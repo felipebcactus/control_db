@@ -58,7 +58,7 @@ $(document).ready(function() {
           '<td>' + moment(approve_date).format("YYYY/MM/DD HH:mm") + '</td>' +
           '<td>' + description + '</td>' +
           '<td> <button class="btn btn-sm btn-success bt-permission" data-bs-toggle="modal" data-bs-target="#permissionModal" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
-          '<td> <button class="btn btn-sm btn-danger bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> </td>' +
+          ' <button class="btn btn-sm btn-danger bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> </td>' +
           '</tr>');
       }
 
@@ -69,7 +69,7 @@ $(document).ready(function() {
         const session_id = $(this).attr('data-bs-session-id')
         const user_name = $(this).attr('data-bs-user-name')
         var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name}});
-        if(confirm('Deseja remover todos os acessos dessa sessão?')){
+        if(confirm('Remove all permissions for this username?')){
           $.ajax({
             type: 'POST',
             async : false,
@@ -101,10 +101,8 @@ $(document).ready(function() {
     const button = event.relatedTarget
     const session_id = button.getAttribute('data-bs-session-id')
     const user_id = button.getAttribute('data-bs-user-id')
-    const user_name = button.getAttribute('data-bs-user-name')
-    
+    const user_name = button.getAttribute('data-bs-user-name')    
     const modalTitle = permissionModal.querySelector('.modal-title')
-    const modalBodyInput = permissionModal.querySelector('.modal-body input')
 
     modalTitle.textContent = "Generate permissions for: "+user_name
     
@@ -141,23 +139,25 @@ $(document).ready(function() {
         url: '/postHostsDatabasesTablesTree',
         data: request_data,
         success: function(status) { 
-          console.log(status);
           _bt.html(_btcontent);
           $('#permissionModal').modal('hide');
           ini_table();
+          exibeSenha(user_name,status.details);
         },
         contentType: "application/json",
         dataType: 'json'
       });
-
-
     });
-    
-
   });
 
+  function exibeSenha(username,details){
+    var modal = $('#passwordModal');
+    modal.find('.modal-title').text("Generated access for: "+username);
+    modal.find('.container').text("Username: "+username+"\nPassword: "+details.password+"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
+    $('#passwordModal').modal('show');
+  }
 
-
+  
 });
 </script>
   
@@ -179,6 +179,24 @@ $(document).ready(function() {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary bt-generate">Generate User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="passwordModalLabel"></h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea width="100%" style="min-height: 350px;" class="container"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>

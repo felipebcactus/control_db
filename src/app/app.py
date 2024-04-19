@@ -359,11 +359,15 @@ def postHostsDatabasesTablesTree():
     username = _data['username']
     session_id = _data['session_id']
     sessionData = database.get_id(Sessions, session_id)
+    details={}
+    details['host']=[]
+    details['permissions']=permissions_obj_name
     
     def _getHostData(_id):
         return database.get_id(Hosts, _id)
     def _getDatabaseData(_id):
         return database.get_id(Databases, _id)
+    
     
     results = []
     if len(permissions_obj_id)>0 :
@@ -371,8 +375,11 @@ def postHostsDatabasesTablesTree():
             hostData = _getHostData(_host_id)
             
             # create relationship for future remove
+            results.append({'removingOldSessionHost': session_id+'-'+_host_id})
+            removeUserFromHostBySession({'session_id': session_id, 'user_name': username})    
             results.append({'addSessionHost': session_id+'-'+_host_id})
             database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
+            details['host'].append({'hostname': hostData.name, 'ipaddress': hostData.ipaddress, 'port': hostData.port, 'type': host_types[hostData.type]})
             
             if hostData.type == 0 : #MySQL
                     
@@ -397,6 +404,7 @@ def postHostsDatabasesTablesTree():
                 pass_len = 10
                 password = "".join([random.choice(characters) for _ in range(pass_len)])
                 results.append({'newpassword': password})
+                details['password']=password
                 database.edit_instance(Sessions, id=session_id, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] Password:  "+password)
                 
                 # CREATE USER 'user'@'hostname';
@@ -460,14 +468,14 @@ def postHostsDatabasesTablesTree():
                 print("ACCESS FOR SQL SERVER - TODO")
     
     
-    return json.dumps(results), 200
+    return json.dumps({'details': details,'results': results}), 200
 
 
 
 @app.route('/removeUserFromHostBySession', methods=['POST'])
-def removeUserFromHostBySession():
+def removeUserFromHostBySession(_data_received=None):
         
-    _data = request.get_json()['data']
+    _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
     user_name = _data['user_name']
     sessionData = database.get_id(Sessions, id_session)
