@@ -1,0 +1,185 @@
+<h2>Sessions</h2>
+
+<div class="d-flex justify-content-between mb-3">
+  <button type="button" class="btn btn-primary bt-newsession" data-toggle="modal" data-target="#sessionModal">New Session</button>
+</div>
+
+<table class="table table-dark" id="Sessions">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">User</th>
+      <th scope="col">Approver</th>
+      <th scope="col">Access Start</th>
+      <th scope="col">Access End</th>
+      <th scope="col">Status</th>
+      <th scope="col">Request Date</th>
+      <th scope="col">Approve Date</th>
+      <th scope="col">Description</th>
+      <th scope="col">Actions</th>
+      <!-- th scope="col">Log Operation Cron</th -->
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+<script>
+var tree_sel;
+$(document).ready(function() {
+  
+  function ini_table(){
+    $.getJSON('/getSessions', function (sessions) {
+      if (!Array.isArray(sessions)) return; // Check for array response
+      $('#Sessions > tbody').empty();
+      for (var i in sessions) {
+
+        var id = sessions[i].id
+        var user = sessions[i].user
+        var user_name = sessions[i].user_name
+        var approver = sessions[i].approver
+        var access_start = sessions[i].access_start
+        var access_end = sessions[i].access_end
+        var status = sessions[i].status
+        var request_date = sessions[i].request_date
+        var approve_date = sessions[i].approve_date
+        var description = sessions[i].description
+        var updated_at = sessions[i].updated_at
+
+        // Modify selector to target tables table
+        $('#Sessions > tbody:last').append('<tr>' +
+          '<td>' + id + '</td>' +
+          '<td>' + user_name + '</td>' +
+          '<td>' + approver + '</td>' +
+          '<td>' + moment(access_start).format("YYYY/MM/DD HH:mm") + '</td>' +
+          '<td>' + moment(access_end).format("YYYY/MM/DD HH:mm") + '</td>' +
+          '<td>' + status + '</td>' +
+          '<td>' + moment(request_date).format("YYYY/MM/DD HH:mm") + '</td>' +
+          '<td>' + moment(approve_date).format("YYYY/MM/DD HH:mm") + '</td>' +
+          '<td>' + description + '</td>' +
+          '<td> <button class="btn btn-sm btn-success bt-permission" data-bs-toggle="modal" data-bs-target="#permissionModal" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
+          '<td> <button class="btn btn-sm btn-danger bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> </td>' +
+          '</tr>');
+      }
+
+        
+
+      $('.bt-permission-remove').click(function(e) {
+        e.preventDefault();
+        const session_id = $(this).attr('data-bs-session-id')
+        const user_name = $(this).attr('data-bs-user-name')
+        var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name}});
+        if(confirm('Deseja remover todos os acessos dessa sessão?')){
+          $.ajax({
+            type: 'POST',
+            async : false,
+            url: '/removeUserFromHostBySession',
+            data: request_data,
+            success: function(status) { 
+              ini_table();
+            },
+            contentType: "application/json",
+            dataType: 'json'
+          });
+        }
+      });
+    });
+  }
+
+  ini_table();
+
+
+  $('.bt-newsession').click(function(e) {
+    e.preventDefault();
+    var target = $(this).data('target');
+    $('#content-area').load('sessions_new.html'); // Load content for new table form
+  });
+  
+  
+  const permissionModal = document.getElementById('permissionModal');
+  permissionModal.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget
+    const session_id = button.getAttribute('data-bs-session-id')
+    const user_id = button.getAttribute('data-bs-user-id')
+    const user_name = button.getAttribute('data-bs-user-name')
+    
+    const modalTitle = permissionModal.querySelector('.modal-title')
+    const modalBodyInput = permissionModal.querySelector('.modal-body input')
+
+    modalTitle.textContent = "Generate permissions for: "+user_name
+    
+
+    var datatree=[];
+    
+    $.ajax({
+        url: '/getHostsDatabasesTablesTree', 
+        dataType : 'json',
+        async : false,
+        success : function(data) { 
+          datatree = data;
+        }
+    });
+    
+    tree_sel = new Tree('.container', {
+        data: datatree
+    });
+
+    $('.bt-generate').unbind('click').bind('click',function(){
+      var _bt = $(this);
+      var _btcontent = $(this).html();
+      var selected_val_data = tree_sel.getSelectedNodesById();
+      var selected_array_data=[];
+      for(var i in selected_val_data){
+        selected_array_data.push(i);
+      }
+      $(this).html('<i class="fas fa-sync fa-spin"></i>');
+      var request_data = JSON.stringify({'data': {username: user_name, session_id: session_id, datatree: selected_array_data}});
+
+      $.ajax({
+        type: 'POST',
+        async : false,
+        url: '/postHostsDatabasesTablesTree',
+        data: request_data,
+        success: function(status) { 
+          console.log(status);
+          _bt.html(_btcontent);
+          $('#permissionModal').modal('hide');
+          ini_table();
+        },
+        contentType: "application/json",
+        dataType: 'json'
+      });
+
+
+    });
+    
+
+  });
+
+
+
+});
+</script>
+  
+
+
+<div class="modal fade" id="permissionModal" tabindex="-1" aria-labelledby="permissionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="permissionModalLabel"></h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-6 container">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary bt-generate">Generate User</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<h2>Tables</h2>
+<div class="d-flex justify-content-between mb-3" style="display:none !important;">
+  <button type="button" class="btn btn-primary bt-newtable" data-toggle="modal" data-target="#tableModal">New Table</button>
+</div>
+<table class="table table-dark" id="tables">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Name</th>
+      <th scope="col">Database</th>
+      <th scope="col">Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    </tbody>
+</table>
+
+<script>
+// Update existing script to handle tables section
+$(document).ready(function() {
+  // ... Existing code to get hosts and databases ...
+
+  // Additional code to fetch tables (assuming an endpoint exists)
+  $.getJSON('/getTables', function (tables) {
+    if (!Array.isArray(tables)) return; // Check for array response
+    for (var i in tables) {
+      var table_id = tables[i].id;
+      var table_name = tables[i].name;
+      var table_type = tables[i].type;
+      var table_database = tables[i].database_name; // Assuming foreign key for database
+
+      // Modify selector to target tables table
+      $('#tables > tbody:last').append('<tr><td>' + table_id + '</td>' +
+        '<td>' + table_name + '</td>' +
+        '<td>' + table_database + '</td>' +
+        '<td>' + table_type + '</td>' +
+        '</tr>');
+    }
+  });
+
+  // Update click event handler for new table button
+  $('.bt-newtable').click(function(e) {
+    e.preventDefault();
+    var target = $(this).data('target');
+    $('#content-area').load('tables_new.html'); // Load content for new table form
+  });
+});
+</script>

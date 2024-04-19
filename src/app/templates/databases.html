@@ -1,0 +1,47 @@
+<h2>Databases</h2>
+<div class="d-flex justify-content-between mb-3" style="display:none !important;">
+  <button type="button" class="btn btn-primary bt-newdatabase" data-toggle="modal" data-target="#databaseModal">New Database</button>
+</div>
+<table class="table table-dark" id="databases">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Name</th>
+      <th scope="col">Host</th>
+      <th scope="col">Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    </tbody>
+</table>
+
+<script>
+// Update existing script to handle databases section
+$(document).ready(function() {
+
+  // Additional code to fetch databases
+  $.getJSON('/getDatabases', function (databases) {
+    if (!Array.isArray(databases)) return; // Check for array response
+    for (var i in databases) {
+      var db_id = databases[i].id;
+      var db_name = databases[i].name;
+      var db_host = databases[i].host_name; // Assuming host data is referenced by ID
+      var db_type = databases[i].type; // Assuming a "type" field exists in the response
+
+      // Modify selector to target databases table
+      $('#databases > tbody:last').append('<tr><td>' + db_id + '</td>' +
+        '<td>' + db_name + '</td>' +
+        '<td>' + db_host + '</td>' +
+        '<td>' + db_type + '</td>' +
+        '</tr>');
+    }
+  });
+
+  // Update click event handler for new database button
+  $('.bt-newdatabase').click(function(e) {
+    e.preventDefault();
+    var target = $(this).data('target');
+    $('#content-area').load('databases_new.html'); // Load content for new database form
+  });
+});
+</script>

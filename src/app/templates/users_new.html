@@ -1,0 +1,50 @@
+<h2>Create New User</h2>
+<form id="user-form">
+  <div class="mb-3">
+    <label for="name" class="form-label">Name</label>
+    <input type="text" class="form-control" id="name" name="name" required>
+  </div>
+  <div class="mb-3">
+    <label for="email" class="form-label">E-mail</label>
+    <input type="text" class="form-control" id="email" name="email">
+  </div>
+  <div class="mb-3">
+    <label for="password" class="form-label">Password</label>
+    <input type="password" class="form-control" id="password" name="password">
+  </div>
+  <div class="mb-3">
+    <label for="type" class="form-label">Type</label>
+    <select class="form-select" id="type" name="type" required>
+      <option value="0" selected>Admin (Default Both)</option>
+      <option value="1">System Only</option>
+      <option value="2">DB Only</option>
+    </select>
+  </div>
+  <button type="button" form="user-form" class="btn btn-primary bt-create">Create</button>
+  <button type="button" form="user-form" class="btn btn-danger bt-cancel">CANCEL</button>
+</form>
+
+<script>
+  $(document).ready(function() {
+      $('.bt-cancel').click(function(e) {
+          e.preventDefault();
+          var target = $(this).data('target');
+          $('#content-area').load('users.html'); // Load content based on menu item
+      });
+      $('.bt-create').click(function(e) {
+          e.preventDefault();
+          var dataform = JSON.stringify($('form#user-form').serializeArray());
+          $.ajax({
+              type: 'POST',
+              url: '/addUser',
+              data: dataform,
+              success: function(data) { 
+                var target = $(this).data('target');
+                $('#content-area').load('users.html'); // Load content based on menu item
+              },
+              contentType: "application/json",
+              dataType: 'json'
+          });
+      });
+  });
+</script>

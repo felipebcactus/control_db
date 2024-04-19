@@ -1,0 +1,47 @@
+<h2>Create New Session</h2>
+<form id="session-form">
+  <div class="mb-3">
+    <label for="user" class="form-label">User</label>
+    <input type="text" class="form-control" id="user" name="user" required>
+  </div>
+  <div class="mb-3">
+      <label for="access_start" class="form-label">Access Start</label>
+      <input type="text" class="form-control" id="access_start" name="access_start" required>
+  </div>
+  <div class="mb-3">
+      <label for="access_end" class="form-label">Access End</label>
+      <input type="text" class="form-control" id="access_end" name="access_end" required>
+  </div>
+  <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <input type="text" class="form-control" id="description" name="description" required>
+  </div>
+  <button type="button" form="session-form" class="btn btn-primary bt-create">Create</button>
+  <button type="button" form="session-form" class="btn btn-danger bt-cancel">CANCEL</button>
+</form>
+
+<script>
+  $(document).ready(function() {
+      $('.bt-cancel').click(function(e) {
+          e.preventDefault();
+          var target = $(this).data('target');
+          $('#content-area').load('sessions.html'); // Load content based on menu item
+      });
+      $('.bt-create').click(function(e) {
+          e.preventDefault();
+          var dataform = JSON.stringify($('form#session-form').serializeArray());
+          $.ajax({
+              type: 'POST',
+              url: '/addSession',
+              data: dataform,
+              success: function(data) { 
+                console.log(data);
+                //var target = $(this).data('target');
+                //$('#content-area').load('users.html'); // Load content based on menu item
+              },
+              contentType: "application/json",
+              dataType: 'json'
+          });
+      });
+  });
+</script>

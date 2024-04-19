@@ -1,0 +1,117 @@
+<h2>Users</h2>
+<div class="d-flex justify-content-between mb-3">
+  <button type="button" class="btn btn-primary bt-newuser" data-toggle="modal" data-target="#userModal">New User</button>
+</div>
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link active" id="nav-system-user-tab" data-bs-toggle="tab" data-bs-target="#nav-system-user" type="button" role="tab" aria-controls="nav-system-user" aria-selected="true">System User</button>
+    <button class="nav-link" id="nav-database-user-tab" data-bs-toggle="tab" data-bs-target="#nav-database-user" type="button" role="tab" aria-controls="nav-database-user" aria-selected="false">Database User</button>
+  </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-system-user" role="tabpanel" aria-labelledby="nav-system-user-tab">
+    <table class="table table-dark" id="system_users">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Name</th>
+          <th scope="col">Email</th>
+          <th scope="col">Type</th>
+          <th scope="col">Parent</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        </tbody>
+    </table>
+  </div>
+  <div class="tab-pane fade" id="nav-database-user" role="tabpanel" aria-labelledby="nav-database-user-tab">
+    <table class="table table-dark" id="database_users">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Name</th>
+          <th scope="col">Email</th>
+          <th scope="col">Type</th>
+          <th scope="col">System User</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+$(document).ready(function() {
+  
+
+  var getUsers = function(_type){
+      $.getJSON('/getUsers/'+_type, function (users) {
+        if (!Array.isArray(users)) return; // Check for array response
+        $('#system_users > tbody' ).empty(); // Empty the table body
+        $('#database_users > tbody' ).empty(); // Empty the table body
+        for (var i in users) {
+          var user_id = users[i].id;
+          var user_name = users[i].name;
+          var user_email = users[i].email;
+          var user_type = users[i].type;
+          var user_parent = users[i].parent;
+          var user_status = users[i].status;
+
+          // Modify selector to target users user
+          $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
+            '<td>' + user_name + '</td>' +
+            '<td>' + user_email + '</td>' +
+            '<td>' + user_type + '</td>' +
+            '<td>' + user_parent + '</td>' +
+            '<td>' + user_status + '</td>' +
+            '</tr>');
+        }
+      });
+    };
+
+    // Find tab links and content divs
+    const tabLinks = $('.nav-tabs .nav-link');
+    const tabContents = $('.tab-pane');
+  
+    // Hide all tab contents by default
+    tabContents.hide().removeClass('active');
+  
+    // Show the first tab content (or active tab if set)
+    let activeTabIndex = 0; // Default to first tab
+    const activeTabLink = $('.nav-tabs .nav-link.active'); // Check for pre-active tab
+  
+    if (activeTabLink.length) {
+      activeTabIndex = activeTabLink.index(); // Use index of pre-active tab
+    }
+      
+    // Add click event listener to each tab link
+    tabLinks.on('click', function(e) {
+      e.preventDefault(); // Prevent default link behavior
+      $('.tab-pane').hide();
+      // Update active class and show corresponding content
+      const clickedTabIndex = $(this).index();
+      tabLinks.removeClass("active");
+      $(this).addClass("active");
+      tabContents.eq(clickedTabIndex).show().fadeTo(0,1);
+      // getUsers(clickedTabIndex==0?0:2);// TODO
+      getUsers(0);
+    });
+    
+    $('.bt-newuser').click(function(e) {
+      e.preventDefault();
+      var target = $(this).data('target');
+      $('#content-area').load('users_new.html'); // Load content for new table form
+    });
+
+    tabLinks.eq(activeTabIndex).trigger('click');
+
+  });
+  
+
+</script>
