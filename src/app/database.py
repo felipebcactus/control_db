@@ -4,16 +4,27 @@ def get_all(model):
     data = model.query.all()
     return data
 
-def get_all_order_by(model, column_name):
-    data = model.query.order_by(getattr(model, column_name)).all()
+def get_all_order_by(model, column_name, _desc=False):
+    data = model.query.order_by(getattr(model, column_name).desc() if _desc else getattr(model, column_name)).all()
+    return data
+
+def get_all_order_by_twice(model, column_name, column_name2, _desc=False):
+    data = model.query.order_by(getattr(model, column_name).desc() if _desc else getattr(model, column_name), getattr(model, column_name2).desc() if _desc else getattr(model, column_name2)).all()
     return data
 
 def get_id(model, id):
-    data = model.query.filter_by(id=id).all()[0]
-    return data
+    data = model.query.filter_by(id=id).all()
+    if len(data)>0 :
+        return data[0]
+    else :
+        return False
 
 def get_by(model, column_name, value):
     data = model.query.filter(getattr(model, column_name) == value).all()
+    return data
+
+def get_by_date_and_filter(model, column_name, value, filter, filter_value, more_less=True):
+    data = model.query.filter(((getattr(model, column_name) >= value) if more_less else (getattr(model, column_name) <= value))).filter(getattr(model, filter) == filter_value).all()
     return data
 
 def get_by_like(model, column_name, substring):

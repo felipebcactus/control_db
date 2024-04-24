@@ -48,6 +48,10 @@ def index():
     usuarios = fetch(_json=True)
     return render_template('index.html',  usuarios=usuarios)
 
+@app.route('/user/getAccess/<user_id>', methods=['GET'])
+def user_get_access(user_id):
+    return render_template('userGetAccess.html',  user_id=user_id)
+
 @app.route('/editar', methods=['GET'])
 def editar():
     return render_template('index.html')
@@ -145,7 +149,7 @@ def getDatabases(_json=False):
 
 @app.route('/getTables', methods=['GET'])
 def getTables(_json=False):
-    tables = database.get_all(Tables)
+    tables = database.get_all_order_by_twice(Tables, 'id_database', 'name')
     all_tables = []
     for table in tables:
         _database = database.get_id(Databases, table.id_database)
@@ -225,7 +229,38 @@ def addSession():
 
 @app.route('/getSessions', methods=['GET'])
 def getSessions(_json=False):
-    sessions = database.get_all(Sessions)
+    sessions = database.get_all_order_by(Sessions, 'id', True)
+    all_sessions = []
+    for session in sessions:
+        _approver_name='';
+        if session.approver!='' and session.approver!='null' and session.approver!='None':
+            _approver_ = database.get_id(Users, session.approver)
+            if _approver_!=False:
+                _approver_name = _approver_.name
+        _user = database.get_id(Users, session.user)
+        user_name = _user.name if _user else "Unknown user"
+        new_session = {
+            "id": session.id,
+            "user": session.user,
+            "user_name": user_name,
+            "approver":  _approver_name, #session.approver,
+            "access_start": str(session.access_start) or '',
+            "access_end": str(session.access_end) or '',
+            "status": session_status_type[session.status],
+            "request_date": str(session.request_date) or '',
+            "approve_date": str(session.approve_date) or '',
+            "description": session.description
+        }
+        all_sessions.append(new_session)
+    if _json==True:
+        return all_sessions
+    else:
+        return json.dumps(all_sessions), 200
+
+
+@app.route('/getSessions/<user_id>', methods=['GET'])
+def getSessionsUser(user_id, _json=False):
+    sessions = database.get_by(Sessions, 'user', user_id)
     all_sessions = []
     for session in sessions:
         _user = database.get_id(Users, session.user)
@@ -234,10 +269,10 @@ def getSessions(_json=False):
             "id": session.id,
             "user": session.user,
             "user_name": user_name,
-            "approver": '', #session.approver,
+            "approver": database.get_id(Users, session.approver).name if session.approver!='' else '', #session.approver,
             "access_start": str(session.access_start) or '',
             "access_end": str(session.access_end) or '',
-            "status": session.status,
+            "status": session_status_type[session.status],
             "request_date": str(session.request_date) or '',
             "approve_date": str(session.approve_date) or '',
             "description": session.description
@@ -272,7 +307,7 @@ def getHostsDatabasesTablesTree(_json=False):
             "id": str(host.id),
             "text": host.name,
             "children": []
-        }
+        }  # 🔒🔓
         for _database in databases:
             if _database.id_host == host.id:
                 database_dict = {
@@ -285,7 +320,7 @@ def getHostsDatabasesTablesTree(_json=False):
                     if table.id_database == _database.id:
                         table_dict = {
                             "id": '-'.join((str(host.id),str(_database.id),str(table.id))),
-                            "text": table.name
+                            "text": ('🔒 ' if table.type==0 else "✅ ") + table.name
                         }
                         database_dict["children"].append(table_dict)
                 host_dict["children"].append(database_dict)
@@ -300,13 +335,14 @@ def getHostsDatabasesTablesTree(_json=False):
 def returnPermissionTree(_data):
     permissions_obj_name = {}
     permissions_obj_id = {}
+    user_auto_approve=True
     
     def _getHostName(_id):
         return database.get_id(Hosts, _id).name
     def _getDatabaseName(_id):
         return database.get_id(Databases, _id).name
-    def _getTableName(_id):
-        return database.get_id(Tables, _id).name
+    def _getTableDetails(_id):
+        return database.get_id(Tables, _id)
     
     def _addHost(_id):
         _hostname = _getHostName(_id)
@@ -319,13 +355,16 @@ def returnPermissionTree(_data):
         if _databasename not in permissions_obj_name[_hostname]:
             permissions_obj_name[_hostname][_databasename] = []
             permissions_obj_id[_id_host][_id_database] = []
-    def _addTable(_id_host,_id_database,_id_table):
+    def _addTable(_id_host,_id_database,_id_table,user_auto_approve):
         _hostname = _getHostName(_id_host)
         _databasename = _getDatabaseName(_id_database)
-        _tablename = _getTableName(_id_table)
-        if _tablename not in permissions_obj_name[_hostname][_databasename]:
-            permissions_obj_name[_hostname][_databasename].append(_tablename)
+        _tabledetails = _getTableDetails(_id_table)
+        if _tabledetails.name not in permissions_obj_name[_hostname][_databasename]:
+            if _tabledetails.type != 1 :
+                user_auto_approve = False
+            permissions_obj_name[_hostname][_databasename].append(_tabledetails.name)
             permissions_obj_id[_id_host][_id_database].append(_id_table)
+        return user_auto_approve
     
     for item in _data:
         _parts = item.split('-')
@@ -337,28 +376,41 @@ def returnPermissionTree(_data):
             _addDatabase(_parts[0],_parts[1])
         elif len(_parts) == 3:
             # host + database + tables
-            _addTable(_parts[0],_parts[1],_parts[2])
+            _user_auto_approve = _addTable(_parts[0],_parts[1],_parts[2],user_auto_approve)
+            if user_auto_approve:
+                user_auto_approve = _user_auto_approve # so altera o valor pra false, nao mais pra true se ocorrer
         else :            
             print('else ')
             print(_parts)
-        
-    return { 'permissions_name' : permissions_obj_name , 'permissions_id' : permissions_obj_id }
+    return { 'permissions_name' : permissions_obj_name , 'permissions_id' : permissions_obj_id, 'user_auto_approve': user_auto_approve }
 
 
+@app.route('/postHostsDatabasesTablesTreeApprove', methods=['POST'])
+def postHostsDatabasesTablesTreeApprove():
+    _data = request.get_json()['data']
+    _return = postHostsDatabasesTablesTree(_data['session_id'],_data['approver'])
+    print(_return)
+    return {}, 200
+    
 @app.route('/postHostsDatabasesTablesTree', methods=['POST'])
-def postHostsDatabasesTablesTree():
+def postHostsDatabasesTablesTree(_approve=False,_approver=False):
     
     # TODO: pensar em colocar ou controlar por HOST esses usuarios, precisa?
     
-    _data = request.get_json()['data']
+    if _approve!=False:
+        _approve_data = database.get_id(Sessions, _approve)
+        _data = json.loads(_approve_data.datatree)
+    else:
+        _data = request.get_json()['data']
     
     permissions = returnPermissionTree(_data['datatree'])
     permissions_obj_name = permissions['permissions_name']
     permissions_obj_id = permissions['permissions_id']
+    user_auto_approve = permissions['user_auto_approve']
+    filter_user = _data['filter_user']
     
     username = _data['username']
     session_id = _data['session_id']
-    sessionData = database.get_id(Sessions, session_id)
     details={}
     details['host']=[]
     details['permissions']=permissions_obj_name
@@ -367,32 +419,51 @@ def postHostsDatabasesTablesTree():
         return database.get_id(Hosts, _id)
     def _getDatabaseData(_id):
         return database.get_id(Databases, _id)
-    
-    
+        
     results = []
-    if len(permissions_obj_id)>0 :
+    
+    if _approve==False:
+        characters = list(string.ascii_letters + string.digits + "!@#$%^&*()")            
+        pass_len = 10
+        password = "".join([random.choice(characters) for _ in range(pass_len)])
+        results.append({'newpassword': password})
+        details['password']=password
+        database.edit_instance(Sessions, id=session_id, status=0, password=password, datatree=json.dumps(_data))
+    else:
+        password = _approve_data.password
+        results.append({'newpassword': password})
+        details['password']=password
+        user_auto_approve = True
+        filter_user = False
+        database.edit_instance(Sessions, id=session_id, status=1, approver=_approver)
+    
+    details['user_auto_approve'] = user_auto_approve
+    details['filter_user'] = filter_user
+    
+    if (len(permissions_obj_id)>0) and ((filter_user!=False and user_auto_approve==True) or filter_user==False) :
+        details['waiting_approve'] = False
         for _host_id in permissions_obj_id :
             hostData = _getHostData(_host_id)
             
             # create relationship for future remove
             results.append({'removingOldSessionHost': session_id+'-'+_host_id})
-            removeUserFromHostBySession({'session_id': session_id, 'user_name': username})    
             results.append({'addSessionHost': session_id+'-'+_host_id})
-            database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
             details['host'].append({'hostname': hostData.name, 'ipaddress': hostData.ipaddress, 'port': hostData.port, 'type': host_types[hostData.type]})
-            
+            if _approve==False:
+                removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
+                database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
+                
+            def _execSQL(sql, _fetch=False):
+                if _fetch:
+                    return external_session.execute(text(sql)).fetchall()
+                else:
+                    external_session.execute(text(sql))
+                    
+                    
             if hostData.type == 0 : #MySQL
                     
-                external_session = ExternalConnectionByHostId.getConn(_host_id)    
+                external_session = ExternalConnectionByHostId.getConn(_host_id)   
                 
-                def _execSQL(sql, _fetch=False):
-                    if _fetch:
-                        return external_session.execute(text(sql)).fetchall()
-                    else:
-                        external_session.execute(text(sql))
-                
-                characters = list(string.ascii_letters + string.digits + "!@#$%^&*()")
-            
                 # check if user exists mysql
                 # SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'username')
                 
@@ -401,23 +472,15 @@ def postHostsDatabasesTablesTree():
                 results.append({'dropuserifexists': _command})
                 _execSQL(_command)
                 
-                pass_len = 10
-                password = "".join([random.choice(characters) for _ in range(pass_len)])
-                results.append({'newpassword': password})
-                details['password']=password
-                database.edit_instance(Sessions, id=session_id, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] Password:  "+password)
-                
                 # CREATE USER 'user'@'hostname';
                 _command = "CREATE USER '"+username+"'@'%';"
                 results.append({'createnewuser': _command})
                 _execSQL(_command)
                 
-                
                 for _database in permissions_obj_id[_host_id]:
                     
                     databaseData = _getDatabaseData(_database)     
                     database_tables_count = len(permissions_obj_id[_host_id][_database])
-    
                                         
                     if database_tables_count == 0 : # todo o database (todas as tabelas)
                         
@@ -454,6 +517,8 @@ def postHostsDatabasesTablesTree():
                 results.append({'flushprivileges': _command})
                 _execSQL(_command)
                                 
+                                
+                database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
                 
                 # GUIDE EXAMPLES
                 # GRANT ALL PRIVILEGES ON *.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> todo o HOST
@@ -466,19 +531,34 @@ def postHostsDatabasesTablesTree():
                 print("ACCESS FOR POSTGRES - TODO")
             elif host_types[hostData.type] == 2 : #SQLServer
                 print("ACCESS FOR SQL SERVER - TODO")
+                
+    else:
+        details['waiting_approve'] = True
     
     
     return json.dumps({'details': details,'results': results}), 200
 
 
+@app.route('/expireAccessEnd', methods=['GET'])
+def expireAccessEnd():
+    _sessions_expired=[]
+    _expired = database.get_by_date_and_filter(Sessions, 'access_end', datetime.now(), 'status', 1, False)
+    for expired_session in _expired:
+        removeUserFromHostBySession({'session_id':expired_session.id,'expired':datetime.now()})
+        _sessions_expired.append(expired_session.id)
+    return {'session_expired': _sessions_expired}, 200
 
+
+# pode receber apenas _data['session_id']
 @app.route('/removeUserFromHostBySession', methods=['POST'])
 def removeUserFromHostBySession(_data_received=None):
         
     _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
-    user_name = _data['user_name']
     sessionData = database.get_id(Sessions, id_session)
+    if 'user_name' not in _data:
+        _data['user_name'] = database.get_id(Users, sessionData.user).name
+    user_name = _data['user_name']
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
     results = []
     if len(sessions_host)>0 :
@@ -490,7 +570,34 @@ def removeUserFromHostBySession(_data_received=None):
             
             
     database.delete_instance_by(SessionsHosts, 'id_session', id_session)
-    database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
-                
+    database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None)
+    # database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
+    
+    return json.dumps(results), 200
+
+
+@app.route('/removeSession/<user_id_logged>', methods=['POST'])
+def removeSession(user_id_logged, _data_received=None):
+        
+    _data = request.get_json()['data'] if _data_received==None else _data_received
+    id_session = _data['session_id']
+    user_name = _data['user_name']
+    user_id_selected = _data['user_id']
+    
+    if user_id_logged!='0' and user_id_logged != user_id_selected:
+        return {}, 200
+    
+    sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
+    results = []
+    if len(sessions_host)>0 :
+        for _reg in sessions_host :
+            external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
+            _command = 'DROP USER IF EXISTS '+user_name+';'
+            results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
+            external_session.execute(text(_command))
+            
+            
+    database.delete_instance_by(SessionsHosts, 'id_session', id_session)
+    database.delete_instance_by(Sessions, 'id', id_session)
     
     return json.dumps(results), 200

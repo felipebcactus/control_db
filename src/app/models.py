@@ -26,8 +26,10 @@ user_status = {
 }
 
 session_status_type = {
-    0: 'Inactive',
-    1: 'Active' 
+    0: 'Waiting Approve',
+    1: 'Approved' ,
+    2: 'Revoked'  ,
+    3: 'Expired' 
 }
 class Users(db.Model):
     __tablename__ = 'users'
@@ -111,6 +113,8 @@ class Sessions(db.Model):
     request_date = db.Column(db.DateTime(), default=db.func.now())
     approve_date = db.Column(db.DateTime(), default=None)
     description = db.Column(db.Text, default=None)
+    datatree = db.Column(db.Text, default=None)
+    password = db.Column(db.String(255), default=None)
     updated_at = db.Column(db.DateTime(), onupdate=db.func.now())
     def serialize(self):
         return {

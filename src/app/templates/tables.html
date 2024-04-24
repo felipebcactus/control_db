@@ -5,7 +5,7 @@
 <table class="table table-dark" id="tables">
   <thead>
     <tr>
-      <th scope="col">ID</th>
+      <!-- th scope="col">ID</th -->
       <th scope="col">Name</th>
       <th scope="col">Database</th>
       <th scope="col">Type</th>
@@ -30,7 +30,7 @@ $(document).ready(function() {
       var table_database = tables[i].database_name; // Assuming foreign key for database
 
       // Modify selector to target tables table
-      $('#tables > tbody:last').append('<tr><td>' + table_id + '</td>' +
+      $('#tables > tbody:last').append('<tr>'+ //<td>' + table_id + '</td>' +
         '<td>' + table_name + '</td>' +
         '<td>' + table_database + '</td>' +
         '<td>' + table_type + '</td>' +

@@ -1,0 +1,18 @@
+{% include "header.html" %}
+</head>
+<body class="bg-dark text-white">
+  <div class="container-fluid d-flex flex-nowrap">
+    <div class="col-md-2 bg-darker p-0 vh-100">
+      <ul class="nav flex-column nav-pills mb-auto" style="margin-top: 15px;">
+        <li class="nav-item">
+          <a href="#" class="nav-link text-white" data-target="sessions" data-user-id="{% print user_id %}">REQUEST ACCESS</a>
+        </li>
+      </ul>
+    </div>
+    <div class="col p-3">
+      <div id="content-area">
+        </div>
+    </div>
+  </div>
+</body>
+</html>

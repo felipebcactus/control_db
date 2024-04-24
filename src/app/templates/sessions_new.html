@@ -1,47 +1,78 @@
 <h2>Create New Session</h2>
 <form id="session-form">
   <div class="mb-3">
-    <label for="user" class="form-label">User</label>
-    <input type="text" class="form-control" id="user" name="user" required>
+    <label for="user" class="form-label">User *</label>
+    <select class="form-control" id="userCombo" name="user" required></select>
   </div>
   <div class="mb-3">
-      <label for="access_start" class="form-label">Access Start</label>
-      <input type="text" class="form-control" id="access_start" name="access_start" required>
-  </div>
-  <div class="mb-3">
-      <label for="access_end" class="form-label">Access End</label>
-      <input type="text" class="form-control" id="access_end" name="access_end" required>
+      <label for="access_date" class="form-label">Access Date *</label>
+      <input type="text" class="form-control" name="access_date" required />
+      <input type="hidden" name="access_start" id="access_start">
+      <input type="hidden" name="access_end" id="access_end">
   </div>
   <div class="mb-3">
       <label for="description" class="form-label">Description</label>
-      <input type="text" class="form-control" id="description" name="description" required>
+      <input type="text" class="form-control" id="description" name="description">
+  </div>
+  <div class="mb-3">
+    <small>* - required fields</small>
   </div>
   <button type="button" form="session-form" class="btn btn-primary bt-create">Create</button>
   <button type="button" form="session-form" class="btn btn-danger bt-cancel">CANCEL</button>
 </form>
 
 <script>
-  $(document).ready(function() {
-      $('.bt-cancel').click(function(e) {
-          e.preventDefault();
-          var target = $(this).data('target');
-          $('#content-area').load('sessions.html'); // Load content based on menu item
-      });
-      $('.bt-create').click(function(e) {
-          e.preventDefault();
-          var dataform = JSON.stringify($('form#session-form').serializeArray());
-          $.ajax({
+  $(document).ready(function() {      
+  var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
+
+    $('input[name="access_date"]').daterangepicker({
+        opens: 'left'
+    }).on('apply.daterangepicker', function(ev, picker) {
+        var start = picker==undefined? moment() :picker.startDate;
+        var end = picker==undefined? moment() :picker.endDate;
+        $('#access_start').val(start.format('YYYY-MM-DD'));
+        $('#access_end').val(end.format('YYYY-MM-DD'));
+    }).trigger('apply.daterangepicker');
+
+    $.ajax({
+        url: "/getUsers/0",
+        type: "GET",
+        success: function(data) {
+            var users = JSON.parse(data);
+            var userCombo = $("#userCombo");
+            userCombo.empty();
+            users.forEach(function(user) {
+                var option = $("<option></option>");
+                option.val(user.id);
+                option.text(user.name + " (" + user.email + ")");
+                if((filter_user!=false && filter_user==user.id) ||  filter_user===false){
+                  userCombo.append(option);
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.log("Error: " + xhr.responseText);
+        }
+    });
+    $('.bt-cancel').click(function(e) {
+        e.preventDefault();
+        var target = $(this).data('target');
+        $('#content-area').load('/sessions.html'); // Load content based on menu item
+    });
+    $('.bt-create').click(function(e) {
+        e.preventDefault();
+        var dataform = JSON.stringify($('form#session-form').serializeArray());
+        $.ajax({
               type: 'POST',
               url: '/addSession',
               data: dataform,
               success: function(data) { 
-                console.log(data);
-                //var target = $(this).data('target');
-                //$('#content-area').load('users.html'); // Load content based on menu item
+                var target = $(this).data('target');
+                $('#content-area').load('/sessions.html'); // Load content based on menu item
               },
               contentType: "application/json",
               dataType: 'json'
-          });
-      });
+        });
+    });
   });
 </script>

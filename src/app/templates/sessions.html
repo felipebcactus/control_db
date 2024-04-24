@@ -15,7 +15,7 @@
       <th scope="col">Status</th>
       <th scope="col">Request Date</th>
       <th scope="col">Approve Date</th>
-      <th scope="col">Description</th>
+      <th scope="col">Description / LOG</th>
       <th scope="col">Actions</th>
       <!-- th scope="col">Log Operation Cron</th -->
     </tr>
@@ -27,11 +27,12 @@
 <script>
 var tree_sel;
 $(document).ready(function() {
-  
+  var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
   function ini_table(){
-    $.getJSON('/getSessions', function (sessions) {
+    $.getJSON('/getSessions'+((filter_user!=false)?'/'+filter_user:''), function (sessions) {
       if (!Array.isArray(sessions)) return; // Check for array response
       $('#Sessions > tbody').empty();
+      
       for (var i in sessions) {
 
         var id = sessions[i].id
@@ -46,23 +47,44 @@ $(document).ready(function() {
         var description = sessions[i].description
         var updated_at = sessions[i].updated_at
 
+        if(!filter_user && status!='Approved' && status!='Revoked' && status!='Expired'){
+          status+="<button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button>";
+        }
         // Modify selector to target tables table
         $('#Sessions > tbody:last').append('<tr>' +
           '<td>' + id + '</td>' +
           '<td>' + user_name + '</td>' +
-          '<td>' + approver + '</td>' +
+          '<td>' + ((approver!=null && approver!='')?approver:'') + '</td>' +
           '<td>' + moment(access_start).format("YYYY/MM/DD HH:mm") + '</td>' +
           '<td>' + moment(access_end).format("YYYY/MM/DD HH:mm") + '</td>' +
           '<td>' + status + '</td>' +
           '<td>' + moment(request_date).format("YYYY/MM/DD HH:mm") + '</td>' +
-          '<td>' + moment(approve_date).format("YYYY/MM/DD HH:mm") + '</td>' +
-          '<td>' + description + '</td>' +
+          '<td>' + (approve_date=='None'?'':moment(approve_date).format("YYYY/MM/DD HH:mm")) + '</td>' +
+          '<td><pre>' + description + '</pre></td>' +
           '<td> <button class="btn btn-sm btn-success bt-permission" data-bs-toggle="modal" data-bs-target="#permissionModal" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
-          ' <button class="btn btn-sm btn-danger bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> </td>' +
+          ' <button class="btn btn-sm btn-warning bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> '+
+          ' <button class="btn btn-sm btn-danger bt-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-trash3-fill"></i> delete session</button> '+
+          ' </td>' +
           '</tr>');
       }
 
-        
+      $('.bt-approve').click(function(e) {
+        e.preventDefault();
+        if(confirm('Approve this session?')){
+          var request_data = JSON.stringify({'data': {session_id: $(this).data('idsession'), approver: 1}}); // TODO pegar o ID do usuario LOGADO
+          $.ajax({
+            type: 'POST',
+            async : false,
+            url: '/postHostsDatabasesTablesTreeApprove',
+            data: request_data,
+            success: function(status) { 
+              ini_table();
+            },
+            contentType: "application/json",
+            dataType: 'json'
+          });
+        }
+      });
 
       $('.bt-permission-remove').click(function(e) {
         e.preventDefault();
@@ -83,6 +105,29 @@ $(document).ready(function() {
           });
         }
       });
+
+
+      $('.bt-remove').click(function(e) {
+        e.preventDefault();
+        const session_id = $(this).attr('data-bs-session-id')
+        const user_name = $(this).attr('data-bs-user-name')
+        const user_id = $(this).attr('data-bs-user-id')
+        var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name, user_id: user_id}});
+        if(confirm('Delete this session?')){
+          $.ajax({
+            type: 'POST',
+            async : false,
+            url: '/removeSession/'+((filter_user!=false)?filter_user:'0'),
+            data: request_data,
+            success: function(status) { 
+              ini_table();
+            },
+            contentType: "application/json",
+            dataType: 'json'
+          });
+        }
+      });
+
     });
   }
 
@@ -92,7 +137,7 @@ $(document).ready(function() {
   $('.bt-newsession').click(function(e) {
     e.preventDefault();
     var target = $(this).data('target');
-    $('#content-area').load('sessions_new.html'); // Load content for new table form
+    $('#content-area').load('/sessions_new.html'); // Load content for new table form
   });
   
   
@@ -118,7 +163,8 @@ $(document).ready(function() {
         }
     });
     
-    tree_sel = new Tree('.container', {
+    tree_sel = new Tree('.container', { // https://github.com/daweilv/treejs
+        closeDepth: 1,
         data: datatree
     });
 
@@ -131,7 +177,7 @@ $(document).ready(function() {
         selected_array_data.push(i);
       }
       $(this).html('<i class="fas fa-sync fa-spin"></i>');
-      var request_data = JSON.stringify({'data': {username: user_name, session_id: session_id, datatree: selected_array_data}});
+      var request_data = JSON.stringify({'data': {username: user_name, session_id: session_id, datatree: selected_array_data, filter_user: filter_user}});
 
       $.ajax({
         type: 'POST',
@@ -139,10 +185,11 @@ $(document).ready(function() {
         url: '/postHostsDatabasesTablesTree',
         data: request_data,
         success: function(status) { 
+          var waiting_approve = status.details.waiting_approve;
           _bt.html(_btcontent);
           $('#permissionModal').modal('hide');
           ini_table();
-          exibeSenha(user_name,status.details);
+          exibeSenha(user_name,status.details,waiting_approve);
         },
         contentType: "application/json",
         dataType: 'json'
@@ -150,9 +197,9 @@ $(document).ready(function() {
     });
   });
 
-  function exibeSenha(username,details){
+  function exibeSenha(username,details,waiting_approve){
     var modal = $('#passwordModal');
-    modal.find('.modal-title').text("Generated access for: "+username);
+    modal.find('.modal-title').text(((waiting_approve)?"Waiting approve":"Generated access")+" for: "+username);
     modal.find('.container').text("Username: "+username+"\nPassword: "+details.password+"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
     $('#passwordModal').modal('show');
   }
