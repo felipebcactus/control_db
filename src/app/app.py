@@ -3,6 +3,7 @@ from . import create_app, database
 from .models import Users, Hosts, Databases, Tables, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type
 from flask_wtf import FlaskForm #, DataRequired, Length
 from wtforms import StringField, SubmitField, PasswordField, EmailField
+from wtforms.validators import DataRequired, Length
 from werkzeug.security import generate_password_hash
 from sqlalchemy.sql import text
 from datetime import datetime
@@ -21,9 +22,13 @@ app.register_blueprint(synchosts_bp)
 if __name__ == '__main__':
     app.run(debug=True)
     
-@app.route('/')
-def home():
-    return redirect(url_for('index')) 
+@app.route('/user/getAccess/<user_id>', methods=['GET'])
+def user_get_access(user_id):
+    return render_template('userGetAccess.html',  user_id=user_id)
+
+@app.route('/<filename>.html')
+def render_html_template(filename):
+    return render_template(f'{filename}.html')
 
 @app.route('/getUsers', methods=['GET'])
 def fetch(_json=False):
@@ -42,54 +47,6 @@ def fetch(_json=False):
         return all_users
     else:
         return json.dumps(all_users), 200
-
-@app.route('/index', methods=['GET'])
-def index():
-    usuarios = fetch(_json=True)
-    return render_template('index.html',  usuarios=usuarios)
-
-@app.route('/user/getAccess/<user_id>', methods=['GET'])
-def user_get_access(user_id):
-    return render_template('userGetAccess.html',  user_id=user_id)
-
-@app.route('/editar', methods=['GET'])
-def editar():
-    return render_template('index.html')
-
-@app.route('/excluir', methods=['GET'])
-def excluir():
-    return render_template('index.html')
-
-@app.route('/<filename>.html')
-def render_html_template(filename):
-    return render_template(f'{filename}.html')
-
-# Registration form
-class RegistrationForm(FlaskForm):
-    name = StringField('Nome de Usuário:') #, validators=[DataRequired(), Length(min=3, max=20)])
-    email = StringField('Email:') #, validators=[DataRequired(), EmailField()])
-    password = PasswordField('Senha:') #, validators=[DataRequired(), Length(min=8)])
-    submit = SubmitField('Cadastrar')
-
-@app.route('/cadastrar', methods=['GET', 'POST'])
-def cadastrar():
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        hashed_password = generate_password_hash(form.password.data)        
-        add({'name':form.name.data, 'email':form.email.data, 'password':hashed_password})
-        flash('Cadastro realizado com sucesso!', 'success')
-        return redirect(url_for('index'))  # Change to desired route after successful registration
-    return render_template('cadastrar.html', form=form)
-
-
-@app.route('/add', methods=['POST'])
-def add(_data=None):
-    data = request.get_json() if _data==None else _data
-    name = data['name']
-    email = data['email']
-    password = data['password']
-    database.add_instance(Users, name=name, email=email, password=password)
-    return json.dumps("Added"), 200
 
 
 @app.route('/addHost', methods=['POST'])

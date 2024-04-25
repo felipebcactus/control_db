@@ -22,6 +22,9 @@
         $('.nav-link').click(function(e) {
             e.preventDefault();
             var target = $(this).data('target');
+            if(target=='logout'){
+              window.location='/logout';
+            }
             var filter_user = $(this).data('user-id')==undefined?false:$(this).data('user-id');
             if (filter_user){ // set cookie filter_user   
               Cookies.set("filter_user", filter_user);    
@@ -63,5 +66,13 @@
         text-align: center;
         font-size: 14px;
         color: rgb(0 0 0) !important;
+    }
+    .nav-link:focus, .nav-link:hover {
+        color: #dee2e6;
+        background-color: rgba(19, 105, 232, 0.5);
+    }
+    .nav-tabs .nav-link {
+        color: #fff;
+        background-color: rgba(13, 110, 253, .25);
     }
   </style>

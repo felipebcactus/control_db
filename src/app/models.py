@@ -1,6 +1,7 @@
 import flask_sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from flask_login import UserMixin
 
 db = flask_sqlalchemy.SQLAlchemy()
 
@@ -31,7 +32,7 @@ session_status_type = {
     2: 'Revoked'  ,
     3: 'Expired' 
 }
-class Users(db.Model):
+class Users(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
