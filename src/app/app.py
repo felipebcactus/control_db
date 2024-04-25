@@ -1,10 +1,11 @@
-from flask import request, redirect, render_template, flash, url_for, request
+from flask import request, redirect, render_template, flash, url_for, request, send_file
 from . import create_app, database
-from .models import Users, Hosts, Databases, Tables, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type
+from .models import Users, Hosts, Databases, Tables, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type
 from flask_wtf import FlaskForm #, DataRequired, Length
 from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length
 from werkzeug.security import generate_password_hash
+from flask_login import login_required, current_user
 from sqlalchemy.sql import text
 from datetime import datetime
 import os
@@ -22,15 +23,25 @@ app.register_blueprint(synchosts_bp)
 if __name__ == '__main__':
     app.run(debug=True)
     
-@app.route('/user/getAccess/<user_id>', methods=['GET'])
-def user_get_access(user_id):
-    return render_template('userGetAccess.html',  user_id=user_id)
-
 @app.route('/<filename>.html')
 def render_html_template(filename):
-    return render_template(f'{filename}.html')
+    if filename=='logout':
+        return redirect(url_for('auth.login'))
+    elif filename=='login' or not current_user.is_authenticated:
+        return render_template(f'{filename}.html')
+    else:
+        return render_template(f'{filename}.html', user_id=current_user.id)
+
+@app.route('/<filename>.ico')
+def return_ico_file(filename):
+    return send_file(f'templates/{filename}.ico')
+
+@app.route('/favicon/<filename>')
+def return_favicon_file(filename):
+    return send_file(f'templates/favicon/{filename}')
 
 @app.route('/getUsers', methods=['GET'])
+@login_required
 def fetch(_json=False):
     users = database.get_all(Users)
     all_users = []
@@ -50,6 +61,7 @@ def fetch(_json=False):
 
 
 @app.route('/addHost', methods=['POST'])
+@login_required
 def addHost():
     data = request.get_json()
     host_object = {}
@@ -60,6 +72,7 @@ def addHost():
 
 
 @app.route('/getHosts', methods=['GET'])
+@login_required
 def getHosts(_json=False):
     hosts = database.get_all(Hosts)
     all_hosts = []
@@ -85,6 +98,7 @@ def getHosts(_json=False):
 
 
 @app.route('/getDatabases', methods=['GET'])
+@login_required
 def getDatabases(_json=False):
     databases = database.get_all(Databases)
     all_databases = []
@@ -105,6 +119,7 @@ def getDatabases(_json=False):
         return json.dumps(all_databases), 200
 
 @app.route('/getTables', methods=['GET'])
+@login_required
 def getTables(_json=False):
     tables = database.get_all_order_by_twice(Tables, 'id_database', 'name')
     all_tables = []
@@ -116,7 +131,7 @@ def getTables(_json=False):
             "name": table.name,
             "id_database": table.id_database,
             "database_name": database_name,
-            "type": table.type,
+            "type": table_type[table.type],
         }
         all_tables.append(new_table)
     if _json==True:
@@ -126,26 +141,36 @@ def getTables(_json=False):
 
 
 @app.route('/addUser', methods=['POST'])
+@login_required
 def addUser():
     data = request.get_json()
     user_obj = {}
     for item in data:
         user_obj[item['name']] = item['value']
-    database.add_instance(Users, name=user_obj['name'], type=user_obj['type'], email=user_obj['email'], password=user_obj['password'])
+    database.add_instance(Users, name=user_obj['name'], type=user_obj['type'], email=user_obj['email'], parent=(None if user_obj['parent']=='' else user_obj['parent']), password=user_obj['password'])
     return json.dumps(user_obj), 200
 
 
+@app.route('/statusChangeUser/<user_id>/<status>', methods=['GET'])
+@login_required
+def statusChangeUser(user_id,status):    
+    database.edit_instance(Users, user_id, status=status)
+    return json.dumps({}), 200
+
+
 @app.route('/getUsers/<type>', methods=['GET'])
+@login_required
 def getUsers(type,_json=False):
-    users = database.get_by(Users, 'type', type)
+    users = database.get_all_order_by(Users, 'id')
     all_users = []
     for user in users:
         new_user = {
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "parent": "",
-            "status": user_status[user.status],
+            "parent": "" if user.parent is None else database.get_id(Users, user.parent).name,
+            "status": user.status,
+            "status_name": user_status[user.status],
             "type": user_types[user.type],
         }
         all_users.append(new_user)
@@ -173,6 +198,7 @@ def getUsers(type,_json=False):
 
 
 @app.route('/addSession', methods=['POST'])
+@login_required
 def addSession():
     # session_status_type
     data = request.get_json()
@@ -180,16 +206,17 @@ def addSession():
     for item in data:
         session_obj[item['name']] = item['value']
         
-    database.add_instance(Sessions, user=session_obj['user'], access_start=session_obj['access_start'], access_end=session_obj['access_end'], description=session_obj['description'])
+    database.add_instance(Sessions, user=session_obj['user'], status=-1, access_start=session_obj['access_start'], access_end=session_obj['access_end'], description=session_obj['description'])
     return json.dumps(session_obj), 200
 
 
 @app.route('/getSessions', methods=['GET'])
+@login_required
 def getSessions(_json=False):
     sessions = database.get_all_order_by(Sessions, 'id', True)
     all_sessions = []
     for session in sessions:
-        _approver_name='';
+        _approver_name=''
         if session.approver!='' and session.approver!='null' and session.approver!='None':
             _approver_ = database.get_id(Users, session.approver)
             if _approver_!=False:
@@ -204,6 +231,7 @@ def getSessions(_json=False):
             "access_start": str(session.access_start) or '',
             "access_end": str(session.access_end) or '',
             "status": session_status_type[session.status],
+            "status_id": session.status,
             "request_date": str(session.request_date) or '',
             "approve_date": str(session.approve_date) or '',
             "description": session.description
@@ -216,6 +244,7 @@ def getSessions(_json=False):
 
 
 @app.route('/getSessions/<user_id>', methods=['GET'])
+@login_required
 def getSessionsUser(user_id, _json=False):
     sessions = database.get_by(Sessions, 'user', user_id)
     all_sessions = []
@@ -226,10 +255,11 @@ def getSessionsUser(user_id, _json=False):
             "id": session.id,
             "user": session.user,
             "user_name": user_name,
-            "approver": database.get_id(Users, session.approver).name if session.approver!='' else '', #session.approver,
+            "approver": '' if session.approver==None else database.get_id(Users, session.approver).name,
             "access_start": str(session.access_start) or '',
             "access_end": str(session.access_end) or '',
             "status": session_status_type[session.status],
+            "status_id": session.status,
             "request_date": str(session.request_date) or '',
             "approve_date": str(session.approve_date) or '',
             "description": session.description
@@ -240,21 +270,17 @@ def getSessionsUser(user_id, _json=False):
     else:
         return json.dumps(all_sessions), 200
 
-
-@app.route('/remove/<user_id>', methods=['DELETE'])
-def remove(user_id):
-    database.delete_instance(Users, id=user_id)
-    return json.dumps("Deleted"), 200
-
-
-@app.route('/edit/<user_id>', methods=['PATCH'])
-def edit(user_id):
-    data = request.get_json()
-    new_email = data['email']
-    database.edit_instance(Users, id=user_id, email=new_email)
-    return json.dumps("Edited"), 200
-
+@app.route('/getTreeSession/<session_id>', methods=['GET'])
+@login_required
+def getTreeSession(session_id, _json=False):
+    session = database.get_id(Sessions, session_id)
+    if session.datatree != None and 'datatree' in json.loads(session.datatree):
+        return json.dumps(returnPermissionTree(json.loads(session.datatree)['datatree'])), 200
+    else:
+        return json.dumps({}), 200
+    
 @app.route('/getHostsDatabasesTablesTree', methods=['GET'])
+@login_required
 def getHostsDatabasesTablesTree(_json=False):
     hosts = database.get_all_order_by(Hosts, 'name')
     tree = []
@@ -288,7 +314,6 @@ def getHostsDatabasesTablesTree(_json=False):
         return json.dumps(tree), 200
     
     
-
 def returnPermissionTree(_data):
     permissions_obj_name = {}
     permissions_obj_id = {}
@@ -343,6 +368,7 @@ def returnPermissionTree(_data):
 
 
 @app.route('/postHostsDatabasesTablesTreeApprove', methods=['POST'])
+@login_required
 def postHostsDatabasesTablesTreeApprove():
     _data = request.get_json()['data']
     _return = postHostsDatabasesTablesTree(_data['session_id'],_data['approver'])
@@ -350,6 +376,7 @@ def postHostsDatabasesTablesTreeApprove():
     return {}, 200
     
 @app.route('/postHostsDatabasesTablesTree', methods=['POST'])
+@login_required
 def postHostsDatabasesTablesTree(_approve=False,_approver=False):
     
     # TODO: pensar em colocar ou controlar por HOST esses usuarios, precisa?
@@ -497,6 +524,7 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
 
 
 @app.route('/expireAccessEnd', methods=['GET'])
+@login_required
 def expireAccessEnd():
     _sessions_expired=[]
     _expired = database.get_by_date_and_filter(Sessions, 'access_end', datetime.now(), 'status', 1, False)
@@ -508,6 +536,7 @@ def expireAccessEnd():
 
 # pode receber apenas _data['session_id']
 @app.route('/removeUserFromHostBySession', methods=['POST'])
+@login_required
 def removeUserFromHostBySession(_data_received=None):
         
     _data = request.get_json()['data'] if _data_received==None else _data_received
@@ -534,6 +563,7 @@ def removeUserFromHostBySession(_data_received=None):
 
 
 @app.route('/removeSession/<user_id_logged>', methods=['POST'])
+@login_required
 def removeSession(user_id_logged, _data_received=None):
         
     _data = request.get_json()['data'] if _data_received==None else _data_received

@@ -26,7 +26,13 @@ user_status = {
     1: "Active"
 }
 
+table_type = {
+    0: "Restrict",
+    1: "Open"
+}
+
 session_status_type = {
+    -1: 'New',
     0: 'Waiting Approve',
     1: 'Approved' ,
     2: 'Revoked'  ,

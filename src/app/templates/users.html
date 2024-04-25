@@ -61,8 +61,12 @@ $(document).ready(function() {
           var user_email = users[i].email;
           var user_type = users[i].type;
           var user_parent = users[i].parent;
-          var user_status = users[i].status;
-
+          var user_status = users[i].status_name;
+          var btn_a = " <button title='activate' class='badge bg-success bt-approve' data-idsuser='"+user_id+"'><i class='bi bi-check-square-fill'></i></button>";
+          var btn_d = "<button title='deactivate' class='badge bg-danger bt-deapprove' data-idsuser='"+user_id+"'><i class='bi bi-x-square-fill'></i></button> ";
+          var btn = (users[i].status==0)?btn_a:btn_d;
+          user_status = (users[i].status==1) ? '<span class="badge bg-success"> ACTIVE</span>' : '<span class="badge bg-danger"> INACTIVE</span>';
+          user_status = (users[i].status==0) ? user_status + btn : btn + user_status;
           // Modify selector to target users user
           $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
             '<td>' + user_name + '</td>' +
@@ -72,6 +76,15 @@ $(document).ready(function() {
             '<td>' + user_status + '</td>' +
             '</tr>');
         }
+            
+        $('.bt-approve, .bt-deapprove').click(function(e) {
+          e.preventDefault();
+          var id_user = $(this).data('idsuser');
+          $.getJSON('/statusChangeUser/'+id_user+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
+            getUsers(0);
+          });
+        });
+
       });
     };
 

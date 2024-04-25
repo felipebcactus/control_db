@@ -20,6 +20,11 @@
       <option value="2">DB Only</option>
     </select>
   </div>
+  <div class="mb-3">
+    <label for="parent" class="form-label">Parent User *</label>
+    <select class="form-select" id="parentCombo" name="parent" required>
+    </select>
+  </div>
   <button type="button" form="user-form" class="btn btn-primary bt-create">Create</button>
   <button type="button" form="user-form" class="btn btn-danger bt-cancel">CANCEL</button>
 </form>
@@ -45,6 +50,26 @@
               contentType: "application/json",
               dataType: 'json'
           });
+      });
+        
+      $.ajax({
+          url: "/getUsers/0",
+          type: "GET",
+          success: function(data) {
+              var users = JSON.parse(data);
+              var userCombo = $("#parentCombo");
+              userCombo.empty();
+              userCombo.append($("<option>--------</option>"));
+              users.forEach(function(user) {
+                  var option = $("<option></option>");
+                  option.val(user.id);
+                  option.text(user.name + " (" + user.email + ")");
+                  userCombo.append(option);
+              });
+          },
+          error: function(xhr, status, error) {
+              console.log("Error: " + xhr.responseText);
+          }
       });
   });
 </script>

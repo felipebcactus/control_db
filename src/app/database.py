@@ -19,8 +19,11 @@ def get_id(model, id):
     else :
         return False
 
-def get_by(model, column_name, value):
-    data = model.query.filter(getattr(model, column_name) == value).all()
+def get_by(model, column_name, value, orderby=False):
+    if orderby==False:
+        data = model.query.filter(getattr(model, column_name) == value).all()
+    else:
+        data = model.query.filter(getattr(model, column_name) == value).order_by(getattr(model, orderby).asc()).all()
     return data
 
 def get_by_date_and_filter(model, column_name, value, filter, filter_value, more_less=True):
