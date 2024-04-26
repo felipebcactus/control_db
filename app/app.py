@@ -132,6 +132,7 @@ def getTables(_json=False):
             "id_database": table.id_database,
             "database_name": database_name,
             "type": table_type[table.type],
+            "type_id": table.type
         }
         all_tables.append(new_table)
     if _json==True:
@@ -155,6 +156,12 @@ def addUser():
 @login_required
 def statusChangeUser(user_id,status):    
     database.edit_instance(Users, user_id, status=status)
+    return json.dumps({}), 200
+
+@app.route('/typeChangeTable/<table_id>/<type>', methods=['GET'])
+@login_required
+def typeChangeTable(table_id,type):    
+    database.edit_instance(Tables, table_id, type=type)
     return json.dumps({}), 200
 
 
