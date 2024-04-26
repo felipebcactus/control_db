@@ -9,20 +9,23 @@
 # https://github.com/docker/awesome-compose
 services:
   server:
-    container_name: control-db
+    container_name: python
+    env_file: .env
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - 5000:5000    
-    links: 
-        - pgdatabase
-    
-  pgdatabase:
+      
+  postgres:
     image: postgres
-    env_file: database.conf
+    container_name: postgres
+    env_file: .env
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-vol:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    
+
+volumes:
+  postgres-vol:
+      

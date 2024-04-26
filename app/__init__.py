@@ -1,5 +1,7 @@
 from flask import Flask
 from flask_login import LoginManager
+from sqlalchemy import event
+from werkzeug.security import generate_password_hash
 
 from .models import db
 from . import config
@@ -17,6 +19,13 @@ def create_app():
     login_manager.init_app(flask_app)
 
     from .models import Users
+            
+    @event.listens_for(Users.__table__, 'after_create')
+    def create_admin_user(*args, **kwargs):
+        db.session.add(Users(name="Admin", email="admin@admin.com", type=0, status=1, password=generate_password_hash("123!@#", method='pbkdf2:sha256')))
+        db.session.commit()
+    if Users.query.count() == 0:
+        create_admin_user()
     
     @login_manager.user_loader
     def load_user(user_id):

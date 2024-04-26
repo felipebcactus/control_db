@@ -1,14 +1,18 @@
 # syntax=docker/dockerfile:1
 ARG PYTHON_VERSION=3.10.12
 
+ARG POSTGRES_USER
+ARG POSTGRES_PASSWORD
+ARG POSTGRES_HOST
+ARG POSTGRES_PORT
+ARG POSTGRES_DB
 
-FROM postgres
-USER postgres
-RUN whoami
-ADD ./docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/
-RUN chown postgres:postgres /docker-entrypoint-initdb.d/init.sql
+
+
+FROM postgres:9.4
+COPY docker-entrypoint-initdb.d/init.sql /docker-entrypoint-initdb.d/init.sql
 EXPOSE 5432
-CMD ["postgres"]
+CMD ["postgres"] 
 
 
 
@@ -27,4 +31,6 @@ EXPOSE 5000
 # Run the application.
 ENV FLASK_APP='app/app.py'
 CMD ["flask", "run", "--host=0.0.0.0"]
+
+
 
