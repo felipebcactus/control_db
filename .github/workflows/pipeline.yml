@@ -9,7 +9,7 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    environment: staging 
+    environment: SSH_KEY_AWS 
  #   strategy:
  #       matrix:
  #           php: [8.2] #suporte para mais de uma versao de PHP
