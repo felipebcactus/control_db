@@ -1,0 +1,37 @@
+name: Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "stage" ]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment: staging 
+ #   strategy:
+ #       matrix:
+ #           php: [8.2] #suporte para mais de uma versao de PHP
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+  
+    - name: Create path to SSH
+      run: |
+        mkdir -p ~/.ssh
+    - name: Create Key file
+      run: |
+        echo "${{ secrets.SSH_KEY_AWS }}" > ~/.ssh/id_rsa
+    - name: Permission to Key file
+      run: |
+        chmod 600 ~/.ssh/id_rsa
+    - name: Add know host
+      run: |
+        ssh-keyscan -t rsa ${{ secrets.AWS_IP }} >> ~/.ssh/known_hosts2 || echo
+
+    - name: Deploy to Remote Server
+      run: |
+        ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_rsa ${{ secrets.AWS_USER }}@${{ secrets.AWS_IP }} -p ${{ secrets.AWS_PORT }} "cd /home/ec2-user/control_db && git reset --hard origin/main && git pull && docker-compose down && docker-compose up --build  --force-recreate --remove-orphans"
+        
