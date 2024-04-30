@@ -18,7 +18,7 @@
 <script>
   
 $(document).ready(function() {
-
+  
   // Additional code to fetch databases
   $.getJSON('/getDatabases', function (databases) {
     if (!Array.isArray(databases)) return; // Check for array response

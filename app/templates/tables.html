@@ -1,4 +1,4 @@
-<h2>Tables</h2>
+<h2 class="titulo">Tables</h2>
 <div class="d-flex justify-content-between mb-3" style="display:none !important;">
   <button type="button" class="btn btn-primary bt-newtable" data-toggle="modal" data-target="#tableModal">New Table</button>
 </div>
@@ -7,7 +7,7 @@
     <tr>
       <!-- th scope="col">ID</th -->
       <th scope="col">Name</th>
-      <th scope="col">Database</th>
+      <!-- th scope="col">Database</th -->
       <th scope="col">Type</th>
     </tr>
   </thead>
@@ -16,6 +16,7 @@
 </table>
 
 <script>
+var databasename='';
 // Update existing script to handle tables section
 $(document).ready(function() {
   // ... Existing code to get hosts and databases ...
@@ -31,6 +32,7 @@ $(document).ready(function() {
         var table_name = tables[i].name;
         var table_type = tables[i].type;
         var table_database = tables[i].database_name; // Assuming foreign key for database
+        databasename = table_database;
         var btn_a = " <button title='OPEN' class='badge bg-success bt-approve' data-idtable='"+table_id+"'><i class='bi bi-check-square-fill'></i></button>";
         var btn_d = "<button title='RESTRICT' class='badge bg-danger bt-deapprove' data-idtable='"+table_id+"'><i class='bi bi-x-square-fill'></i></button> ";
         var btn = (tables[i].type_id==0)?btn_a:btn_d;
@@ -40,7 +42,7 @@ $(document).ready(function() {
         // Modify selector to target tables table
         $('#tables > tbody:last').append('<tr>'+ //<td>' + table_id + '</td>' +
           '<td>' + table_name + '</td>' +
-          '<td>' + table_database + '</td>' +
+          // '<td>' + table_database + '</td>' +
           '<td>' + table_type + '</td>' +
           '</tr>');
       }
@@ -52,6 +54,8 @@ $(document).ready(function() {
           getTables();
         });
       });
+
+      $('.titulo').prepend("DB :"+databasename+" - ");
 
     });
   }
