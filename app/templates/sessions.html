@@ -29,6 +29,8 @@ var tree_sel;
 $(document).ready(function() {
   var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
   function ini_table(){
+    var session_included = Cookies.get("session_included") | undefined;
+    
     $.getJSON('/getSessions'+((filter_user!=false)?'/'+filter_user:''), function (sessions) {
       if (!Array.isArray(sessions)) return; // Check for array response
       $('#Sessions > tbody').empty();
@@ -150,6 +152,11 @@ $(document).ready(function() {
         });
       });
 
+      if(session_included!=undefined && session_included!=0){
+        Cookies.remove("session_included");
+        $('.bt-permission[data-bs-session-id='+session_included+']').trigger('click');
+      }
+
     });
   }
 
@@ -222,7 +229,7 @@ $(document).ready(function() {
   function exibeSenha(username,details,waiting_approve){
     var modal = $('#passwordModal');
     modal.find('.modal-title').text(((waiting_approve)?"Waiting approve":"Generated access")+" for: "+username);
-    modal.find('.container').text("Username: "+username+"\nPassword: "+details.password+"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
+    modal.find('.container').text("Username: "+username+"\nTemporary password: "+details.password+"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
     $('#passwordModal').modal('show');
   }
 
@@ -247,7 +254,7 @@ $(document).ready(function() {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary bt-generate">Generate User</button>
+        <button type="button" class="btn btn-primary bt-generate">Request Access</button>
       </div>
     </div>
   </div>

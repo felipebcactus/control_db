@@ -16,7 +16,7 @@
 </table>
 
 <script>
-// Update existing script to handle databases section
+  
 $(document).ready(function() {
 
   // Additional code to fetch databases
@@ -29,12 +29,17 @@ $(document).ready(function() {
       var db_type = databases[i].type; // Assuming a "type" field exists in the response
 
       // Modify selector to target databases table
-      $('#databases > tbody:last').append('<tr><td>' + db_id + '</td>' +
+      $('#databases > tbody:last').append('<tr databaseid="'+ db_id +'"><td>' + db_id + '</td>' +
         '<td>' + db_name + '</td>' +
         '<td>' + db_host + '</td>' +
         // '<td>' + db_type + '</td>' +
         '</tr>');
     }
+    $('#databases tbody tr').unbind('click').bind('click',function(){
+      var dbid = $(this).attr("databaseid");
+      Cookies.set("dbid", dbid);    
+      $('#content-area').load('/tables.html');
+    });
   });
 
   // Update click event handler for new database button
@@ -45,3 +50,9 @@ $(document).ready(function() {
   });
 });
 </script>
+
+<style>
+  #databases tbody tr{
+    cursor: pointer;
+  }
+</style>

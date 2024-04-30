@@ -19,10 +19,11 @@
 // Update existing script to handle tables section
 $(document).ready(function() {
   // ... Existing code to get hosts and databases ...
-
+  
   // Additional code to fetch tables (assuming an endpoint exists)
   function getTables(){
-    $.getJSON('/getTables', function (tables) {
+    var dbid = Cookies.get("dbid");
+    $.getJSON('/getTables/'+dbid, function (tables) {
       if (!Array.isArray(tables)) return; // Check for array response
       $('#tables > tbody').empty();
       for (var i in tables) {

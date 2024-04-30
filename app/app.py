@@ -118,10 +118,10 @@ def getDatabases(_json=False):
     else:
         return json.dumps(all_databases), 200
 
-@app.route('/getTables', methods=['GET'])
+@app.route('/getTables/<dbid>', methods=['GET'])
 @login_required
-def getTables(_json=False):
-    tables = database.get_all_order_by_twice(Tables, 'id_database', 'name')
+def getTables(dbid, _json=False):
+    tables = database.get_by(Tables, 'id_database', dbid, 'name')
     all_tables = []
     for table in tables:
         _database = database.get_id(Databases, table.id_database)
@@ -148,7 +148,7 @@ def addUser():
     user_obj = {}
     for item in data:
         user_obj[item['name']] = item['value']
-    database.add_instance(Users, name=user_obj['name'], type=user_obj['type'], email=user_obj['email'], parent=(None if user_obj['parent']=='' else user_obj['parent']), password=user_obj['password'])
+    database.add_instance(Users, name=user_obj['name'], type=user_obj['type'], email=user_obj['email'], parent=(None if user_obj['parent']=='' else user_obj['parent']), password=generate_password_hash(user_obj['password'], method='pbkdf2:sha256'))
     return json.dumps(user_obj), 200
 
 
@@ -203,7 +203,6 @@ def getUsers(type,_json=False):
         return json.dumps(all_users), 200
 
 
-
 @app.route('/addSession', methods=['POST'])
 @login_required
 def addSession():
@@ -211,9 +210,9 @@ def addSession():
     data = request.get_json()
     session_obj = {}
     for item in data:
-        session_obj[item['name']] = item['value']
-        
-    database.add_instance(Sessions, user=session_obj['user'], status=-1, access_start=session_obj['access_start'], access_end=session_obj['access_end'], description=session_obj['description'])
+        session_obj[item['name']] = item['value']        
+    _sess = database.add_instance(Sessions, user=session_obj['user'], status=-1, access_start=session_obj['access_start'], access_end=session_obj['access_end'], description=session_obj['description'])
+    session_obj['id_session'] = _sess
     return json.dumps(session_obj), 200
 
 
@@ -431,7 +430,7 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
     details['user_auto_approve'] = user_auto_approve
     details['filter_user'] = filter_user
     
-    if (len(permissions_obj_id)>0) and ((filter_user!=False and user_auto_approve==True) or filter_user==False) :
+    if (len(permissions_obj_id)>0) :
         details['waiting_approve'] = False
         for _host_id in permissions_obj_id :
             hostData = _getHostData(_host_id)
@@ -440,6 +439,11 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
             results.append({'removingOldSessionHost': session_id+'-'+_host_id})
             results.append({'addSessionHost': session_id+'-'+_host_id})
             details['host'].append({'hostname': hostData.name, 'ipaddress': hostData.ipaddress, 'port': hostData.port, 'type': host_types[hostData.type]})
+            
+            # pula o laco caso nao tenha permissao
+            if filter_user!=False or (filter_user==False and user_auto_approve!=True) :
+                continue
+                        
             if _approve==False:
                 removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
                 database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)

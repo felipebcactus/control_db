@@ -4,7 +4,7 @@
     <label for="user" class="form-label">User *</label>
     <select class="form-select" id="userCombo" name="user" required></select>
   </div>
-  <div class="mb-3">
+  <div class="mb-3 periodo" style="display:none;">
       <label for="access_date" class="form-label">Access Date *</label>
       <input type="text" class="form-control" name="access_date" required />
       <input type="hidden" name="access_start" id="access_start">
@@ -23,15 +23,28 @@
 
 <script>
   $(document).ready(function() {      
-  var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
+    var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
 
+    if(filter_user==false){
+      $('.periodo').show();
+    }else{
+      $('.bt-create').text('Next');
+    }
+  
     $('input[name="access_date"]').daterangepicker({
         opens: 'left'
     }).on('apply.daterangepicker', function(ev, picker) {
         var start = picker==undefined? moment() :picker.startDate;
         var end = picker==undefined? moment() :picker.endDate;
-        $('#access_start').val(start.format('YYYY-MM-DD'));
-        $('#access_end').val(end.format('YYYY-MM-DD'));
+        
+        if(filter_user==false){
+          $('#access_start').val(start.format('YYYY-MM-DD'));
+          $('#access_end').val(end.format('YYYY-MM-DD'));
+        }else{
+          $('#access_start').val(moment().format("YYYY-MM-DD HH:mm:ss"));
+          $('#access_end').val(moment().add('d',1).format("YYYY-MM-DD HH:mm:ss"));          
+        }
+        
     }).trigger('apply.daterangepicker');
 
     $.ajax({
@@ -68,6 +81,7 @@
               data: dataform,
               success: function(data) { 
                 var target = $(this).data('target');
+                Cookies.set("session_included",data['id_session']);
                 $('#content-area').load('/sessions.html'); // Load content based on menu item
               },
               contentType: "application/json",

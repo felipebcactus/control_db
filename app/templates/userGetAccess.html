@@ -9,7 +9,7 @@
       <br>
       <ul class="nav flex-column nav-pills mb-auto" style="margin-top: 15px;">
         <li class="nav-item">
-          <a href="#" class="nav-link text-white" data-target="sessions" data-user-id="{% print user_id %}">REQUEST ACCESS</a>
+          <a href="#" class="nav-link text-white request_access_menu" data-target="sessions" data-user-id="{% print user_id %}">REQUEST ACCESS</a>
         </li>
         <li class="nav-item">
           <a href="/logout" class="nav-link text-white" data-target="logout">LOGOUT</a>
@@ -21,5 +21,10 @@
         </div>
     </div>
   </div>
+  <script>
+    $(document).ready(function() {
+      $('.request_access_menu').trigger('click');
+    });
+  </script>
 </body>
 </html>

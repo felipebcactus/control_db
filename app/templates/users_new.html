@@ -15,8 +15,8 @@
   <div class="mb-3">
     <label for="type" class="form-label">Type</label>
     <select class="form-select" id="type" name="type" required>
-      <option value="0" selected>Admin (Default Both)</option>
-      <option value="1">System Only</option>
+      <option value="0">Admin (Default Both)</option>
+      <option value="1" selected>System User Only</option>
       <option value="2">DB Only</option>
     </select>
   </div>
@@ -59,7 +59,7 @@
               var users = JSON.parse(data);
               var userCombo = $("#parentCombo");
               userCombo.empty();
-              userCombo.append($("<option>--------</option>"));
+              userCombo.append($("<option></option>").text('select a responsible for this user').val(''));
               users.forEach(function(user) {
                   var option = $("<option></option>");
                   option.val(user.id);

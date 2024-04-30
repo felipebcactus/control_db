@@ -7,13 +7,13 @@
   <div class="mb-3">
     <label for="type" class="form-label">Type</label>
     <select class="form-select" id="type" name="type" required>
-      <option value="0" selected>MySQL</option>
-      <option value="1">Postgres</option>
-      <option value="2">SQL Server</option>
+      <option value="0" port="3306" selected>MySQL</option>
+      <option value="1" port="5432">Postgres</option>
+      <option value="2" port="1433">SQL Server</option>
     </select>
   </div>
   <div class="mb-3">
-    <label for="ipaddress" class="form-label">IP Address</label>
+    <label for="ipaddress" class="form-label">Writer Endpoint</label>
     <input type="text" class="form-control" id="ipaddress" name="ipaddress" pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$" title="Please enter a valid IP address (e.g., 192.168.1.1)">
   </div>
   <div class="mb-3">
@@ -34,6 +34,9 @@
 
 <script>
   $(document).ready(function() {
+      $('#type').unbind('change').bind('change',function(){
+        $('#port').val($(this).find(':selected').attr("port"));
+      }).trigger('change');
       $('.bt-cancel').click(function(e) {
           e.preventDefault();
           var target = $(this).data('target');
