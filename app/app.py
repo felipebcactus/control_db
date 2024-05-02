@@ -480,7 +480,7 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
                     if database_tables_count == 0 : # todo o database (todas as tabelas)
                         
                         # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas database dbTest
-                        _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
+                        _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'"+databaseData.name+"' IDENTIFIED BY '"+password+"';"
                         results.append({'grantpermission': _command})
                         _execSQL(_command)
                                                 
@@ -494,14 +494,14 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
                             
                             # GRANT PRIVILEGES PER TABLE
                             for _table in permissions_obj_name[hostData.name][databaseData.name]:
-                                _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+"."+_table+" To '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
+                                _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+"."+_table+" To '"+username+"'@'"+databaseData.name+"' IDENTIFIED BY '"+password+"';"
                                 results.append({'grantpermission_table_'+_table: _command})
                                 _execSQL(_command)
                         
                         else:
                             
                             # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas database dbTest
-                            _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
+                            _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'"+databaseData.name+"' IDENTIFIED BY '"+password+"';"
                             results.append({'grantpermission': _command})
                             _execSQL(_command)
                                             
