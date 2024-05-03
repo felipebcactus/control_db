@@ -377,28 +377,24 @@ def returnPermissionTree(_data):
 @login_required
 def postHostsDatabasesTablesTreeApprove():
     _data = request.get_json()['data']
-    _return = postHostsDatabasesTablesTree(_data['session_id'],_data['approver'])
-    print(_return)
-    return {}, 200
+    _return = postHostsDatabasesTablesTree(_data['session_id'],_data['approver'],True)
+    return json.dumps(_return), 200
     
 @app.route('/postHostsDatabasesTablesTree', methods=['POST'])
 @login_required
-def postHostsDatabasesTablesTree(_approve=False,_approver=False):
-    
-    # TODO: pensar em colocar ou controlar por HOST esses usuarios, precisa?
+def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False):
     
     if _approve!=False:
         _approve_data = database.get_id(Sessions, _approve)
         _data = json.loads(_approve_data.datatree)
     else:
         _data = request.get_json()['data']
-    
     permissions = returnPermissionTree(_data['datatree'])
     permissions_obj_name = permissions['permissions_name']
     permissions_obj_id = permissions['permissions_id']
     user_auto_approve = permissions['user_auto_approve']
     filter_user = _data['filter_user']
-    
+
     username = _data['username']
     session_id = _data['session_id']
     details={}
@@ -442,11 +438,14 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
             
             # pula o laco caso nao tenha permissao
             if filter_user!=False or (filter_user==False and user_auto_approve!=True) :
+                results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve}})
                 continue
                         
-            if _approve==False:
-                removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
-                database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
+                
+            _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
+            results.append({'removeUserFromHostBySession':_removeUserFromHost})
+            database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
+            results.append({'SessionsHostsCreated':True})
                 
             def _execSQL(sql, _fetch=False):
                 if _fetch:
@@ -461,6 +460,31 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
                 
                 # check if user exists mysql
                 # SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'username')
+                # executar isso para o usuario da base que dará permissoes (mysql): GRANT RELOAD ON *.* TO 'test_user'@'%';
+                
+                # PERMISSIOES DE EX NECESSARIAS PARA UM MYSQL                                
+                # SHOW GRANTS FOR 'carcereiro'@'%';
+                # GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, REFERENCES, INDEX, ALTER, CREATE VIEW, SHOW VIEW, CREATE USER, TRIGGER, DELETE HISTORY ON *.* TO `carcereiro`@`%` IDENTIFIED BY PASSWORD '*011D4B5AFDA53BCA82954100CB5D20B69BF00DE2' WITH GRANT OPTION
+                # GRANT SELECT, EXECUTE, SHOW VIEW ON `apibs2be\_bet7k`.* TO `carcereiro`@`%`
+                # GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, SHOW VIEW ON `mysql`.* TO `carcereiro`@`%`
+                # SELECT * FROM information_schema.user_privileges
+                # WHERE grantee = '\'carcereiro\'@\'%\''
+                # GRANTEE	TABLE_CATALOG	PRIVILEGE_TYPE	IS_GRANTABLE
+                # 'carcereiro'@'%'	def	SELECT	YES
+                # 'carcereiro'@'%'	def	INSERT	YES
+                # 'carcereiro'@'%'	def	UPDATE	YES
+                # 'carcereiro'@'%'	def	DELETE	YES
+                # 'carcereiro'@'%'	def	CREATE	YES
+                # 'carcereiro'@'%'	def	DROP	YES
+                # 'carcereiro'@'%'	def	RELOAD	YES
+                # 'carcereiro'@'%'	def	REFERENCES	YES
+                # 'carcereiro'@'%'	def	INDEX	YES
+                # 'carcereiro'@'%'	def	ALTER	YES
+                # 'carcereiro'@'%'	def	CREATE VIEW	YES
+                # 'carcereiro'@'%'	def	SHOW VIEW	YES
+                # 'carcereiro'@'%'	def	CREATE USER	YES
+                # 'carcereiro'@'%'	def	TRIGGER	YES
+                # 'carcereiro'@'%'	def	DELETE HISTORY	YES
                 
                 # REMOVE USER BEFORE CREATE A NEWER
                 _command = 'DROP USER IF EXISTS '+username+';'
@@ -472,15 +496,23 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
                 results.append({'createnewuser': _command})
                 _execSQL(_command)
                 
+                # GRANT USAGE ON *.* TO 'username'@'host'; - para permitir a conexao minima no host
+                # _command = "GRANT USAGE ON *.* TO '"+username+"'@'%';"
+                # results.append({'grantusage': _command})
+                # _execSQL(_command)
+                
+
+                
                 for _database in permissions_obj_id[_host_id]:
                     
                     databaseData = _getDatabaseData(_database)     
                     database_tables_count = len(permissions_obj_id[_host_id][_database])
-                                        
+                    # TODO ainda nao foi encontrada a permissao correta
+                    
                     if database_tables_count == 0 : # todo o database (todas as tabelas)
                         
                         # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas database dbTest
-                        _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'"+databaseData.name+"' IDENTIFIED BY '"+password+"';"
+                        _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
                         results.append({'grantpermission': _command})
                         _execSQL(_command)
                                                 
@@ -494,14 +526,14 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
                             
                             # GRANT PRIVILEGES PER TABLE
                             for _table in permissions_obj_name[hostData.name][databaseData.name]:
-                                _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+"."+_table+" To '"+username+"'@'"+databaseData.name+"' IDENTIFIED BY '"+password+"';"
+                                _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+"."+_table+" To '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
                                 results.append({'grantpermission_table_'+_table: _command})
                                 _execSQL(_command)
                         
                         else:
                             
                             # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas database dbTest
-                            _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'"+databaseData.name+"' IDENTIFIED BY '"+password+"';"
+                            _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
                             results.append({'grantpermission': _command})
                             _execSQL(_command)
                                             
@@ -530,8 +562,11 @@ def postHostsDatabasesTablesTree(_approve=False,_approver=False):
     else:
         details['waiting_approve'] = True
     
-    
-    return json.dumps({'details': details,'results': results}), 200
+    _return_json = {'details': details,'results': results}
+    if _as_json:
+        return _return_json
+    else:
+        return json.dumps(_return_json), 200
 
 
 @app.route('/expireAccessEnd', methods=['GET'])
@@ -545,11 +580,44 @@ def expireAccessEnd():
     return {'session_expired': _sessions_expired}, 200
 
 
+@app.route('/removeHostAndAllTogether', methods=['POST'])
+@login_required
+def removeHostAndAllTogether(_data_received=None):
+    results = []
+    _data = request.get_json()['data'] if _data_received==None else _data_received
+    host_id = _data['host_id']
+    _reg_host = database.get_id(Hosts, host_id)
+    _removeSessions = removeUserFromHostByHostId(host_id)
+    results.append({'removeSessions':_removeSessions})
+    _databases = database.get_by(Databases, 'id_host', host_id)
+    if len(_databases)>0 :
+        for _reg_database in _databases :
+            _tables = database.get_by(Tables, 'id_database', _reg_database.id)
+            if len(_tables)>0 :
+                for _reg_table in _tables :
+                    _remove_table = database.delete_instance(Tables, _reg_table.id)
+                    results.append({'removeTable':_remove_table,'id':_reg_table.id,'name':_reg_table.name})
+            _remove_database = database.delete_instance(Databases, _reg_database.id)
+            results.append({'removeDatabase':_remove_database,'id':_reg_database.id,'name':_reg_database.name})
+    _host_rem = {'id':_reg_host.id,'name':_reg_host.name}
+    _remove_host = database.delete_instance(Hosts, host_id)
+    _host_rem['removeHost']=_remove_host
+    results.append(_host_rem)
+    return json.dumps(results), 200
+    
+
+def removeUserFromHostByHostId(_host_id):
+    sessionsData = database.get_by(SessionsHosts, 'id_host', _host_id)
+    if len(sessionsData)>0 :
+        for _reg in sessionsData :
+            removeUserFromHostBySession({'session_id':_reg.id_session})
+            
+
 # pode receber apenas _data['session_id']
 @app.route('/removeUserFromHostBySession', methods=['POST'])
 @login_required
 def removeUserFromHostBySession(_data_received=None):
-        
+          
     _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
     sessionData = database.get_id(Sessions, id_session)
@@ -559,17 +627,23 @@ def removeUserFromHostBySession(_data_received=None):
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
     results = []
     if len(sessions_host)>0 :
-        for _reg in sessions_host :
-            external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
-            _command = 'DROP USER IF EXISTS '+user_name+';'
-            results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
-            external_session.execute(text(_command))
-            
+        for _reg in sessions_host :              
+            _databases_host = database.get_by(Databases, 'id_host', _reg.id_host)
+            if len(_databases_host)>0 :
+                for _reg_database in _databases_host :                    
+                    external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
+                    _command = 'DROP USER IF EXISTS \''+user_name+'\'@\''+_reg_database.name+'\';'
+                    print(_command)
+                    results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
+                    external_session.execute(text(_command))        
+        _command = 'DROP USER IF EXISTS \''+user_name+"\'@'%';"
+        print(_command)
+        results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
+        external_session.execute(text(_command))
             
     database.delete_instance_by(SessionsHosts, 'id_session', id_session)
     database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None)
     # database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
-    
     return json.dumps(results), 200
 
 

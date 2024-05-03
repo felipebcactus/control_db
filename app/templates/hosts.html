@@ -23,8 +23,10 @@
 
 <script>
   $(document).ready(function() {
+    function ini_table(){
       $.getJSON('/getHosts', function (hosts) {
           if (!Array.isArray(hosts)) return; // If the response is not an array, it's a single object so convert
+          $('#hosts > tbody').empty();
           for (var i in hosts){
             // console.log(hosts[i]);
             var host_id=hosts[i].id;
@@ -38,18 +40,38 @@
               '<td>' + hosts[i].id_user + '</td>' +
               '<td>' + moment(hosts[i].createdAt).format("YYYY/MM/DD HH:mm") + '</td>' +
               '<td>' + moment(hosts[i].updatedAt).format("YYYY/MM/DD HH:mm") + '</td>' +
-              '<td><button class="btn btn-success bt-sync" host_id="'+ hosts[i].id +'"><i class="bi bi-arrow-down-up"></i> sync</button></td>' +
+              '<td><button class="btn btn-success bt-sync" host_id="'+ hosts[i].id +'"><i class="bi bi-arrow-down-up"></i> sync</button> ' +
+                  '<button class="btn btn-danger bt-remove" host_id="'+ hosts[i].id +'"><i class="bi bi-trash3-fill"></i> remove+all</button></td>' +
               '</tr>');
-          }
-              
+          }              
           $('.bt-sync').click(function(e) {
             e.preventDefault();
             var _bt = $(this);
             var _btcontent = $(this).html();
-              if(confirm('Deseja sincronizar os dados?')){
+              if(confirm('Sync every databases and tables?')){
                 $(this).html('<i class="fas fa-sync fa-spin"></i>');
                 $.get( "/synchosts/" + $(this).attr('host_id'), function(  ) {
                   _bt.html(_btcontent);
+                });
+              }
+          });
+          $('.bt-remove').click(function(e) {
+            e.preventDefault();
+            var _bt = $(this);
+            var _btcontent = $(this).html();
+              if(confirm('Remove all sessions + tables + databases + this host?')){
+                $(this).html('<i class="fas fa-sync fa-spin"></i>');
+                var request_data = JSON.stringify({'data': {host_id: $(this).attr('host_id')}});
+                $.ajax({
+                  type: 'POST',
+                  async : false,
+                  url: '/removeHostAndAllTogether',
+                  data: request_data,
+                  success: function(status) { 
+                    ini_table();
+                  },
+                  contentType: "application/json",
+                  dataType: 'json'
                 });
               }
           });
@@ -59,5 +81,7 @@
           var target = $(this).data('target');
           $('#content-area').load('hosts_new.html'); // Load content based on menu item
       });
+    }
+    ini_table();
   });
 </script>

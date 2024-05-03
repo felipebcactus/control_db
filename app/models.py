@@ -36,7 +36,8 @@ session_status_type = {
     0: 'Waiting Approve',
     1: 'Approved' ,
     2: 'Revoked'  ,
-    3: 'Expired' 
+    3: 'Expired'  ,
+    4: 'DB Removed' 
 }
 class Users(UserMixin, db.Model):
     __tablename__ = 'users'

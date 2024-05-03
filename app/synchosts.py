@@ -26,7 +26,7 @@ def synchosts(host_id):
         
         print("Atualizando DATABASE: "+db_name) 
         
-        result = database.get_by_like(Databases, 'name', db_name)
+        result = database.get_by_like_and_id(Databases, 'name', db_name, 'id_host', host_id)
         if len(result)>0:
             db_id = result[0].id
             print("DATABASE JA EXISTENTE: "+db_name) 
