@@ -626,21 +626,25 @@ def removeUserFromHostBySession(_data_received=None):
     user_name = _data['user_name']
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
     results = []
-    if len(sessions_host)>0 :
-        for _reg in sessions_host :              
-            _databases_host = database.get_by(Databases, 'id_host', _reg.id_host)
-            if len(_databases_host)>0 :
-                for _reg_database in _databases_host :                    
-                    external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
-                    _command = 'DROP USER IF EXISTS \''+user_name+'\'@\''+_reg_database.name+'\';'
-                    print(_command)
-                    results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
-                    external_session.execute(text(_command))        
-        _command = 'DROP USER IF EXISTS \''+user_name+"\'@'%';"
-        print(_command)
-        results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
-        external_session.execute(text(_command))
-            
+    try:
+        if len(sessions_host)>0 :
+            for _reg in sessions_host :              
+                _databases_host = database.get_by(Databases, 'id_host', _reg.id_host)
+                if len(_databases_host)>0 :
+                    for _reg_database in _databases_host :                    
+                        external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
+                        _command = 'DROP USER IF EXISTS \''+user_name+'\'@\''+_reg_database.name+'\';'
+                        print(_command)
+                        results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
+                        external_session.execute(text(_command))        
+            _command = 'DROP USER IF EXISTS \''+user_name+"\'@'%';"
+            print(_command)
+            results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
+            external_session.execute(text(_command))
+    except:
+        _msgtry = 'banco sem conexao - pode ter sido desativado'
+        print(_msgtry)
+        results.append({'dropuserfromhost': _msgtry})
     database.delete_instance_by(SessionsHosts, 'id_session', id_session)
     database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None)
     # database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
