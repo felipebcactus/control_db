@@ -458,40 +458,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     
                 external_session = ExternalConnectionByHostId.getConn(_host_id)   
                 
-                # check if user exists mysql
-                # SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'username')
-                # executar isso para o usuario da base que dará permissoes (mysql): GRANT RELOAD ON *.* TO 'test_user'@'%';
-                
-                # PERMISSIOES DE EX NECESSARIAS PARA UM MYSQL                                
-                # SHOW GRANTS FOR 'carcereiro'@'%';
-                # GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, REFERENCES, INDEX, ALTER, CREATE VIEW, SHOW VIEW, CREATE USER, TRIGGER, DELETE HISTORY ON *.* TO `carcereiro`@`%` IDENTIFIED BY PASSWORD '*011D4B5AFDA53BCA82954100CB5D20B69BF00DE2' WITH GRANT OPTION
-                # GRANT SELECT, EXECUTE, SHOW VIEW ON `apibs2be\_bet7k`.* TO `carcereiro`@`%`
-                # GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, SHOW VIEW ON `mysql`.* TO `carcereiro`@`%`
-                # SELECT * FROM information_schema.user_privileges
-                # WHERE grantee = '\'carcereiro\'@\'%\''
-                # GRANTEE	TABLE_CATALOG	PRIVILEGE_TYPE	IS_GRANTABLE
-                # 'carcereiro'@'%'	def	SELECT	YES
-                # 'carcereiro'@'%'	def	INSERT	YES
-                # 'carcereiro'@'%'	def	UPDATE	YES
-                # 'carcereiro'@'%'	def	DELETE	YES
-                # 'carcereiro'@'%'	def	CREATE	YES
-                # 'carcereiro'@'%'	def	DROP	YES
-                # 'carcereiro'@'%'	def	RELOAD	YES
-                # 'carcereiro'@'%'	def	REFERENCES	YES
-                # 'carcereiro'@'%'	def	INDEX	YES
-                # 'carcereiro'@'%'	def	ALTER	YES
-                # 'carcereiro'@'%'	def	CREATE VIEW	YES
-                # 'carcereiro'@'%'	def	SHOW VIEW	YES
-                # 'carcereiro'@'%'	def	CREATE USER	YES
-                # 'carcereiro'@'%'	def	TRIGGER	YES
-                # 'carcereiro'@'%'	def	DELETE HISTORY	YES
-                
-                # CREATE USER 'sistema'@'%' IDENTIFIED BY 'sistema';
-                # SET PASSWORD FOR 'sistema'@'%' = PASSWORD('sistema');
-                # GRANT Create user ON *.* TO 'sistema'@'%';
-                # GRANT Reload ON *.* TO 'sistema'@'%';
-                # GRANT Show databases ON *.* TO 'sistema'@'%' WITH GRANT OPTION;
-
+                # necessario essas permissoe spro usuario que administrará o MYSQL
+                # GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, REFERENCES, INDEX, ALTER, CREATE VIEW, SHOW VIEW, CREATE USER, TRIGGER, DELETE HISTORY ON *.* TO `sistema`@`%` WITH GRANT OPTION;
                 
                 # REMOVE USER BEFORE CREATE A NEWER
                 _command = 'DROP USER IF EXISTS '+username+';'
@@ -624,7 +592,6 @@ def removeUserFromHostByHostId(_host_id):
 @app.route('/removeUserFromHostBySession', methods=['POST'])
 @login_required
 def removeUserFromHostBySession(_data_received=None):
-          
     _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
     sessionData = database.get_id(Sessions, id_session)
@@ -653,7 +620,7 @@ def removeUserFromHostBySession(_data_received=None):
         print(_msgtry)
         results.append({'dropuserfromhost': _msgtry})
     database.delete_instance_by(SessionsHosts, 'id_session', id_session)
-    database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None)
+    database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None, approver=None)
     # database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
     return json.dumps(results), 200
 
