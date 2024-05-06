@@ -12,7 +12,7 @@ host_types = {
 }
 
 db_name_ignore_per_type = {
-    0: ['information_schema','mysql','sys','performance_schema']
+    0: ['information_schema','mysql','sys','performance_schema','innodb','tmp']
 }
 
 user_types = {

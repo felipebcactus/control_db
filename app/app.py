@@ -486,6 +486,13 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 # 'carcereiro'@'%'	def	TRIGGER	YES
                 # 'carcereiro'@'%'	def	DELETE HISTORY	YES
                 
+                # CREATE USER 'sistema'@'%' IDENTIFIED BY 'sistema';
+                # SET PASSWORD FOR 'sistema'@'%' = PASSWORD('sistema');
+                # GRANT Create user ON *.* TO 'sistema'@'%';
+                # GRANT Reload ON *.* TO 'sistema'@'%';
+                # GRANT Show databases ON *.* TO 'sistema'@'%' WITH GRANT OPTION;
+
+                
                 # REMOVE USER BEFORE CREATE A NEWER
                 _command = 'DROP USER IF EXISTS '+username+';'
                 results.append({'dropuserifexists': _command})
