@@ -2,9 +2,12 @@
 
 {% block content %}
 <div class="column is-4 is-offset-4">
+    {% with logo = request.args.get('logo') or 2 %}
+    <img src="/favicon/cerberus{{ logo }}.png" style="width: 150px;">
+    <br>
     <span class="logo">CERBERUS</span>
     <br>
-    <img src="/favicon/cerberus.jpeg" style="width: 150px;">
+    {% endwith %}
 </div>
 
 <div class="column is-4 is-offset-4">
