@@ -218,7 +218,7 @@ $(document).ready(function() {
           _bt.html(_btcontent);
           $('#permissionModal').modal('hide');
           ini_table();
-          exibeSenha(user_name,status.details,waiting_approve);
+          exibeSenha(status.username,status.details,waiting_approve);
         },
         contentType: "application/json",
         dataType: 'json'
@@ -229,7 +229,7 @@ $(document).ready(function() {
   function exibeSenha(username,details,waiting_approve){
     var modal = $('#passwordModal');
     modal.find('.modal-title').text(((waiting_approve)?"Waiting approve":"Generated access")+" for: "+username);
-    modal.find('.container').text("Username: "+username+"\nTemporary password: "+details.password+"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
+    modal.find('.container').text("Username: \""+username+"\"\nTemporary password: \""+details.password+"\"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
     $('#passwordModal').modal('show');
   }
 

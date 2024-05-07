@@ -395,7 +395,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
     user_auto_approve = permissions['user_auto_approve']
     filter_user = _data['filter_user']
 
-    username = _data['username']
+    prefixo = '_'
+    username = prefixo + _data['username']
     session_id = _data['session_id']
     details={}
     details['host']=[]
@@ -437,7 +438,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             details['host'].append({'hostname': hostData.name, 'ipaddress': hostData.ipaddress, 'port': hostData.port, 'type': host_types[hostData.type]})
             
             # pula o laco caso nao tenha permissao
-            if filter_user!=False or (filter_user==False and user_auto_approve!=True) :
+            if (filter_user!=False and user_auto_approve!=True) :
                 results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve}})
                 continue
                         
@@ -537,7 +538,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
     else:
         details['waiting_approve'] = True
     
-    _return_json = {'details': details,'results': results}
+    _return_json = {'details': details,'results': results,'username': username}
     if _as_json:
         return _return_json
     else:
@@ -597,7 +598,8 @@ def removeUserFromHostBySession(_data_received=None):
     sessionData = database.get_id(Sessions, id_session)
     if 'user_name' not in _data:
         _data['user_name'] = database.get_id(Users, sessionData.user).name
-    user_name = _data['user_name']
+    prefixo = '_'
+    user_name = prefixo + _data['user_name']
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
     results = []
     try:
@@ -631,7 +633,6 @@ def removeSession(user_id_logged, _data_received=None):
         
     _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
-    user_name = _data['user_name']
     user_id_selected = _data['user_id']
     
     if user_id_logged!='0' and user_id_logged != user_id_selected:
@@ -641,10 +642,7 @@ def removeSession(user_id_logged, _data_received=None):
     results = []
     if len(sessions_host)>0 :
         for _reg in sessions_host :
-            external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
-            _command = 'DROP USER IF EXISTS '+user_name+';'
-            results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
-            external_session.execute(text(_command))
+            removeUserFromHostBySession({'session_id':_reg.id_session})
             
             
     database.delete_instance_by(SessionsHosts, 'id_session', id_session)
