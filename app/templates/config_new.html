@@ -1,0 +1,38 @@
+<h2>Create New Config</h2>
+<form id="config-form">
+  <div class="mb-3">
+    <label for="key" class="form-label">Key</label>
+    <input type="text" class="form-control" id="key" name="key" required>
+  </div>
+  <div class="mb-3">
+    <label for="value" class="form-label">Value</label>
+    <input type="text" class="form-control" id="value" name="value" required>
+  </div>
+  <button type="button" form="config-form" class="btn btn-primary bt-create">Create</button>
+  <button type="button" form="session-form" class="btn btn-danger bt-cancel">CANCEL</button>
+</form>
+
+<script>
+  $(document).ready(function() {     
+    $('.bt-cancel').click(function(e) {
+        e.preventDefault();
+        var target = $(this).data('target');
+        $('#content-area').load('/config.html'); // Load content based on menu item
+    });
+    $('.bt-create').click(function(e) {
+        e.preventDefault();
+        var dataform = JSON.stringify($('form#config-form').serializeArray());
+        $.ajax({
+              type: 'POST',
+              url: '/addConfig',
+              data: dataform,
+              success: function(data) { 
+                var target = $(this).data('target');
+                $('#content-area').load('/config.html'); // Load content based on menu item
+              },
+              contentType: "application/json",
+              dataType: 'json'
+        });
+    });
+  });
+</script>

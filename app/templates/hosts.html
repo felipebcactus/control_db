@@ -40,8 +40,8 @@
               '<td>' + hosts[i].id_user + '</td>' +
               '<td>' + moment(hosts[i].createdAt).format("YYYY/MM/DD HH:mm") + '</td>' +
               '<td>' + moment(hosts[i].updatedAt).format("YYYY/MM/DD HH:mm") + '</td>' +
-              '<td><button class="btn btn-success bt-sync" host_id="'+ hosts[i].id +'"><i class="bi bi-arrow-down-up"></i> sync</button> ' +
-                  '<button class="btn btn-danger bt-remove" host_id="'+ hosts[i].id +'"><i class="bi bi-trash3-fill"></i> remove+all</button></td>' +
+              '<td><button class="btn btn-sm btn-success bt-sync" host_id="'+ hosts[i].id +'"><i class="bi bi-arrow-down-up"></i> sync</button> ' +
+                  '<button class="btn btn-sm btn-danger bt-remove" host_id="'+ hosts[i].id +'"><i class="bi bi-trash3-fill"></i> remove+all</button></td>' +
               '</tr>');
           }              
           $('.bt-sync').click(function(e) {

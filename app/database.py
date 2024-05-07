@@ -5,7 +5,7 @@ def get_all(model):
     return data
 
 def get_all_order_by(model, column_name, _desc=False):
-    data = model.query.order_by(getattr(model, column_name).desc() if _desc else getattr(model, column_name)).all()
+    data = model.query.order_by(getattr(model, column_name).desc() if _desc else getattr(model, column_name).asc()).all()
     return data
 
 def get_all_order_by_twice(model, column_name, column_name2, _desc=False):
@@ -67,6 +67,11 @@ def edit_instance(model, id, **kwargs):
         setattr(instance, attr, new_value)
     commit_changes()
 
+def edit_instance_by(model, column_name, _value, **kwargs):
+    instance = model.query.filter(getattr(model, column_name) == _value).all()[0]
+    for attr, new_value in kwargs.items():
+        setattr(instance, attr, new_value)
+    commit_changes()
 
 def commit_changes():
     db.session.commit()

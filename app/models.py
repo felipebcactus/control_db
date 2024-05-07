@@ -15,6 +15,10 @@ db_name_ignore_per_type = {
     0: ['information_schema','mysql','sys','performance_schema','innodb','tmp']
 }
 
+db_username_deny = {
+    0: ['bet7k']
+}
+
 user_types = {
     0: "Admin - Both",
     1: "System Only",
@@ -110,6 +114,11 @@ class Tables(db.Model):
             "updated_at": self.updated_at
         }
 
+class Config(db.Model):
+    __tablename__ = 'config'
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.String(255))
+        
 class Sessions(db.Model):
     __tablename__ = 'sessions'
     id = db.Column(db.Integer, primary_key=True)

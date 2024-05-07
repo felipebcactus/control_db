@@ -1,6 +1,6 @@
 from flask import request, redirect, render_template, flash, url_for, request, send_file
 from . import create_app, database
-from .models import Users, Hosts, Databases, Tables, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type
+from .models import Users, Hosts, Databases, Tables, Config, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny
 from flask_wtf import FlaskForm #, DataRequired, Length
 from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length
@@ -96,6 +96,67 @@ def getHosts(_json=False):
     else:
         return json.dumps(all_hosts), 200
 
+@app.route('/addConfig', methods=['POST'])
+@login_required
+def addConfig():
+    data = request.get_json()
+    config_obj = {}
+    for item in data:
+        config_obj[item['name']] = item['value']
+    database.add_instance_no_return(Config, key=config_obj['key'], value=config_obj['value'])
+    return json.dumps(config_obj), 200
+
+@app.route('/updateConfig', methods=['POST'])
+@login_required
+def updateConfig():
+    data = request.get_json()
+    obj_key=''
+    obj_val=''
+    for _key in data:
+        obj_key = _key
+        obj_val = data[_key]
+    if obj_key=='db_user_prefix':
+        if obj_val.strip()=='':
+            obj_val='cb_'
+    database.edit_instance_by(Config, 'key', obj_key, value=obj_val)
+    return json.dumps(data), 200
+
+@app.route('/deleteConfig', methods=['POST'])
+@login_required
+def deleteConfig():
+    data = request.get_json()['data']
+    obj_key = data['key']
+    if obj_key=='db_user_prefix':
+        return json.dumps({}), 200
+    database.delete_instance_by(Config, 'key', obj_key)
+    return json.dumps(data), 200
+
+@app.route('/getConfig', methods=['GET'])
+@login_required
+def getConfig(_json=False):
+    configs = database.get_all_order_by(Config, 'key')
+    all_configs = []
+    for _config in configs:
+        config_key = _config.key
+        config_value = _config.value
+        all_configs.append({config_key:config_value})
+    if _json==True:
+        return all_configs
+    else:
+        return json.dumps(all_configs), 200
+
+
+def getConfigValue(config_name):
+    try:
+        data = database.get_by(Config, 'key', config_name)
+        if len(data)>0:
+            for reg in data:
+                return reg.value or False
+        else:
+            return False
+    except:
+        return False
+    
 
 @app.route('/getDatabases', methods=['GET'])
 @login_required
@@ -147,6 +208,10 @@ def addUser():
     data = request.get_json()
     user_obj = {}
     for item in data:
+        if item['name']=='name':
+            for username_denied in db_username_deny[0]:
+                if item['value'].strip() == username_denied:
+                    item['value']='DENIED_'+item['value'] 
         user_obj[item['name']] = item['value']
     database.add_instance(Users, name=user_obj['name'], type=user_obj['type'], email=user_obj['email'], parent=(None if user_obj['parent']=='' else user_obj['parent']), password=generate_password_hash(user_obj['password'], method='pbkdf2:sha256'))
     return json.dumps(user_obj), 200
@@ -395,7 +460,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
     user_auto_approve = permissions['user_auto_approve']
     filter_user = _data['filter_user']
 
-    prefixo = '_'
+    prefixo = (getConfigValue('db_user_prefix') if getConfigValue('db_user_prefix')!='' and getConfigValue('db_user_prefix')!=False else '_') or '_'
     username = prefixo + _data['username']
     session_id = _data['session_id']
     details={}
@@ -598,7 +663,7 @@ def removeUserFromHostBySession(_data_received=None):
     sessionData = database.get_id(Sessions, id_session)
     if 'user_name' not in _data:
         _data['user_name'] = database.get_id(Users, sessionData.user).name
-    prefixo = '_'
+    prefixo = (getConfigValue('db_user_prefix') if getConfigValue('db_user_prefix')!='' and getConfigValue('db_user_prefix')!=False else '_') or '_'
     user_name = prefixo + _data['user_name']
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
     results = []
