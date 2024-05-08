@@ -1,6 +1,6 @@
 from flask import request, redirect, render_template, flash, url_for, request, send_file
 from . import create_app, database
-from .models import Users, Hosts, Databases, Tables, Config, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny
+from .models import Users, Hosts, Databases, Tables, Config, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny, db_config_exceptions
 from flask_wtf import FlaskForm #, DataRequired, Length
 from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length
@@ -118,6 +118,9 @@ def updateConfig():
     if obj_key=='db_user_prefix':
         if obj_val.strip()=='':
             obj_val='cb_'
+    if obj_key=='hours_user_session':
+        if obj_val.strip()=='':
+            obj_val='24'
     database.edit_instance_by(Config, 'key', obj_key, value=obj_val)
     return json.dumps(data), 200
 
@@ -126,8 +129,9 @@ def updateConfig():
 def deleteConfig():
     data = request.get_json()['data']
     obj_key = data['key']
-    if obj_key=='db_user_prefix':
-        return json.dumps({}), 200
+    for exception in db_config_exceptions[0]:
+        if obj_key==exception:
+            return json.dumps({}), 200
     database.delete_instance_by(Config, 'key', obj_key)
     return json.dumps(data), 200
 
@@ -157,6 +161,20 @@ def getConfigValue(config_name):
     except:
         return False
     
+@app.route('/getConfigParam/<config_name>', methods=['GET'])
+@login_required
+def getConfigParam(config_name):
+    _value=''
+    try:
+        data = database.get_by(Config, 'key', config_name)
+        if len(data)>0:
+            for reg in data:
+                _value = reg.value
+        else:
+            _value=''
+    except:
+        _value=''
+    return json.dumps(_value), 200
 
 @app.route('/getDatabases', methods=['GET'])
 @login_required

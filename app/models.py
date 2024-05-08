@@ -19,6 +19,10 @@ db_username_deny = {
     0: ['bet7k']
 }
 
+db_config_exceptions = {
+    0: ['db_user_prefix','hours_user_session']
+}
+
 user_types = {
     0: "Admin - Both",
     1: "System Only",

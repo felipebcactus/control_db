@@ -22,8 +22,13 @@
 </form>
 
 <script>
+  var hours=24;
   $(document).ready(function() {      
     var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
+    
+    $.getJSON('/getConfigParam/hours_user_session', function (_hours) {
+      hours = _hours;
+    });
 
     if(filter_user==false){
       $('.periodo').show();
@@ -42,7 +47,7 @@
           $('#access_end').val(end.format('YYYY-MM-DD'));
         }else{
           $('#access_start').val(moment().format("YYYY-MM-DD HH:mm:ss"));
-          $('#access_end').val(moment().add('d',1).format("YYYY-MM-DD HH:mm:ss"));          
+          $('#access_end').val(moment().add('H',hours).format("YYYY-MM-DD HH:mm:ss"));          
         }
         
     }).trigger('apply.daterangepicker');

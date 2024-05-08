@@ -24,6 +24,7 @@ def create_app():
     def create_admin_user(*args, **kwargs):
         db.session.add(Users(name="Admin", email="admin@admin.com", type=0, status=1, password=generate_password_hash("123!@#", method='pbkdf2:sha256')))
         db.session.add(Config(key="db_user_prefix", value="cb_"))
+        db.session.add(Config(key="hours_user_session", value="24"))
         db.session.commit()
     if Users.query.count() == 0:
         create_admin_user()
