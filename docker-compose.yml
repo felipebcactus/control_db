@@ -21,6 +21,7 @@ services:
       - MYSQL_ROOT_PASSWORD=passw0rd
     volumes:
       - mysqld-vol:/var/lib/mysqld/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     restart: always
 
 volumes:
