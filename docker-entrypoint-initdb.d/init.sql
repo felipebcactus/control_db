@@ -1,3 +1,4 @@
+create database control_db;
 use control_db;
 CREATE USER control_user;
 alter user control_user ENCRYPTED password 'passw0rd';
