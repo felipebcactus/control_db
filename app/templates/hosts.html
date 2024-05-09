@@ -50,8 +50,9 @@
             var _btcontent = $(this).html();
               if(confirm('Sync every databases and tables?')){
                 $(this).html('<i class="fas fa-sync fa-spin"></i>');
-                $.get( "/synchosts/" + $(this).attr('host_id'), function(  ) {
+                $.get( "/synchosts/" + $(this).attr('host_id'), function( returned ) {
                   _bt.html(_btcontent);
+                  console.log(returned);
                 });
               }
           });

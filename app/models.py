@@ -161,7 +161,7 @@ class SessionsHosts(db.Model):
 
 class ExternalConnectionByHostId():
     
-    def getConn(host_id):
+    def getConn(host_id, _database=False):
         from . import database
         
         # Get the host with the given host_id
@@ -177,15 +177,17 @@ class ExternalConnectionByHostId():
         # Create a connection string
         connection_string = {}
         connection_string[0] = f'mysql+pymysql://{db_username}:{db_password}@{db_host}:{db_port}'
-        connection_string[1] = f'postgresql://{db_username}:{db_password}@{db_host}:{db_port}'
+        connection_string[1] = f'postgresql+psycopg2://{db_username}:{db_password}@{db_host}:{db_port}'+("/"+_database if _database!=False else '')
         connection_string[2] = f'mssql+pyodbc://{db_username}:{db_password}@{db_host}:{db_port}?driver=ODBC+Driver+17+for+SQL+Server'
         
         # print("Iniciando atualização do HOST: "+connections.name) 
         # print("Connection string: "+connection_string[connections.type])
 
         # Create an engine instance
-        external_engine = create_engine(connection_string[connections.type])
-        external_session = sessionmaker(bind=external_engine)
-        external_session = external_session()
+        strconn = connection_string[connections.type]
+        print('Conectando: '+strconn)
+        external_engine = create_engine(strconn)
+        _session = sessionmaker(bind=external_engine)
+        external_session = _session()
         
         return external_session

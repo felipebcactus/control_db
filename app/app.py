@@ -528,39 +528,27 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 
             _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
             results.append({'removeUserFromHostBySession':_removeUserFromHost})
-            database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
-            results.append({'SessionsHostsCreated':True})
-                
+                    
+            external_session = ExternalConnectionByHostId.getConn(_host_id)   
             def _execSQL(sql, _fetch=False):
                 if _fetch:
                     return external_session.execute(text(sql)).fetchall()
                 else:
                     external_session.execute(text(sql))
                     
-                    
             if hostData.type == 0 : #MySQL
-                    
-                external_session = ExternalConnectionByHostId.getConn(_host_id)   
-                
+                                 
                 # necessario essas permissoe spro usuario que administrará o MYSQL
                 # GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, REFERENCES, INDEX, ALTER, CREATE VIEW, SHOW VIEW, CREATE USER, TRIGGER, DELETE HISTORY ON *.* TO `sistema`@`%` WITH GRANT OPTION;
                 
                 # REMOVE USER BEFORE CREATE A NEWER
-                _command = 'DROP USER IF EXISTS '+username+';'
-                results.append({'dropuserifexists': _command})
-                _execSQL(_command)
+                removeUserFromHostByHostId(_host_id)
                 
                 # CREATE USER 'user'@'hostname';
                 _command = "CREATE USER '"+username+"'@'%';"
                 results.append({'createnewuser': _command})
                 _execSQL(_command)
                 
-                # GRANT USAGE ON *.* TO 'username'@'host'; - para permitir a conexao minima no host
-                # _command = "GRANT USAGE ON *.* TO '"+username+"'@'%';"
-                # results.append({'grantusage': _command})
-                # _execSQL(_command)
-                
-
                 
                 for _database in permissions_obj_id[_host_id]:
                     
@@ -595,29 +583,76 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                             _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
                             results.append({'grantpermission': _command})
                             _execSQL(_command)
-                                            
-                                
-                        
+                                                
                 # FLUSH PRIVILEGES;
                 _command = "FLUSH PRIVILEGES;"
                 results.append({'flushprivileges': _command})
                 _execSQL(_command)
                                 
-                                
                 database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
+                                
+            elif hostData.type == 1:  # PostgreSQL
+                # REMOVE USER BEFORE CREATE A NEW ONE
+                removeUserFromHostByHostId(_host_id)
+
+                # CREATE USER 'user' WITH PASSWORD 'password';
+                _command = "CREATE ROLE "+username+" NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD '"+password+"'; COMMIT;"
+                results.append({'createnewuser': _command})
+                _execSQL(_command)
+
+                for _database in permissions_obj_id[_host_id]:
+                    databaseData = _getDatabaseData(_database)
+                    database_tables_count = len(permissions_obj_id[_host_id][_database])
+
+                    if database_tables_count == 0:  # All tables in the database
+                        # GRANT ALL PRIVILEGES ON DATABASE dbTest TO 'user';
+                        _command = "GRANT ALL PRIVILEGES ON DATABASE "+databaseData.name+" TO "+username+"; COMMIT;"
+                        results.append({'grantpermission': _command})
+                        _execSQL(_command)
+
+                    else:  # Specific tables within a database
+                        # GRANT PRIVILEGES PER TABLE
+                        for _table in permissions_obj_name[hostData.name][databaseData.name]:
+                            _command = "GRANT ALL PRIVILEGES ON "+_table+" TO "+username+"; COMMIT;"
+                            results.append({'grantpermission_table_'+_table: _command})
+                            _execSQL(_command)
+
+                database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
+
+
+            elif hostData.type == 2:  # SQL Server
+                # REMOVE USER BEFORE CREATE A NEW ONE
+                removeUserFromHostByHostId(_host_id)
+
+                # CREATE LOGIN 'user' WITH PASSWORD = 'password';
+                _command = "CREATE LOGIN "+username+" WITH PASSWORD = '"+password+"';"
+                results.append({'createnewuser': _command})
+                _execSQL(_command)
+
+                for _database in permissions_obj_id[_host_id]:
+                    databaseData = _getDatabaseData(_database)
+                    database_tables_count = len(permissions_obj_id[_host_id][_database])
+
+                    if database_tables_count == 0:  # All tables in the database
+                        # GRANT ALL PRIVILEGES ON DATABASE::dbTest TO 'user';
+                        _command = "USE "+databaseData.name+"; GRANT ALL TO "+username+";"
+                        results.append({'grantpermission': _command})
+                        _execSQL(_command)
+
+                    else:  # Specific tables within a database
+                        # GRANT PRIVILEGES PER TABLE
+                        for _table in permissions_obj_name[hostData.name][databaseData.name]:
+                            _command = "USE "+databaseData.name+"; GRANT ALL ON "+_table+" TO "+username+";"
+                            results.append({'grantpermission_table_'+_table: _command})
+                            _execSQL(_command)
+
+                database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
+            
+            
+            database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
+            results.append({'SessionsHostsCreated':True})
                 
-                # GUIDE EXAMPLES
-                # GRANT ALL PRIVILEGES ON *.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> todo o HOST
-                # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas database dbTest
-                # GRANT ALL PRIVILEGES ON dbTest.table_one To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas tabela table_one
-                # FLUSH PRIVILEGES;
-    
-                
-            elif host_types[hostData.type] == 1 : #Postgres
-                print("ACCESS FOR POSTGRES - TODO")
-            elif host_types[hostData.type] == 2 : #SQLServer
-                print("ACCESS FOR SQL SERVER - TODO")
-                
+            external_session.close()
     else:
         details['waiting_approve'] = True
     
@@ -666,10 +701,15 @@ def removeHostAndAllTogether(_data_received=None):
     
 
 def removeUserFromHostByHostId(_host_id):
-    sessionsData = database.get_by(SessionsHosts, 'id_host', _host_id)
-    if len(sessionsData)>0 :
-        for _reg in sessionsData :
-            removeUserFromHostBySession({'session_id':_reg.id_session})
+    try:
+        sessionsData = database.get_by(SessionsHosts, 'id_host', _host_id)
+        if len(sessionsData)>0 :
+            for _reg in sessionsData :
+                removeUserFromHostBySession({'session_id':_reg.id_session})
+    except Exception as ex:
+        print('Exception on remove user')
+        print(ex)
+        
             
 
 # pode receber apenas _data['session_id']
@@ -682,25 +722,55 @@ def removeUserFromHostBySession(_data_received=None):
     if 'user_name' not in _data:
         _data['user_name'] = database.get_id(Users, sessionData.user).name
     prefixo = (getConfigValue('db_user_prefix') if getConfigValue('db_user_prefix')!='' and getConfigValue('db_user_prefix')!=False else '_') or '_'
-    user_name = prefixo + _data['user_name']
+    user_name = (prefixo + _data['user_name']) if prefixo not in _data['user_name'] else _data['user_name']
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
+    print('preparando exclusao: '+user_name)
     results = []
     try:
+        print('sessoes: '+str(len(sessions_host)))
         if len(sessions_host)>0 :
-            for _reg in sessions_host :              
+            for _reg in sessions_host :     
+                # TODO: criar um apagar usuario por HOST mas tem q ter o username pq ao remover um session pode nao existir mais um SESSIONHOST         
+                hostData = database.get_id(Hosts, _reg.id_host)
+                print("Host: "+hostData.name)
                 _databases_host = database.get_by(Databases, 'id_host', _reg.id_host)
                 if len(_databases_host)>0 :
                     for _reg_database in _databases_host :                    
                         external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
-                        _command = 'DROP USER IF EXISTS \''+user_name+'\'@\''+_reg_database.name+'\';'
-                        print(_command)
-                        results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
-                        external_session.execute(text(_command))        
-            _command = 'DROP USER IF EXISTS \''+user_name+"\'@'%';"
-            print(_command)
-            results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
-            external_session.execute(text(_command))
-    except:
+                        
+                        if hostData.type == 0 : #MySQL
+                            _command = 'DROP USER IF EXISTS \''+user_name+'\'@\''+_reg_database.name+'\';'
+                            print(_command)
+                            results.append({'dropuserfromdatabase': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
+                            external_session.execute(text(_command))     
+
+                        if hostData.type == 1 : #Postgres
+                            _command = 'DROP OWNED BY '+user_name
+                            print(_command)
+                            results.append({'dropuserfromdatabase1': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
+                            external_session.execute(text(_command))     
+
+                            _command = 'DROP ROLE '+user_name
+                            print(_command)
+                            results.append({'dropuserfromdatabase2': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
+                            external_session.execute(text(_command))     
+
+                            _command = 'COMMIT'
+                            print(_command)
+                            results.append({'dropuserfromdatabase3': _command, 'host_id': _reg.id_host, 'database': _reg_database.name})
+                            external_session.execute(text(_command))     
+
+                        if hostData.type == 2 : #SQLServer
+                            _command = '' #TODO
+                                
+                if hostData.type == 0 : #MySQL   
+                    _command = 'DROP USER IF EXISTS \''+user_name+"\'@'%';"                    
+                    print(_command)
+                    results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
+                    external_session.execute(text(_command))
+                
+    except Exception as ex:
+        print(ex)
         _msgtry = 'banco sem conexao - pode ter sido desativado'
         print(_msgtry)
         results.append({'dropuserfromhost': _msgtry})
