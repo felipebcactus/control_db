@@ -26,6 +26,10 @@ ENV MYSQL_PASSWORD=$MYSQL_PASSWORD
 ENV MYSQL_HOST=$MYSQL_HOST
 ENV MYSQL_PORT=$MYSQL_PORT
 ENV MYSQL_DATABASE=$MYSQL_DATABASE
+
+RUN echo ">>>"
+RUN echo MYSQL_USER
+
 # Install necessary packages for Python
 RUN apt-get update && \
     apt-get install -y python3 python3-pip && \
