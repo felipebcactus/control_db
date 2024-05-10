@@ -22,12 +22,64 @@
     </tbody>
 </table>
 
+<div class="pagination">
+</div>
+
 <script>
+  var qtd_global=0;
   $(document).ready(function() {
-    function ini_table(){
-      $.getJSON('/getHosts', function (hosts) {
-          if (!Array.isArray(hosts)) return; // If the response is not an array, it's a single object so convert
+    function ini_table(pag=1,qtd=10){
+      qtd_global = qtd;
+      $.getJSON('/getHosts?pag='+pag+'&qtd='+qtd, function (returned) {
+          //if (!Array.isArray(hosts)) return; // If the response is not an array, it's a single object so convert
+          hosts = returned['items'];
           $('#hosts > tbody').empty();
+              
+          var pag = document.createElement('div');
+          pag.innerHTML = '';
+          
+          if(returned['has_prev']){
+            pag.innerHTML += `
+                <span page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
+            `;
+          }else{
+            pag.innerHTML += `
+                <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
+            `;
+          }
+          var contfor=0;
+          for(var i=1; i<=returned['pages']; i++){
+            if(i == returned['page']){
+              pag.innerHTML += `
+                      <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
+              `;
+            }else{
+              contfor++;
+              pag.innerHTML += `
+                    <span page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
+              `;
+            }
+            if(false && contfor>3){
+              pag.innerHTML += `
+                    <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
+              `;
+              break;          
+            }
+          }
+          if(returned['has_next']){
+            pag.innerHTML += `
+                <span page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
+            `;
+          }else{
+            pag.innerHTML += `
+                <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
+            `;
+          }
+          $('.pagination').html('').append(pag.innerHTML);
+          $('.linknav[page]').unbind('click').bind('click',function(){
+            ini_table($(this).attr('page'),qtd_global)
+          });
+          
           for (var i in hosts){
             // console.log(hosts[i]);
             var host_id=hosts[i].id;

@@ -46,15 +46,67 @@
 </div>
 </div>
 
-<script>
-$(document).ready(function() {
-  
+<div class="pagination">
+</div>
 
-  var getUsers = function(_type){
-      $.getJSON('/getUsers/'+_type, function (users) {
-        if (!Array.isArray(users)) return; // Check for array response
+<script>
+var qtd_global=0;
+
+$(document).ready(function() {
+
+  var getUsers = function(_type,pag=1,qtd=10){
+      qtd_global = qtd;
+      $.getJSON('/getUsers/'+_type+'?pag='+pag+'&qtd='+qtd, function (returned) {
+        // if (!Array.isArray(users)) return; // Check for array response
         $('#system_users > tbody' ).empty(); // Empty the table body
         $('#database_users > tbody' ).empty(); // Empty the table body
+        users = returned['items'];
+          
+        var pag = document.createElement('div');
+        pag.innerHTML = '';
+        
+        if(returned['has_prev']){
+          pag.innerHTML += `
+              <span page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
+          `;
+        }else{
+          pag.innerHTML += `
+              <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
+          `;
+        }
+        var contfor=0;
+        for(var i=1; i<=returned['pages']; i++){
+          if(i == returned['page']){
+            pag.innerHTML += `
+                    <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
+            `;
+          }else{
+            contfor++;
+            pag.innerHTML += `
+                  <span page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
+            `;
+          }
+          if(false && contfor>3){
+            pag.innerHTML += `
+                  <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
+            `;
+            break;          
+          }
+        }
+        if(returned['has_next']){
+          pag.innerHTML += `
+              <span page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
+          `;
+        }else{
+          pag.innerHTML += `
+              <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
+          `;
+        }
+        $('.pagination').html('').append(pag.innerHTML);
+        $('.linknav[page]').unbind('click').bind('click',function(){
+          getUsers(_type,$(this).attr('page'),qtd_global)
+        });
+        
         for (var i in users) {
           var user_id = users[i].id;
           var user_name = users[i].name;

@@ -19,7 +19,7 @@ def get_id(model, id):
     else :
         return False
     
-def get_by_paginated(model, filter_column, filter_value, order_by_column, page=1, per_page=10):
+def get_by_paginated_filtered(model, filter_column, filter_value, order_by_column, page=1, per_page=10):
     query = model.query.filter(getattr(model, filter_column) == filter_value).order_by(getattr(model, order_by_column))
     total = query.count()
     paginated_query = db.paginate(query, page=page, per_page=per_page)
@@ -34,6 +34,24 @@ def get_by_paginated(model, filter_column, filter_value, order_by_column, page=1
         'next_num': paginated_query.next_num
     }
 
+def get_by_paginated(model, order_by_column, page=1, per_page=10, orderby=False):
+    if orderby==False:
+        query = model.query.order_by(getattr(model, order_by_column))
+    else:
+        query = model.query.order_by(getattr(model, order_by_column).desc())
+    total = query.count()
+    paginated_query = db.paginate(query, page=page, per_page=per_page)
+    return {
+        'total': total,
+        'items': paginated_query.items,
+        'pages': paginated_query.pages,
+        'page': paginated_query.page,
+        'has_prev': paginated_query.has_prev,
+        'has_next': paginated_query.has_next,
+        'prev_num': paginated_query.prev_num,
+        'next_num': paginated_query.next_num
+    }
+    
 def get_by(model, column_name, value, orderby=False):
     if orderby==False:
         data = model.query.filter(getattr(model, column_name) == value).all()

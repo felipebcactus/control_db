@@ -15,33 +15,86 @@
     </tbody>
 </table>
 
+<div class="pagination">
+</div>
+
 <script>
-  
+var qtd_global=0; 
 $(document).ready(function() {
-  
-  // Additional code to fetch databases
-  $.getJSON('/getDatabases', function (databases) {
-    if (!Array.isArray(databases)) return; // Check for array response
-    for (var i in databases) {
-      var db_id = databases[i].id;
-      var db_name = databases[i].name;
-      var db_host = databases[i].host_name; // Assuming host data is referenced by ID
-      var db_type = databases[i].type; // Assuming a "type" field exists in the response
 
-      // Modify selector to target databases table
-      $('#databases > tbody:last').append('<tr databaseid="'+ db_id +'"><td>' + db_id + '</td>' +
-        '<td>' + db_name + '</td>' +
-        '<td>' + db_host + '</td>' +
-        // '<td>' + db_type + '</td>' +
-        '</tr>');
-    }
-    $('#databases tbody tr').unbind('click').bind('click',function(){
-      var dbid = $(this).attr("databaseid");
-      Cookies.set("dbid", dbid);    
-      $('#content-area').load('/tables.html');
+// Additional code to fetch database
+  function ini_table(pag=1,qtd=10){
+    qtd_global = qtd;
+    $.getJSON('/getDatabases?pag='+pag+'&qtd='+qtd, function (returned) {
+      // if (!Array.isArray(databases)) return; // Check for array response
+      databases = returned['items'];
+      
+      var pag = document.createElement('div');
+      pag.innerHTML = '';
+      
+      if(returned['has_prev']){
+        pag.innerHTML += `
+            <span page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
+        `;
+      }else{
+        pag.innerHTML += `
+            <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
+        `;
+      }
+      var contfor=0;
+      for(var i=1; i<=returned['pages']; i++){
+        if(i == returned['page']){
+          pag.innerHTML += `
+                  <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
+          `;
+        }else{
+          contfor++;
+          pag.innerHTML += `
+                <span page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
+          `;
+        }
+        if(false && contfor>3){
+          pag.innerHTML += `
+                <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
+          `;
+          break;          
+        }
+      }
+      if(returned['has_next']){
+        pag.innerHTML += `
+            <span page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
+        `;
+      }else{
+        pag.innerHTML += `
+            <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
+        `;
+      }
+      $('.pagination').html('').append(pag.innerHTML);
+      $('.linknav[page]').unbind('click').bind('click',function(){
+        ini_table($(this).attr('page'),qtd_global)
+      });
+      
+      for (var i in databases) {
+        var db_id = databases[i].id;
+        var db_name = databases[i].name;
+        var db_host = databases[i].host_name; // Assuming host data is referenced by ID
+        var db_type = databases[i].type; // Assuming a "type" field exists in the response
+
+        // Modify selector to target databases table
+        $('#databases > tbody:last').append('<tr databaseid="'+ db_id +'"><td>' + db_id + '</td>' +
+          '<td>' + db_name + '</td>' +
+          '<td>' + db_host + '</td>' +
+          // '<td>' + db_type + '</td>' +
+          '</tr>');
+      }
+      $('#databases tbody tr').unbind('click').bind('click',function(){
+        var dbid = $(this).attr("databaseid");
+        Cookies.set("dbid", dbid);    
+        $('#content-area').load('/tables.html');
+      });
     });
-  });
-
+  }
+  ini_table();
   // Update click event handler for new database button
   $('.bt-newdatabase').click(function(e) {
     e.preventDefault();

@@ -74,9 +74,13 @@ def addHost():
 @app.route('/getHosts', methods=['GET'])
 @login_required
 def getHosts(_json=False):
-    hosts = database.get_all(Hosts)
+    pag = request.args.get('pag', 1, type=int)
+    qtd = request.args.get('qtd', 5, type=int)
+    
+    hosts_pag = database.get_by_paginated(Hosts, 'name', page=pag, per_page=qtd)
+    
     all_hosts = []
-    for host in hosts:
+    for host in hosts_pag['items']:
         new_host = {
             "id": host.id,
             "name": host.name,
@@ -92,10 +96,22 @@ def getHosts(_json=False):
         }
 
         all_hosts.append(new_host)
+    
+    return_obj = {
+        'total': hosts_pag['total'],
+        'items': all_hosts,
+        'pages': hosts_pag['pages'],
+        'page': hosts_pag['page'],
+        'has_prev': hosts_pag['has_prev'],
+        'has_next': hosts_pag['has_next'],
+        'prev_num': hosts_pag['prev_num'],
+        'next_num': hosts_pag['next_num']
+    }
+    
     if _json==True:
-        return all_hosts
+        return return_obj
     else:
-        return json.dumps(all_hosts), 200
+        return json.dumps(return_obj), 200
 
 @app.route('/addConfig', methods=['POST'])
 @login_required
@@ -180,9 +196,13 @@ def getConfigParam(config_name):
 @app.route('/getDatabases', methods=['GET'])
 @login_required
 def getDatabases(_json=False):
-    databases = database.get_all(Databases)
+    pag = request.args.get('pag', 1, type=int)
+    qtd = request.args.get('qtd', 5, type=int)
+    
+    databases_pag = database.get_by_paginated(Databases, 'name', page=pag, per_page=qtd)
+    
     all_databases = []
-    for _database in databases:
+    for _database in databases_pag['items']:
         host = database.get_id(Hosts, _database.id_host)
         host_name = host.name if host else "Unknown host"
         new_database = {
@@ -193,10 +213,22 @@ def getDatabases(_json=False):
             "type": _database.type,
         }
         all_databases.append(new_database)
+    
+    return_obj = {
+        'total': databases_pag['total'],
+        'items': all_databases,
+        'pages': databases_pag['pages'],
+        'page': databases_pag['page'],
+        'has_prev': databases_pag['has_prev'],
+        'has_next': databases_pag['has_next'],
+        'prev_num': databases_pag['prev_num'],
+        'next_num': databases_pag['next_num']
+    }    
+        
     if _json==True:
-        return all_databases
+        return return_obj
     else:
-        return json.dumps(all_databases), 200
+        return json.dumps(return_obj), 200
 
 @app.route('/getTables/<_dbid>', methods=['GET'])
 @login_required
@@ -204,7 +236,7 @@ def getTables(_dbid, _json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
     
-    tables_pag = database.get_by_paginated(Tables, 'id_database', _dbid, 'name', page=pag, per_page=qtd)
+    tables_pag = database.get_by_paginated_filtered(Tables, 'id_database', _dbid, 'name', page=pag, per_page=qtd)
     
     _database = database.get_id(Databases, _dbid)
     database_name = _database.name if _database else "Unknown database"
@@ -268,9 +300,13 @@ def typeChangeTable(table_id,type):
 @app.route('/getUsers/<type>', methods=['GET'])
 @login_required
 def getUsers(type,_json=False):
-    users = database.get_all_order_by(Users, 'id')
+    pag = request.args.get('pag', 1, type=int)
+    qtd = request.args.get('qtd', 5, type=int)
+    
+    users_pag = database.get_by_paginated(Users, 'id', page=pag, per_page=qtd, orderby=True)
+    
     all_users = []
-    for user in users:
+    for user in users_pag['items']:
         new_user = {
             "id": user.id,
             "name": user.name,
@@ -282,25 +318,22 @@ def getUsers(type,_json=False):
         }
         all_users.append(new_user)
     
-    # carrega 0 e 1 juntos se nao for 2 (pq so tem 2 abas system/database)
-    if False and type!=2 :
-        users = database.get_by(Users, 'type', (1 if type==0 else 0))
-        for user in users:
-            new_user = {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "parent": "",
-                "status": user_status[user.status],
-                "type": user_types[user.type],
-            }
-            all_users.append(new_user)
-        print(">>>")
-        print(all_users)
+    return_obj = {
+        'total': users_pag['total'],
+        'items': all_users,
+        'pages': users_pag['pages'],
+        'page': users_pag['page'],
+        'has_prev': users_pag['has_prev'],
+        'has_next': users_pag['has_next'],
+        'prev_num': users_pag['prev_num'],
+        'next_num': users_pag['next_num']
+    }
+    
+        
     if _json==True:
-        return all_users
+        return return_obj
     else:
-        return json.dumps(all_users), 200
+        return json.dumps(return_obj), 200
 
 
 @app.route('/addSession', methods=['POST'])
@@ -319,9 +352,13 @@ def addSession():
 @app.route('/getSessions', methods=['GET'])
 @login_required
 def getSessions(_json=False):
-    sessions = database.get_all_order_by(Sessions, 'id', True)
+    pag = request.args.get('pag', 1, type=int)
+    qtd = request.args.get('qtd', 5, type=int)
+    
+    sessions_pag = database.get_by_paginated(Sessions, 'request_date', page=pag, per_page=qtd, orderby=True)
+    
     all_sessions = []
-    for session in sessions:
+    for session in sessions_pag['items']:
         _approver_name=''
         if session.approver!='' and session.approver!='null' and session.approver!='None':
             _approver_ = database.get_id(Users, session.approver)
@@ -343,10 +380,22 @@ def getSessions(_json=False):
             "description": session.description
         }
         all_sessions.append(new_session)
+    
+    return_obj = {
+        'total': sessions_pag['total'],
+        'items': all_sessions,
+        'pages': sessions_pag['pages'],
+        'page': sessions_pag['page'],
+        'has_prev': sessions_pag['has_prev'],
+        'has_next': sessions_pag['has_next'],
+        'prev_num': sessions_pag['prev_num'],
+        'next_num': sessions_pag['next_num']
+    }
+    
     if _json==True:
-        return all_sessions
+        return return_obj
     else:
-        return json.dumps(all_sessions), 200
+        return json.dumps(return_obj), 200
 
 
 @app.route('/getSessions/<user_id>', methods=['GET'])
