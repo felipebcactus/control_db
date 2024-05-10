@@ -67,7 +67,7 @@ def addHost():
     host_object = {}
     for item in data:
         host_object[item['name']] = item['value']
-    database.add_instance(Hosts, name=host_object['name'], type=host_object['type'], ipaddress=host_object['ipaddress'], port=host_object['port'], username=host_object['username'], password=host_object['password'])
+    database.add_instance(Hosts, name=host_object['name'], type=host_object['type'], ipaddress=host_object['ipaddress'], ipaddress_read=host_object['ipaddress_read'], port=host_object['port'], username=host_object['username'], password=host_object['password'])
     return json.dumps(host_object), 200
 
 
@@ -82,6 +82,7 @@ def getHosts(_json=False):
             "name": host.name,
             "type": host_types[host.type],
             "ipaddress": host.ipaddress,
+            "ipaddress_read": host.ipaddress_read,
             "port": host.port,
             "username": host.username,
             "password": "*", #host.password,
@@ -197,27 +198,43 @@ def getDatabases(_json=False):
     else:
         return json.dumps(all_databases), 200
 
-@app.route('/getTables/<dbid>', methods=['GET'])
+@app.route('/getTables/<_dbid>', methods=['GET'])
 @login_required
-def getTables(dbid, _json=False):
-    tables = database.get_by(Tables, 'id_database', dbid, 'name')
-    all_tables = []
-    for table in tables:
-        _database = database.get_id(Databases, table.id_database)
-        database_name = _database.name if _database else "Unknown database"
-        new_table = {
-            "id": table.id,
-            "name": table.name,
-            "id_database": table.id_database,
+def getTables(_dbid, _json=False):
+    pag = request.args.get('pag', 1, type=int)
+    qtd = request.args.get('qtd', 5, type=int)
+    
+    tables_pag = database.get_by_paginated(Tables, 'id_database', _dbid, 'name', page=pag, per_page=qtd)
+    
+    _database = database.get_id(Databases, _dbid)
+    database_name = _database.name if _database else "Unknown database"
+    items = []
+    for e in tables_pag['items']:
+        item_e = {
+            "id": e.id,
+            "name": e.name,
+            "id_database": e.id_database,
             "database_name": database_name,
-            "type": table_type[table.type],
-            "type_id": table.type
+            "type": table_type[e.type],
+            "type_id": e.type
         }
-        all_tables.append(new_table)
+        items.append(item_e)
+    
+    return_obj = {
+        'total': tables_pag['total'],
+        'items': items,
+        'pages': tables_pag['pages'],
+        'page': tables_pag['page'],
+        'has_prev': tables_pag['has_prev'],
+        'has_next': tables_pag['has_next'],
+        'prev_num': tables_pag['prev_num'],
+        'next_num': tables_pag['next_num']
+    }
+    
     if _json==True:
-        return all_tables
+        return return_obj
     else:
-        return json.dumps(all_tables), 200
+        return json.dumps(return_obj), 200
 
 
 @app.route('/addUser', methods=['POST'])
@@ -518,7 +535,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             # create relationship for future remove
             results.append({'removingOldSessionHost': session_id+'-'+_host_id})
             results.append({'addSessionHost': session_id+'-'+_host_id})
-            details['host'].append({'hostname': hostData.name, 'ipaddress': hostData.ipaddress, 'port': hostData.port, 'type': host_types[hostData.type]})
+            details['host'].append({'hostname': hostData.name, 'ipaddress': hostData.ipaddress, 'ipaddress_read': hostData.ipaddress_read, 'port': hostData.port, 'type': host_types[hostData.type]})
             
             # pula o laco caso nao tenha permissao
             if (filter_user!=False and user_auto_approve!=True) :

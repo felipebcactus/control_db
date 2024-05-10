@@ -65,6 +65,7 @@ class Hosts(db.Model):
     name = db.Column(db.String(255))
     type = db.Column(db.Integer)
     ipaddress = db.Column(db.String(255))
+    ipaddress_read = db.Column(db.String(255))
     port = db.Column(db.Integer)
     username = db.Column(db.String(255))
     password = db.Column(db.String(255))
