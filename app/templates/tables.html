@@ -15,20 +15,74 @@
     </tbody>
 </table>
 
+<div class="pagination">
+</div>
+
+<style>
+  .linknav{
+    margin-right: 5px;
+  }
+</style>
 <script>
 var databasename='';
+var qtd_global=0;
 // Update existing script to handle tables section
 $(document).ready(function() {
   // ... Existing code to get hosts and databases ...
   
   // Additional code to fetch tables (assuming an endpoint exists)
-  function getTables(pag=1,qtd=5){
+  function getTables(pag=1,qtd=10){
+    qtd_global = qtd;
     var dbid = Cookies.get("dbid");
     $.getJSON('/getTables/'+dbid+'?pag='+pag+'&qtd='+qtd, function (returned) {
       //if (!Array.isArray(tables)) return; // Check for array response
       $('#tables > tbody').empty();
       tables = returned['items'];
-      console.log(returned);
+      
+      var pag = document.createElement('div');
+      pag.innerHTML = '';
+      
+      if(returned['has_prev']){
+        pag.innerHTML += `
+            <span dbid="${dbid}" page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
+        `;
+      }else{
+        pag.innerHTML += `
+            <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
+        `;
+      }
+      var contfor=0;
+      for(var i=1; i<=returned['pages']; i++){
+        if(i == returned['page']){
+          pag.innerHTML += `
+                  <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
+          `;
+        }else{
+          contfor++;
+          pag.innerHTML += `
+                <span dbid="${dbid}" page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
+          `;
+        }
+        if(false && contfor>3){
+          pag.innerHTML += `
+                <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
+          `;
+          break;          
+        }
+      }
+      if(returned['has_next']){
+        pag.innerHTML += `
+            <span dbid="${dbid}" page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
+        `;
+      }else{
+        pag.innerHTML += `
+            <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
+        `;
+      }
+      $('.pagination').html('').append(pag.innerHTML);
+      $('.linknav[page]').unbind('click').bind('click',function(){
+        getTables($(this).attr('page'),qtd_global)
+      });
       for (var i in tables) {
         var table_id = tables[i].id;
         var table_name = tables[i].name;
