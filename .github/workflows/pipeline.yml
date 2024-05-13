@@ -33,5 +33,5 @@ jobs:
 
     - name: Deploy to Remote Server
       run: |
-        ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_rsa ${{ secrets.AWS_USER }}@${{ secrets.AWS_IP }} -p ${{ secrets.AWS_PORT }} "cd /home/ec2-user/control_db && git reset --hard origin/main && git pull && docker-compose down && docker-compose up -d --build  --force-recreate --remove-orphans"
+        ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_rsa ${{ secrets.AWS_USER }}@${{ secrets.AWS_IP }} -p ${{ secrets.AWS_PORT }} "cd /home/${{ secrets.AWS_USER }}/control_db && git reset --hard origin/main && git pull && docker-compose down && cp /home/${{ secrets.AWS_USER }}/.env /home/${{ secrets.AWS_USER }}/control_db/example.env -f && docker-compose up -d --build  --force-recreate --remove-orphans"
         
