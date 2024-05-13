@@ -44,7 +44,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY . .
-COPY example.env .env
+# COPY example.env .env
+COPY .env .env
 RUN pip install -r requirements.txt
 RUN pip install pymysql cryptography
 # Expose the port that the application listens on.
