@@ -59,7 +59,8 @@
             var users = JSON.parse(data);
             var userCombo = $("#userCombo");
             userCombo.empty();
-            users.forEach(function(user) {
+            users.forEach(function(returned) {
+              user = returned['items'];
                 var option = $("<option></option>");
                 option.val(user.id);
                 option.text(user.name + " (" + user.email + ")");
