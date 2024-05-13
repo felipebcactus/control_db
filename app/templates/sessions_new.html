@@ -56,8 +56,8 @@
         url: "/getUsers/0",
         type: "GET",
         success: function(returned) {
-            var data = returned['items'];
-            var users = JSON.parse(data);
+            returned = JSON.parse(returned);
+            var users = returned['items'];
             var userCombo = $("#userCombo");
             userCombo.empty();
             users.forEach(function(user) {
