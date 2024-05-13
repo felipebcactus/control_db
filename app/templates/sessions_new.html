@@ -55,12 +55,12 @@
     $.ajax({
         url: "/getUsers/0",
         type: "GET",
-        success: function(data) {
+        success: function(returned) {
+            var data = returned['items'];
             var users = JSON.parse(data);
             var userCombo = $("#userCombo");
             userCombo.empty();
-            users.forEach(function(returned) {
-              user = returned['items'];
+            users.forEach(function(user) {
                 var option = $("<option></option>");
                 option.val(user.id);
                 option.text(user.name + " (" + user.email + ")");
