@@ -45,7 +45,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY . .
 # COPY example.env .env
-COPY .env .env
+COPY example.env .env
 RUN pip install -r requirements.txt
 RUN pip install pymysql cryptography
 # Expose the port that the application listens on.
