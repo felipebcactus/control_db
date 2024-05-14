@@ -645,8 +645,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                         if qtd_tables_total != database_tables_count :
                             
                             # GRANT PRIVILEGES PER TABLE
-                            for _table in permissions_obj_name[hostData.name][databaseData.name]: #"+_table+"
-                                _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+".* To '"+username+"'@'%';" # IDENTIFIED BY '"+password+"';"
+                            for _table in permissions_obj_name[hostData.name][databaseData.name]:
+                                _command = "GRANT ALL PRIVILEGES ON "+databaseData.name+"."+_table+" To '"+username+"'@'%';" # IDENTIFIED BY '"+password+"';"
                                 results.append({'grantpermission_table_'+_table: _command})
                                 _execSQL(_command)
                         
