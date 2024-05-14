@@ -615,7 +615,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     
                 try:
                     # CREATE USER 'user'@'hostname';
-                    _command = "CREATE USER '"+username+"'@'%';"
+                    _command = "CREATE USER '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
                     results.append({'createnewuser': _command})
                     _execSQL(_command)                    
                 except Exception as ex:
