@@ -64,7 +64,7 @@
                 var option = $("<option></option>");
                 option.val(user.id);
                 option.text(user.name + " (" + user.email + ")");
-                if((filter_user!=false && filter_user==user.id) ||  filter_user===false){
+                if((filter_user!=false && (filter_user==user.id || filter_user==user.parent_id)) ||  filter_user===false){
                   userCombo.append(option);
                 }
             });

@@ -100,7 +100,7 @@ $(document).ready(function() {
         var description = sessions[i].description
         var updated_at = sessions[i].updated_at
         
-        if(!filter_user && status_id==0){
+        if((!filter_user || returned['approver_user']==true) && status_id==0){
           status+="<button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button>";
         }
         // Modify selector to target tables table

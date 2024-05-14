@@ -312,6 +312,7 @@ def getUsers(type,_json=False):
             "name": user.name,
             "email": user.email,
             "parent": "" if user.parent is None else database.get_id(Users, user.parent).name,
+            "parent_id": user.parent,
             "status": user.status,
             "status_name": user_status[user.status],
             "type": user_types[user.type],
@@ -401,6 +402,11 @@ def getSessions(_json=False):
 @app.route('/getSessions/<user_id>', methods=['GET'])
 @login_required
 def getSessionsUser(user_id, _json=False):
+    pag = request.args.get('pag', 1, type=int)
+    qtd = request.args.get('qtd', 5, type=int)
+    
+    sessions_pag = database.get_by_paginated_filtered(Sessions, 'user', user_id, 'request_date', page=pag, per_page=qtd, order_desc=True)
+    
     sessions = database.get_by(Sessions, 'user', user_id)
     all_sessions = []
     for session in sessions:
@@ -420,10 +426,48 @@ def getSessionsUser(user_id, _json=False):
             "description": session.description
         }
         all_sessions.append(new_session)
+        
+    approver_user=False
+    user_data = database.get_id(Users,user_id)
+    if int(user_data.type)==2:
+        approver_user=True
+        print('User approver')
+        # verifica se o user logado possui "usuarios filhos"
+        sessions_child = database.get_by_join(Sessions, 'user', user_id, join=Users, parent_column='parent', parent_value=user_id)
+        for session in sessions_child:
+            _user = database.get_id(Users, session.user)
+            user_name = _user.name if _user else "Unknown user"
+            new_session = {
+                "id": session.id,
+                "user": session.user,
+                "user_name": user_name,
+                "approver": '' if session.approver==None else database.get_id(Users, session.approver).name,
+                "access_start": str(session.access_start) or '',
+                "access_end": str(session.access_end) or '',
+                "status": session_status_type[session.status],
+                "status_id": session.status,
+                "request_date": str(session.request_date) or '',
+                "approve_date": str(session.approve_date) or '',
+                "description": session.description
+            }
+            all_sessions.append(new_session)
+    
+    return_obj = {
+        'total': sessions_pag['total'],
+        'items': all_sessions,
+        'pages': sessions_pag['pages'],
+        'page': sessions_pag['page'],
+        'has_prev': sessions_pag['has_prev'],
+        'has_next': sessions_pag['has_next'],
+        'prev_num': sessions_pag['prev_num'],
+        'next_num': sessions_pag['next_num'],
+        'approver_user': approver_user
+    }        
+            
     if _json==True:
-        return all_sessions
+        return return_obj
     else:
-        return json.dumps(all_sessions), 200
+        return json.dumps(return_obj), 200
 
 @app.route('/getTreeSession/<session_id>', methods=['GET'])
 @login_required
@@ -532,6 +576,10 @@ def postHostsDatabasesTablesTreeApprove():
 @app.route('/postHostsDatabasesTablesTree', methods=['POST'])
 @login_required
 def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False):
+    print("postHostsDatabasesTablesTree")
+    print(_approve)
+    print(_approver)
+    print(_as_json)
     
     if _approve!=False:
         _approve_data = database.get_id(Sessions, _approve)
@@ -603,16 +651,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     external_session.execute(text(sql))
                     
             if hostData.type == 0 : #MySQL
-                                 
-                # necessario essas permissoe spro usuario que administrará o MYSQL
-                # GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, REFERENCES, INDEX, ALTER, CREATE VIEW, SHOW VIEW, CREATE USER, TRIGGER, DELETE HISTORY ON *.* TO `sistema`@`%` WITH GRANT OPTION;
-                try:
-                    # REMOVE USER BEFORE CREATE A NEWER
-                    removeUserFromHostByHostId(_host_id)
-                except Exception as ex:
-                    print('Exception removing user')
-                    print(ex)
-                    
+                                       
                 try:
                     # CREATE USER 'user'@'hostname';
                     _command = "CREATE USER '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
@@ -665,8 +704,6 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
                                 
             elif hostData.type == 1:  # PostgreSQL
-                # REMOVE USER BEFORE CREATE A NEW ONE
-                removeUserFromHostByHostId(_host_id)
 
                 # CREATE USER 'user' WITH PASSWORD 'password';
                 _command = "CREATE ROLE "+username+" NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD '"+password+"'; COMMIT;"
@@ -694,8 +731,6 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
 
 
             elif hostData.type == 2:  # SQL Server
-                # REMOVE USER BEFORE CREATE A NEW ONE
-                removeUserFromHostByHostId(_host_id)
 
                 # CREATE LOGIN 'user' WITH PASSWORD = 'password';
                 _command = "CREATE LOGIN "+username+" WITH PASSWORD = '"+password+"';"
@@ -774,6 +809,8 @@ def removeHostAndAllTogether(_data_received=None):
     
 
 def removeUserFromHostByHostId(_host_id):
+    print("removeUserFromHostByHostId")
+    print(_host_id)
     try:
         sessionsData = database.get_by(SessionsHosts, 'id_host', _host_id)
         if len(sessionsData)>0 :
@@ -789,6 +826,8 @@ def removeUserFromHostByHostId(_host_id):
 @app.route('/removeUserFromHostBySession', methods=['POST'])
 @login_required
 def removeUserFromHostBySession(_data_received=None):
+    print("removeUserFromHostBySession")
+    print(_data_received)
     _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
     sessionData = database.get_id(Sessions, id_session)
@@ -856,7 +895,9 @@ def removeUserFromHostBySession(_data_received=None):
 @app.route('/removeSession/<user_id_logged>', methods=['POST'])
 @login_required
 def removeSession(user_id_logged, _data_received=None):
-        
+    print("removeSession")
+    print(user_id_logged)
+    print(_data_received)
     _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
     user_id_selected = _data['user_id']
@@ -865,9 +906,11 @@ def removeSession(user_id_logged, _data_received=None):
         return {}, 200
     
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
+    print(sessions_host)
     results = []
     if len(sessions_host)>0 :
         for _reg in sessions_host :
+            print(_reg)
             removeUserFromHostBySession({'session_id':_reg.id_session})
             
             
