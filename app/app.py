@@ -606,15 +606,21 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                                  
                 # necessario essas permissoe spro usuario que administrará o MYSQL
                 # GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, REFERENCES, INDEX, ALTER, CREATE VIEW, SHOW VIEW, CREATE USER, TRIGGER, DELETE HISTORY ON *.* TO `sistema`@`%` WITH GRANT OPTION;
-                
-                # REMOVE USER BEFORE CREATE A NEWER
-                removeUserFromHostByHostId(_host_id)
-                
-                # CREATE USER 'user'@'hostname';
-                _command = "CREATE USER '"+username+"'@'%';"
-                results.append({'createnewuser': _command})
-                _execSQL(_command)
-                
+                try:
+                    # REMOVE USER BEFORE CREATE A NEWER
+                    removeUserFromHostByHostId(_host_id)
+                except Exception as ex:
+                    print('Exception removing user')
+                    print(ex)
+                    
+                try:
+                    # CREATE USER 'user'@'hostname';
+                    _command = "CREATE USER '"+username+"'@'%';"
+                    results.append({'createnewuser': _command})
+                    _execSQL(_command)                    
+                except Exception as ex:
+                    print('Exception creating user')
+                    print(ex)
                 
                 for _database in permissions_obj_id[_host_id]:
                     
