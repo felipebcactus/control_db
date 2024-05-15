@@ -125,6 +125,7 @@ $(document).ready(function() {
       $('.bt-approve').click(function(e) {
         e.preventDefault();
         if(confirm('Approve this session?')){
+          $(this).html('<i class="fas fa-sync fa-spin"></i>');
           var user_id_logged = {{ user_id }};
           var request_data = JSON.stringify({'data': {session_id: $(this).data('idsession'), approver: user_id_logged}});
           $.ajax({
@@ -147,6 +148,7 @@ $(document).ready(function() {
         const user_name = $(this).attr('data-bs-user-name')
         var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name}});
         if(confirm('Remove all permissions for this username?')){
+          $(this).html('<i class="fas fa-sync fa-spin"></i>');
           $.ajax({
             type: 'POST',
             async : false,
@@ -169,6 +171,7 @@ $(document).ready(function() {
         const user_id = $(this).attr('data-bs-user-id')
         var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name, user_id: user_id}});
         if(confirm('Delete this session?')){
+          $(this).html('<i class="fas fa-sync fa-spin"></i>');
           $.ajax({
             type: 'POST',
             async : false,
