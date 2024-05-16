@@ -15,7 +15,7 @@
       <th scope="col">Status</th>
       <th scope="col">Request Date</th>
       <th scope="col">Approve Date</th>
-      <th scope="col">Description / LOG</th>
+      <th scope="col">Description</th>
       <th scope="col">Actions</th>
       <!-- th scope="col">Log Operation Cron</th -->
     </tr>
@@ -122,10 +122,13 @@ $(document).ready(function() {
           '</tr>');
       }
 
-      $('.bt-approve').click(function(e) {
+      $('.bt-approve').unbind('click').bind('click',function(e) {
         e.preventDefault();
+        var _bt = $(this);
+        var _btcontent = $(this).html();
+        $(this).html('<i class="fas fa-sync fa-spin"></i>');
+        console.log(">>>",_btcontent,$(this).html());
         if(confirm('Approve this session?')){
-          $(this).html('<i class="fas fa-sync fa-spin"></i>');
           var user_id_logged = {{ user_id }};
           var request_data = JSON.stringify({'data': {session_id: $(this).data('idsession'), approver: user_id_logged}});
           $.ajax({
@@ -139,10 +142,12 @@ $(document).ready(function() {
             contentType: "application/json",
             dataType: 'json'
           });
+        }else{
+          _bt.html(_btcontent);
         }
       });
 
-      $('.bt-permission-remove').click(function(e) {
+      $('.bt-permission-remove').unbind('click').bind('click',function(e) {
         e.preventDefault();
         const session_id = $(this).attr('data-bs-session-id')
         const user_name = $(this).attr('data-bs-user-name')
@@ -164,7 +169,7 @@ $(document).ready(function() {
       });
 
 
-      $('.bt-remove').click(function(e) {
+      $('.bt-remove').unbind('click').bind('click',function(e) {
         e.preventDefault();
         const session_id = $(this).attr('data-bs-session-id')
         const user_name = $(this).attr('data-bs-user-name')
@@ -187,7 +192,7 @@ $(document).ready(function() {
       });
 
       
-      $('.bt-info').click(function(e) {
+      $('.bt-info').unbind('click').bind('click',function(e) {
         e.preventDefault();
         const session_id = $(this).attr('data-bs-session-id')
         const user_name = $(this).attr('data-bs-user-name')
@@ -216,7 +221,7 @@ $(document).ready(function() {
   ini_table();
 
 
-  $('.bt-newsession').click(function(e) {
+  $('.bt-newsession').unbind('click').bind('click',function(e) {
     e.preventDefault();
     var target = $(this).data('target');
     $('#content-area').load('/sessions_new.html'); // Load content for new table form
