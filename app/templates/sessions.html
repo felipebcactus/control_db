@@ -343,9 +343,8 @@ function bind_permission(){
   $('.bt-permission').unbind('click').bind('click',function() {
     __bt = $(this);
     __bt_content = $(this).html();
-    window.setTimeout(function(){
-      __bt.unbind('click').html('<i class="fas fa-sync fa-spin"></i>');
-    },10);
+    
+    __bt.unbind('click').html('<i class="fas fa-sync fa-spin"></i>');
 
     const permissionModal = document.getElementById('permissionModal');
     const button = $(this);
@@ -357,25 +356,30 @@ function bind_permission(){
     modalTitle.textContent = "Generate permissions for: "+user_name
     
     window.setTimeout(function(){
-      $.ajax({
-          url: '/getHostsDatabasesTablesTree', 
-          dataType : 'json',
-          async : false,
-          success : function(data) { 
-            window.setTimeout(function(){
-              console.log('loaded');
-              bind_permission();
-              __bt.html(__bt_content);
-            },10);
-            bindmodal(data);
-            $('#permissionModal').modal('show');
-          }
-      });
+      start_datatree();
     },10);
     
   });
 }
 
+function start_datatree(){
+  
+  $.ajax({
+      url: '/getHostsDatabasesTablesTree', 
+      dataType : 'json',
+      async : false,
+      success : function(data) { 
+        window.setTimeout(function(){
+          console.log('loaded');
+          bind_permission();
+          __bt.html(__bt_content);
+        },10);
+        bindmodal(data);
+        $('#permissionModal').modal('show');
+      }
+  });
+  
+}
 
 function bindmodal(datatree){
   tree_sel = new Tree('.container', { // https://github.com/daweilv/treejs
