@@ -367,7 +367,7 @@ function start_datatree(){
   $.ajax({
       url: '/getHostsDatabasesTablesTree', 
       dataType : 'json',
-      async : false,
+      async : true,
       success : function(data) { 
         window.setTimeout(function(){
           console.log('loaded');
