@@ -23,7 +23,7 @@ var qtd_global=0;
 $(document).ready(function() {
 
 // Additional code to fetch database
-  function ini_table(pag=1,qtd=10){
+  function ini_table(pag=1,qtd=20){
     qtd_global = qtd;
     $('#databases > tbody').empty();
     $.getJSON('/getDatabases?pag='+pag+'&qtd='+qtd, function (returned) {
