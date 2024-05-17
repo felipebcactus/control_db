@@ -333,12 +333,15 @@ $(document).ready(function() {
     
 
     var datatree=[];
-    
+    var _bt_content = $('.bt-permission').html();
+    $('.bt-permission').html('<i class="fas fa-sync fa-spin"></i>');
+
     $.ajax({
         url: '/getHostsDatabasesTablesTree', 
         dataType : 'json',
         async : false,
         success : function(data) { 
+          $('.bt-permission').html(_bt_content);
           datatree = data;
         }
     });
