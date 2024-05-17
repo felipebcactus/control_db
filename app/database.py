@@ -37,6 +37,9 @@ def get_by_paginated_filtered(model, filter_column, filter_value, order_by_colum
         'next_num': paginated_query.next_num
     }
 
+def get_distinct(model, field):
+    return model.query.distinct(field).all()
+
 def get_by_paginated(model, order_by_column, page=1, per_page=10, orderby=False):
     if orderby==False:
         query = model.query.order_by(getattr(model, order_by_column))

@@ -349,12 +349,30 @@ def addSession():
     session_obj['id_session'] = _sess
     return json.dumps(session_obj), 200
 
+def getFieldValuesFromObjectsArray(objects, name, getFieldNameById=False, ModelName=False):
+    values = []
+    for obj in objects:
+        if name!=None and name!=False and obj!=False and hasattr(obj, name):
+            item = getattr(obj, name)
+            if item!=None:
+                if getFieldNameById:
+                    if ModelName:
+                        values.append({item:getattr(database.get_id(ModelName, item),getFieldNameById)})
+                    else:
+                        values.append({item:getFieldNameById[item]})
+                else:
+                    values.append(item)
+    return values
 
 @app.route('/getSessions', methods=['GET'])
 @login_required
 def getSessions(_json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
+    
+    unique_users = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'user'), 'user', 'name', Users)
+    unique_approvers = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'approver'), 'approver', 'name', Users)
+    unique_status = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'status'), 'status', session_status_type)
     
     sessions_pag = database.get_by_paginated(Sessions, 'request_date', page=pag, per_page=qtd, orderby=True)
     
@@ -390,7 +408,10 @@ def getSessions(_json=False):
         'has_prev': sessions_pag['has_prev'],
         'has_next': sessions_pag['has_next'],
         'prev_num': sessions_pag['prev_num'],
-        'next_num': sessions_pag['next_num']
+        'next_num': sessions_pag['next_num'],
+        'unique_users': unique_users,
+        'unique_approvers': unique_approvers,
+        'unique_status': unique_status
     }
     
     if _json==True:
@@ -405,6 +426,8 @@ def getSessionsUser(user_id, _json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
     
+    unique_users = Users.objects.filter(session__isnull=False).distinct()
+        
     sessions_pag = database.get_by_paginated_filtered(Sessions, 'user', user_id, 'request_date', page=pag, per_page=qtd, order_desc=True)
     
     sessions = database.get_by(Sessions, 'user', user_id)
@@ -461,7 +484,8 @@ def getSessionsUser(user_id, _json=False):
         'has_next': sessions_pag['has_next'],
         'prev_num': sessions_pag['prev_num'],
         'next_num': sessions_pag['next_num'],
-        'approver_user': approver_user
+        'approver_user': approver_user,
+        'unique_users': unique_users
     }        
             
     if _json==True:
