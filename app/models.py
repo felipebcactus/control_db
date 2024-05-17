@@ -12,7 +12,7 @@ host_types = {
 }
 
 db_name_ignore_per_type = {
-    0: ['information_schema','mysql','sys','performance_schema','innodb','tmp']
+    0: ['information_schema','mysql','sys','performance_schema','innodb','tmp','awsdms_control']
 }
 
 db_username_deny = {
@@ -41,7 +41,7 @@ table_type = {
 
 session_status_type = {
     -1: 'New',
-    0: 'Waiting Approve',
+    0: 'Waiting for approval',
     1: 'Approved' ,
     2: 'Revoked'  ,
     3: 'Expired'  ,

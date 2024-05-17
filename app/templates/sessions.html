@@ -160,7 +160,7 @@ $(document).ready(function() {
         var _btcontent = $(this).html();
         $(this).html('<i class="fas fa-sync fa-spin"></i>');
         console.log(">>>",_btcontent,$(this).html());
-        if(confirm('Approve this session?')){
+        //if(confirm('Approve this session?')){
           var user_id_logged = {{ user_id }};
           var request_data = JSON.stringify({'data': {session_id: $(this).data('idsession'), approver: user_id_logged}});
           $.ajax({
@@ -174,9 +174,9 @@ $(document).ready(function() {
             contentType: "application/json",
             dataType: 'json'
           });
-        }else{
-          _bt.html(_btcontent);
-        }
+        //}else{
+        //  _bt.html(_btcontent);
+        //}
       });
 
       $('.bt-permission-remove').unbind('click').bind('click',function(e) {

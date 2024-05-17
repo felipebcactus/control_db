@@ -147,16 +147,24 @@ def delete_instance_by(model, column_name, value):
     
 
 def edit_instance(model, id, **kwargs):
-    instance = model.query.filter_by(id=id).all()[0]
-    for attr, new_value in kwargs.items():
-        setattr(instance, attr, new_value)
-    commit_changes()
+    try:
+        instance = model.query.filter_by(id=id).all()[0]
+        for attr, new_value in kwargs.items():
+            setattr(instance, attr, new_value)
+        commit_changes()        
+    except Exception as ex:
+        print('EDIT INSTANCE')
+        print(ex)
 
 def edit_instance_by(model, column_name, _value, **kwargs):
-    instance = model.query.filter(getattr(model, column_name) == _value).all()[0]
-    for attr, new_value in kwargs.items():
-        setattr(instance, attr, new_value)
-    commit_changes()
+    try:
+        instance = model.query.filter(getattr(model, column_name) == _value).all()[0]
+        for attr, new_value in kwargs.items():
+            setattr(instance, attr, new_value)
+        commit_changes()    
+    except Exception as ex:
+        print('EDIT INSTANCE BY')
+        print(ex)
 
 def commit_changes():
     db.session.commit()
