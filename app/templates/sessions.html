@@ -3,16 +3,18 @@
 <div class="d-flex justify-content-between mb-3">
   <button type="button" class="btn btn-primary bt-newsession" data-toggle="modal" data-target="#sessionModal">New Session</button>
 </div>
+<div class="filter_applied">
 
+</div>
 <table class="table table-dark" id="Sessions">
   <thead>
     <tr>
       <th scope="col">ID</th>
-      <th scope="col"><i class="filter-icon" data-column="user"></i> User</th>
-      <th scope="col"><i class="filter-icon" data-column="approver"></i> Approver</th>
+      <th scope="col"><span class="filter-title" data-column="user">User</span></th>
+      <th scope="col"><span class="filter-title" data-column="approver">Approver</span></th>
       <th scope="col">Access Start</th>
       <th scope="col">Access End</th>
-      <th scope="col"><i class="filter-icon" data-column="status"></i> Status</th>
+      <th scope="col"><span class="filter-title" data-column="status">Status</span></th>
       <th scope="col">Request Date</th>
       <th scope="col">Approve Date</th>
       <th scope="col">Description</th>
@@ -27,33 +29,77 @@
 <div class="pagination">
 </div>
 
+<style>
+  .filter-icon {
+    cursor: pointer;
+    margin-left: 5px;
+    top: -48px;
+    position: relative;
+    left: -8px;
+  }
+
+  .filter-icon:before {
+    content: "\f0b0"; /* FontAwesome filter icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: #ffc107;
+  }
+
+  .filter-icon.active:before {
+    color: #333;
+  }
+
+  .filter-title {
+    cursor: pointer;
+    margin-left: 20px;
+  }
+</style>
+
 <script>
 var tree_sel;
 var qtd_global=0;
 var pag_global=0;
 var filters_global={};
+var global_users_filters={};
 
 $(document).ready(function() {
 
 
-  $('.filter-icon').each(function(){
+  $('.filter-title').each(function(){
+    var title = $(this);
     var column = $(this).attr('data-column');
-    $(this).unbind('click').bind('click', function(){
-      console.log('clicado',column, filters_global['unique_'+column]);
-      var select_created = $('<select class="filter_value"><option value=""></option></select>').unbind('change,blur').bind('change,blur',function(){
-        console.log(column,$(this).find(':selected').val());
-        $(this).remove();
-      }).insertAfter($(this));
-      var filters = filters_global['unique_'+column];
-      if(filters.length>0){
-        for(var i in filters){
-          select_created.append($('<option>').val(Object.keys(filters[i])[0]).text(Object.values(filters[i])[0]));
+    title.unbind('mouseover').bind('mouseover',function(){
+      $(this).css('color','#ffc107');
+    }).unbind('mouseout').bind('mouseout',function(){
+      $(this).css('color','');
+    }).unbind('click').bind('click', function(){   
+      if($(this).parent().find('select').length==0){
+        title.unbind('mouseout').css('color','#ffc107');   
+        var icon_created = $('<i class="filter-icon"></i>').insertAfter($(this));
+        var select_created = $('<select class="filter_value"><option value=""></option></select>').unbind('change').bind('change',function(){
+          filters_global[column] = $(this).find(':selected').val();
+          ini_table(pag_global,qtd_global,filters_global);
+          title.parent().find('select,i').remove();
+        }).insertAfter($(this));
+        var filters = filters_global['unique_'+column];
+        if(filters.length>0){
+          for(var i in filters){
+            select_created.append($('<option>').val(Object.keys(filters[i])[0]).text(Object.values(filters[i])[0]));
+          }
+        }else{
+          title.parent().find('select,i').remove();
+          title.unbind('mouseout').bind('mouseout',function(){
+            $(this).css('color','');
+          }).trigger('mouseout');   
         }
       }else{
-        select_created.remove();
+          title.parent().find('select,i').remove();
+          title.unbind('mouseout').bind('mouseout',function(){
+            $(this).css('color','');
+          }).trigger('mouseout');   
       }
     });
-  });
+  }).css('cursor','pointer');
 
 
 
@@ -63,6 +109,15 @@ $(document).ready(function() {
     qtd_global = qtd;
     filters_global = filter;
     var session_included = Cookies.get("session_included") | undefined;
+
+    $('.filter_applied').html('Filtros aplicados:<br>');
+    if(filters_global.hasOwnProperty('user') && Object.keys(filters_global['user']).length>0){
+      for(var k in filters_global['user']){
+        $('.filter_applied').append('- user: '+global_users_filters[filters_global['user'][k]]);
+      }
+    }else{
+      $('.filter_applied').html('');
+    }
     
     $.getJSON('/getSessions'+((filter_user!=false)?'/'+filter_user:'')+'?pag='+pag+'&qtd='+qtd, function (returned) {
       //if (!Array.isArray(sessions)) return; // Check for array response
@@ -72,6 +127,12 @@ $(document).ready(function() {
       filters_global['unique_user'] = returned['unique_users'];
       filters_global['unique_approver'] = returned['unique_approvers'];
       filters_global['unique_status'] = returned['unique_status'];
+
+      if(Object.keys(filters_global['unique_user']).length>0){
+        for(var h in filters_global['unique_user']){
+          global_users_filters[Object.keys(filters_global['unique_user'][h])[0]] = Object.values(filters_global['unique_user'][h])[0];
+        }
+      }
       
       var pag = document.createElement('div');
       pag.innerHTML = '';
@@ -326,24 +387,6 @@ $(document).ready(function() {
   
 });
 </script>
-<style>
-  .filter-icon {
-    cursor: pointer;
-    margin-left: 5px;
-  }
-
-  .filter-icon:before {
-    content: "\f0b0"; /* FontAwesome filter icon */
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    color: #ccc;
-  }
-
-  .filter-icon.active:before {
-    color: #333;
-  }
-</style>
-
 
 <div class="modal fade" id="permissionModal" tabindex="-1" aria-labelledby="permissionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
