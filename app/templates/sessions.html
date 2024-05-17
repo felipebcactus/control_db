@@ -211,7 +211,7 @@ $(document).ready(function() {
           '<td>' + moment(request_date).format("YYYY/MM/DD HH:mm") + '</td>' +
           '<td>' + (approve_date=='None'?'':moment(approve_date).format("YYYY/MM/DD HH:mm")) + '</td>' +
           '<td><pre>' + description + '</pre></td>' +
-          '<td style="text-wrap: nowrap;"> <button class="btn btn-sm btn-success bt-permission" data-bs-toggle="modal" data-bs-target="#permissionModal" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
+          '<td style="text-wrap: nowrap;"> <button class="btn btn-sm btn-success bt-permission" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
           ' <button class="btn btn-sm btn-warning bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> '+
           ' <button class="btn btn-sm btn-danger bt-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-trash3-fill"></i> delete session</button> '+
           ' <button class="btn btn-sm btn-info bt-info" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-diagram-3-fill"></i> view tree</button> '+
