@@ -426,7 +426,7 @@ def getSessionsUser(user_id, _json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
     
-    unique_users = Users.objects.filter(session__isnull=False).distinct()
+    # unique_users = Users.objects.filter(session__isnull=False).distinct()
         
     sessions_pag = database.get_by_paginated_filtered(Sessions, 'user', user_id, 'request_date', page=pag, per_page=qtd, order_desc=True)
     
