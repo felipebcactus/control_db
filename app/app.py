@@ -280,7 +280,7 @@ def addUser():
                 if item['value'].strip() == username_denied:
                     item['value']='DENIED_'+item['value'] 
         user_obj[item['name']] = item['value']
-    database.add_instance(Users, name=user_obj['name'], type=user_obj['type'], email=user_obj['email'], parent=(None if user_obj['parent']=='' else user_obj['parent']), password=generate_password_hash(user_obj['password'], method='pbkdf2:sha256'))
+    database.add_instance(Users, name=user_obj['name'], type=user_obj['type'], status=1, email=user_obj['email'], parent=(None if user_obj['parent']=='' else user_obj['parent']), password=generate_password_hash(user_obj['password'], method='pbkdf2:sha256'))
     return json.dumps(user_obj), 200
 
 

@@ -1,7 +1,7 @@
 <h2>Create New User</h2>
 <form id="user-form">
   <div class="mb-3">
-    <label for="email" class="form-label">E-mail</label>
+    <label for="email" class="form-label">E-mail *</label>
     <input type="text" class="form-control" id="email" name="email" required>
   </div>
   <div class="mb-3">
@@ -9,11 +9,11 @@
     <input type="text" class="form-control disabled" id="name" name="name" required readonly style="cursor: not-allowed;background-color: #bbb;">
   </div>
   <div class="mb-3">
-    <label for="password" class="form-label">Password</label>
+    <label for="password" class="form-label">Password *</label>
     <input type="password" class="form-control" id="password" name="password" required>
   </div>
   <div class="mb-3">
-    <label for="type" class="form-label">Type</label>
+    <label for="type" class="form-label">Type *</label>
     <select class="form-select" id="type" name="type" required>
       <option value="0">Admin (Default Both)</option>
       <option value="1" selected>User Only</option>
@@ -24,6 +24,9 @@
     <label for="parent" class="form-label">Parent User</label>
     <select class="form-select" id="parentCombo" name="parent" required>
     </select>
+  </div>
+  <div class="mb-3">
+    <small>* - required fields</small>
   </div>
   <button type="button" form="user-form" class="btn btn-primary bt-create">Create</button>
   <button type="button" form="user-form" class="btn btn-danger bt-cancel">CANCEL</button>
