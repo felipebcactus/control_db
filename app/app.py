@@ -199,7 +199,7 @@ def getDatabases(_json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
     
-    databases_pag = database.get_by_paginated(Databases, 'name', page=pag, per_page=qtd)
+    databases_pag = database.get_by_paginated(Databases, 'id', page=pag, per_page=qtd, orderby=True)
     
     all_databases = []
     for _database in databases_pag['items']:
