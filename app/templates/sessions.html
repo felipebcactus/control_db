@@ -353,6 +353,7 @@ $(document).ready(function() {
             },10);
             bind_permission();
             datatree = data;
+            $('#permissionModal').modal('show');
           }
       });
       
@@ -392,7 +393,6 @@ $(document).ready(function() {
       window.setTimeout(function(){
         __bt.html(__bt_content);
       },10);
-      $('#permissionModal').modal('show');
     });
   }
 
