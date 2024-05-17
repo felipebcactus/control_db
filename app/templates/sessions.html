@@ -62,6 +62,10 @@ var pag_global=0;
 var filters_global={};
 var global_users_filters={};
 
+
+var __bt;
+var __bt_content;
+
 $(document).ready(function() {
 
 
@@ -320,65 +324,79 @@ $(document).ready(function() {
     $('#content-area').load('/sessions_new.html'); // Load content for new table form
   });
   
-  
-  const permissionModal = document.getElementById('permissionModal');
-  permissionModal.addEventListener('show.bs.modal', event => {
-    const button = event.relatedTarget
-    const session_id = button.getAttribute('data-bs-session-id')
-    const user_id = button.getAttribute('data-bs-user-id')
-    const user_name = button.getAttribute('data-bs-user-name')    
-    const modalTitle = permissionModal.querySelector('.modal-title')
+  function bind_permission(){
+    $('.bt-permission').unbind('click').bind('click',function() {
+      __bt = $(this);
+      __bt_content = $(this).html();
+      window.setTimeout(function(){
+        __bt.unbind('click').html('<i class="fas fa-sync fa-spin"></i>');
+      },10);
 
-    modalTitle.textContent = "Generate permissions for: "+user_name
-    
+      const permissionModal = document.getElementById('permissionModal');
+      const button = $(this);
+      const session_id = button.attr('data-bs-session-id')
+      const user_id = button.attr('data-bs-user-id')
+      const user_name = button.attr('data-bs-user-name')    
+      const modalTitle = permissionModal.querySelector('.modal-title')
 
-    var datatree=[];
-    var _bt_content = $('.bt-permission').html();
-    $('.bt-permission').html('<i class="fas fa-sync fa-spin"></i>');
-
-    $.ajax({
-        url: '/getHostsDatabasesTablesTree', 
-        dataType : 'json',
-        async : false,
-        success : function(data) { 
-          $('.bt-permission').html(_bt_content);
-          datatree = data;
-        }
-    });
-    
-    tree_sel = new Tree('.container', { // https://github.com/daweilv/treejs
-        closeDepth: 1,
-        data: datatree
-    });
-
-    $('.bt-generate').unbind('click').bind('click',function(){
-      var _bt = $(this);
-      var _btcontent = $(this).html();
-      var selected_val_data = tree_sel.getSelectedNodesById();
-      var selected_array_data=[];
-      for(var i in selected_val_data){
-        selected_array_data.push(i);
-      }
-      $(this).html('<i class="fas fa-sync fa-spin"></i>');
-      var request_data = JSON.stringify({'data': {username: user_name, session_id: session_id, datatree: selected_array_data, filter_user: filter_user}});
+      modalTitle.textContent = "Generate permissions for: "+user_name
+      
+      var datatree=[];
 
       $.ajax({
-        type: 'POST',
-        async : false,
-        url: '/postHostsDatabasesTablesTree',
-        data: request_data,
-        success: function(status) { 
-          var waiting_approve = status.details.waiting_approve;
-          _bt.html(_btcontent);
-          $('#permissionModal').modal('hide');
-          ini_table();
-          exibeSenha(status.username,status.details,waiting_approve);
-        },
-        contentType: "application/json",
-        dataType: 'json'
+          url: '/getHostsDatabasesTablesTree', 
+          dataType : 'json',
+          async : false,
+          success : function(data) { 
+            window.setTimeout(function(){
+              __bt.html(__bt_content);
+            },10);
+            bind_permission();
+            datatree = data;
+          }
       });
+      
+      tree_sel = new Tree('.container', { // https://github.com/daweilv/treejs
+          closeDepth: 1,
+          data: datatree
+      });
+
+      $('.bt-generate').unbind('click').bind('click',function(){
+        var _bt = $(this);
+        var _btcontent = $(this).html();
+        var selected_val_data = tree_sel.getSelectedNodesById();
+        var selected_array_data=[];
+        for(var i in selected_val_data){
+          selected_array_data.push(i);
+        }
+        $(this).html('<i class="fas fa-sync fa-spin"></i>');
+        var request_data = JSON.stringify({'data': {username: user_name, session_id: session_id, datatree: selected_array_data, filter_user: filter_user}});
+
+        $.ajax({
+          type: 'POST',
+          async : false,
+          url: '/postHostsDatabasesTablesTree',
+          data: request_data,
+          success: function(status) { 
+            var waiting_approve = status.details.waiting_approve;
+            _bt.html(_btcontent);
+            $('#permissionModal').modal('hide');
+            ini_table();
+            exibeSenha(status.username,status.details,waiting_approve);
+          },
+          contentType: "application/json",
+          dataType: 'json'
+        });
+      });
+
+      window.setTimeout(function(){
+        __bt.html(__bt_content);
+      },10);
+      $('#permissionModal').modal('show');
     });
-  });
+  }
+
+  bind_permission();
 
   function exibeSenha(username,details,waiting_approve){
     var modal = $('#passwordModal');
