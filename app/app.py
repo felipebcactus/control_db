@@ -484,8 +484,7 @@ def getSessionsUser(user_id, _json=False):
         'has_next': sessions_pag['has_next'],
         'prev_num': sessions_pag['prev_num'],
         'next_num': sessions_pag['next_num'],
-        'approver_user': approver_user,
-        'unique_users': unique_users
+        'approver_user': approver_user
     }        
             
     if _json==True:
