@@ -180,14 +180,13 @@ function ini_table(pag=1,qtd=10,filter={}){
       e.preventDefault();
       var _bt = $(this);
       var _btcontent = $(this).html();
-      $(this).html('<i class="fas fa-sync fa-spin"></i>');
-      console.log(">>>",_btcontent,$(this).html());
+      $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       //if(confirm('Approve this session?')){
         var user_id_logged = {{ user_id }};
         var request_data = JSON.stringify({'data': {session_id: $(this).data('idsession'), approver: user_id_logged}});
         $.ajax({
           type: 'POST',
-          async : false,
+          async : true,
           url: '/postHostsDatabasesTablesTreeApprove',
           data: request_data,
           success: function(status) { 
@@ -203,6 +202,9 @@ function ini_table(pag=1,qtd=10,filter={}){
 
     $('.bt-permission-remove').unbind('click').bind('click',function(e) {
       e.preventDefault();
+      var _bt = $(this);
+      var _btcontent = $(this).html();
+      $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       const session_id = $(this).attr('data-bs-session-id')
       const user_name = $(this).attr('data-bs-user-name')
       var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name}});
@@ -210,7 +212,7 @@ function ini_table(pag=1,qtd=10,filter={}){
         $(this).html('<i class="fas fa-sync fa-spin"></i>');
         $.ajax({
           type: 'POST',
-          async : false,
+          async : true,
           url: '/removeUserFromHostBySession',
           data: request_data,
           success: function(status) { 
@@ -225,6 +227,9 @@ function ini_table(pag=1,qtd=10,filter={}){
 
     $('.bt-remove').unbind('click').bind('click',function(e) {
       e.preventDefault();
+      var _bt = $(this);
+      var _btcontent = $(this).html();
+      $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       const session_id = $(this).attr('data-bs-session-id')
       const user_name = $(this).attr('data-bs-user-name')
       const user_id = $(this).attr('data-bs-user-id')
@@ -233,7 +238,7 @@ function ini_table(pag=1,qtd=10,filter={}){
         $(this).html('<i class="fas fa-sync fa-spin"></i>');
         $.ajax({
           type: 'POST',
-          async : false,
+          async : true,
           url: '/removeSession/'+((filter_user!=false)?filter_user:'0'),
           data: request_data,
           success: function(status) { 
@@ -248,11 +253,15 @@ function ini_table(pag=1,qtd=10,filter={}){
     
     $('.bt-info').unbind('click').bind('click',function(e) {
       e.preventDefault();
+      var _bt = $(this);
+      var _btcontent = $(this).html();
+      $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       const session_id = $(this).attr('data-bs-session-id')
       const user_name = $(this).attr('data-bs-user-name')
       const user_id = $(this).attr('data-bs-user-id')
       $.getJSON('/getTreeSession/'+session_id, function (tree) {
         if(tree.hasOwnProperty('permissions_name')){
+          __bt.html(__bt_content);
           var modal = $('#passwordModal');
           modal.find('.modal-title').text('Permissions required');
           modal.find('.container').text("Permissions Tree: "+JSON.stringify(tree['permissions_name'], null, 2));
@@ -412,7 +421,7 @@ function bindmodal(datatree){
 
     $.ajax({
       type: 'POST',
-      async : false,
+      async : true,
       url: '/postHostsDatabasesTablesTree',
       data: request_data,
       success: function(status) { 
