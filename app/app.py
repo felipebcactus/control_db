@@ -801,7 +801,7 @@ def expireAccessEnd():
     print('Sessoes expiradas: ')
     print(_expired)
     for expired_session in _expired:
-        removeUserFromHostBySession({'session_id':expired_session.id,'expired':datetime.now()})
+        removeUserFromHostBySession_action({'session_id':expired_session.id,'expired':datetime.now()})
         _sessions_expired.append(expired_session.id)
     return {'session_expired': _sessions_expired}, 200
 
@@ -850,6 +850,9 @@ def removeUserFromHostByHostId(_host_id):
 @app.route('/removeUserFromHostBySession', methods=['POST'])
 @login_required
 def removeUserFromHostBySession(_data_received=None):
+    removeUserFromHostBySession_action(_data_received=_data_received)
+    
+def removeUserFromHostBySession_action(_data_received=None):
     print("removeUserFromHostBySession")
     print(_data_received)
     _data = request.get_json()['data'] if _data_received==None else _data_received
