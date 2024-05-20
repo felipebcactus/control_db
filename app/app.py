@@ -798,6 +798,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
 def expireAccessEnd():
     _sessions_expired=[]
     _expired = database.get_by_date_and_filter(Sessions, 'access_end', datetime.now(), 'status', 1, False)
+    print('Sessoes expiradas: ')
+    print(_expired.__dict__)
     for expired_session in _expired:
         removeUserFromHostBySession({'session_id':expired_session.id,'expired':datetime.now()})
         _sessions_expired.append(expired_session.id)
