@@ -795,7 +795,6 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
 
 
 @app.route('/expireAccessEnd', methods=['GET'])
-@login_required
 def expireAccessEnd():
     _sessions_expired=[]
     _expired = database.get_by_date_and_filter(Sessions, 'access_end', datetime.now(), 'status', 1, False)
