@@ -61,10 +61,9 @@ var qtd_global=0;
 var pag_global=0;
 var filters_global={};
 var global_users_filters={};
-
-
 var __bt;
 var __bt_content;
+var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
 
 $(document).ready(function() {
 
@@ -105,9 +104,6 @@ $(document).ready(function() {
     });
   }).css('cursor','pointer');
 
-
-
-  var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
   function ini_table(pag=1,qtd=10,filter={}){
     pag_global = pag;
     qtd_global = qtd;
