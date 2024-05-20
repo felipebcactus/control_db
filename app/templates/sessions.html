@@ -65,7 +65,220 @@ var __bt;
 var __bt_content;
 var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
 
+function ini_table(pag=1,qtd=10,filter={}){
+  pag_global = pag;
+  qtd_global = qtd;
+  filters_global = filter;
+  var session_included = Cookies.get("session_included") | undefined;
+
+  $('.filter_applied').html('Filtros aplicados:<br>');
+  if(filters_global.hasOwnProperty('user') && Object.keys(filters_global['user']).length>0){
+    for(var k in filters_global['user']){
+      $('.filter_applied').append('- user: '+global_users_filters[filters_global['user'][k]]);
+    }
+  }else{
+    $('.filter_applied').html('');
+  }
+  
+  $.getJSON('/getSessions'+((filter_user!=false)?'/'+filter_user:'')+'?pag='+pag+'&qtd='+qtd, function (returned) {
+    //if (!Array.isArray(sessions)) return; // Check for array response
+    $('#Sessions > tbody').empty();
+    sessions = returned['items'];
+
+    filters_global['unique_user'] = returned['unique_users'];
+    filters_global['unique_approver'] = returned['unique_approvers'];
+    filters_global['unique_status'] = returned['unique_status'];
+
+    if(Object.keys(filters_global['unique_user']).length>0){
+      for(var h in filters_global['unique_user']){
+        global_users_filters[Object.keys(filters_global['unique_user'][h])[0]] = Object.values(filters_global['unique_user'][h])[0];
+      }
+    }
+    
+    var pag = document.createElement('div');
+    pag.innerHTML = '';
+    
+    if(returned['has_prev']){
+      pag.innerHTML += `
+          <span page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
+      `;
+    }else{
+      pag.innerHTML += `
+          <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
+      `;
+    }
+    var contfor=0;
+    for(var i=1; i<=returned['pages']; i++){
+      if(i == returned['page']){
+        pag.innerHTML += `
+                <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
+        `;
+      }else{
+        contfor++;
+        pag.innerHTML += `
+              <span page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
+        `;
+      }
+      if(false && contfor>3){
+        pag.innerHTML += `
+              <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
+        `;
+        break;          
+      }
+    }
+    if(returned['has_next']){
+      pag.innerHTML += `
+          <span page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
+      `;
+    }else{
+      pag.innerHTML += `
+          <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
+      `;
+    }
+    $('.pagination').html('').append(pag.innerHTML);
+    $('.linknav[page]').unbind('click').bind('click',function(){
+      ini_table($(this).attr('page'),qtd_global)
+    });
+    for (var i in sessions) {
+
+      var id = sessions[i].id
+      var user = sessions[i].user
+      var user_name = sessions[i].user_name
+      var approver = sessions[i].approver
+      var access_start = sessions[i].access_start
+      var access_end = sessions[i].access_end
+      var status = sessions[i].status
+      var status_id = sessions[i].status_id
+      var request_date = sessions[i].request_date
+      var approve_date = sessions[i].approve_date
+      var description = sessions[i].description
+      var updated_at = sessions[i].updated_at
+      
+      if((!filter_user || returned['approver_user']==true) && status_id==0){
+        status+="<button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button>";
+      }
+      // Modify selector to target tables table
+      $('#Sessions > tbody:last').append('<tr>' +
+        '<td>' + id + '</td>' +
+        '<td>' + user_name + '</td>' +
+        '<td>' + ((approver!=null && approver!='')?approver:'') + '</td>' +
+        '<td>' + moment(access_start).format("YYYY/MM/DD HH:mm") + '</td>' +
+        '<td>' + moment(access_end).format("YYYY/MM/DD HH:mm") + '</td>' +
+        '<td>' + status + '</td>' +
+        '<td>' + moment(request_date).format("YYYY/MM/DD HH:mm") + '</td>' +
+        '<td>' + (approve_date=='None'?'':moment(approve_date).format("YYYY/MM/DD HH:mm")) + '</td>' +
+        '<td><pre>' + description + '</pre></td>' +
+        '<td style="text-wrap: nowrap;"> <button class="btn btn-sm btn-success bt-permission" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
+        ' <button class="btn btn-sm btn-warning bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> '+
+        ' <button class="btn btn-sm btn-danger bt-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-trash3-fill"></i> delete session</button> '+
+        ' <button class="btn btn-sm btn-info bt-info" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-diagram-3-fill"></i> view tree</button> '+
+        ' </td>' +
+        '</tr>');
+    }
+
+    $('.bt-approve').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      var _bt = $(this);
+      var _btcontent = $(this).html();
+      $(this).html('<i class="fas fa-sync fa-spin"></i>');
+      console.log(">>>",_btcontent,$(this).html());
+      //if(confirm('Approve this session?')){
+        var user_id_logged = {{ user_id }};
+        var request_data = JSON.stringify({'data': {session_id: $(this).data('idsession'), approver: user_id_logged}});
+        $.ajax({
+          type: 'POST',
+          async : false,
+          url: '/postHostsDatabasesTablesTreeApprove',
+          data: request_data,
+          success: function(status) { 
+            ini_table();
+          },
+          contentType: "application/json",
+          dataType: 'json'
+        });
+      //}else{
+      //  _bt.html(_btcontent);
+      //}
+    });
+
+    $('.bt-permission-remove').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      const session_id = $(this).attr('data-bs-session-id')
+      const user_name = $(this).attr('data-bs-user-name')
+      var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name}});
+      if(confirm('Remove all permissions for this username?')){
+        $(this).html('<i class="fas fa-sync fa-spin"></i>');
+        $.ajax({
+          type: 'POST',
+          async : false,
+          url: '/removeUserFromHostBySession',
+          data: request_data,
+          success: function(status) { 
+            ini_table();
+          },
+          contentType: "application/json",
+          dataType: 'json'
+        });
+      }
+    });
+
+
+    $('.bt-remove').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      const session_id = $(this).attr('data-bs-session-id')
+      const user_name = $(this).attr('data-bs-user-name')
+      const user_id = $(this).attr('data-bs-user-id')
+      var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name, user_id: user_id}});
+      if(confirm('Delete this session?')){
+        $(this).html('<i class="fas fa-sync fa-spin"></i>');
+        $.ajax({
+          type: 'POST',
+          async : false,
+          url: '/removeSession/'+((filter_user!=false)?filter_user:'0'),
+          data: request_data,
+          success: function(status) { 
+            ini_table();
+          },
+          contentType: "application/json",
+          dataType: 'json'
+        });
+      }
+    });
+
+    
+    $('.bt-info').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      const session_id = $(this).attr('data-bs-session-id')
+      const user_name = $(this).attr('data-bs-user-name')
+      const user_id = $(this).attr('data-bs-user-id')
+      $.getJSON('/getTreeSession/'+session_id, function (tree) {
+        if(tree.hasOwnProperty('permissions_name')){
+          var modal = $('#passwordModal');
+          modal.find('.modal-title').text('Permissions required');
+          modal.find('.container').text("Permissions Tree: "+JSON.stringify(tree['permissions_name'], null, 2));
+          $('#passwordModal').modal('show');
+
+        }else{
+          alert('No permissions required yet');
+        }
+      });
+    });
+
+    
+    bind_permission();
+
+    if(session_included!=undefined && session_included!=0){
+      Cookies.remove("session_included");
+      $('.bt-permission[data-bs-session-id='+session_included+']').trigger('click');
+    }
+
+  });
+}
+
 $(document).ready(function() {
+
+
+  ini_table();
 
 
   $('.filter-title').each(function(){
@@ -104,236 +317,21 @@ $(document).ready(function() {
     });
   }).css('cursor','pointer');
 
-  function ini_table(pag=1,qtd=10,filter={}){
-    pag_global = pag;
-    qtd_global = qtd;
-    filters_global = filter;
-    var session_included = Cookies.get("session_included") | undefined;
-
-    $('.filter_applied').html('Filtros aplicados:<br>');
-    if(filters_global.hasOwnProperty('user') && Object.keys(filters_global['user']).length>0){
-      for(var k in filters_global['user']){
-        $('.filter_applied').append('- user: '+global_users_filters[filters_global['user'][k]]);
-      }
-    }else{
-      $('.filter_applied').html('');
-    }
-    
-    $.getJSON('/getSessions'+((filter_user!=false)?'/'+filter_user:'')+'?pag='+pag+'&qtd='+qtd, function (returned) {
-      //if (!Array.isArray(sessions)) return; // Check for array response
-      $('#Sessions > tbody').empty();
-      sessions = returned['items'];
-
-      filters_global['unique_user'] = returned['unique_users'];
-      filters_global['unique_approver'] = returned['unique_approvers'];
-      filters_global['unique_status'] = returned['unique_status'];
-
-      if(Object.keys(filters_global['unique_user']).length>0){
-        for(var h in filters_global['unique_user']){
-          global_users_filters[Object.keys(filters_global['unique_user'][h])[0]] = Object.values(filters_global['unique_user'][h])[0];
-        }
-      }
-      
-      var pag = document.createElement('div');
-      pag.innerHTML = '';
-      
-      if(returned['has_prev']){
-        pag.innerHTML += `
-            <span page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
-        `;
-      }else{
-        pag.innerHTML += `
-            <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
-        `;
-      }
-      var contfor=0;
-      for(var i=1; i<=returned['pages']; i++){
-        if(i == returned['page']){
-          pag.innerHTML += `
-                  <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
-          `;
-        }else{
-          contfor++;
-          pag.innerHTML += `
-                <span page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
-          `;
-        }
-        if(false && contfor>3){
-          pag.innerHTML += `
-                <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
-          `;
-          break;          
-        }
-      }
-      if(returned['has_next']){
-        pag.innerHTML += `
-            <span page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
-        `;
-      }else{
-        pag.innerHTML += `
-            <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
-        `;
-      }
-      $('.pagination').html('').append(pag.innerHTML);
-      $('.linknav[page]').unbind('click').bind('click',function(){
-        ini_table($(this).attr('page'),qtd_global)
-      });
-      for (var i in sessions) {
-
-        var id = sessions[i].id
-        var user = sessions[i].user
-        var user_name = sessions[i].user_name
-        var approver = sessions[i].approver
-        var access_start = sessions[i].access_start
-        var access_end = sessions[i].access_end
-        var status = sessions[i].status
-        var status_id = sessions[i].status_id
-        var request_date = sessions[i].request_date
-        var approve_date = sessions[i].approve_date
-        var description = sessions[i].description
-        var updated_at = sessions[i].updated_at
-        
-        if((!filter_user || returned['approver_user']==true) && status_id==0){
-          status+="<button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button>";
-        }
-        // Modify selector to target tables table
-        $('#Sessions > tbody:last').append('<tr>' +
-          '<td>' + id + '</td>' +
-          '<td>' + user_name + '</td>' +
-          '<td>' + ((approver!=null && approver!='')?approver:'') + '</td>' +
-          '<td>' + moment(access_start).format("YYYY/MM/DD HH:mm") + '</td>' +
-          '<td>' + moment(access_end).format("YYYY/MM/DD HH:mm") + '</td>' +
-          '<td>' + status + '</td>' +
-          '<td>' + moment(request_date).format("YYYY/MM/DD HH:mm") + '</td>' +
-          '<td>' + (approve_date=='None'?'':moment(approve_date).format("YYYY/MM/DD HH:mm")) + '</td>' +
-          '<td><pre>' + description + '</pre></td>' +
-          '<td style="text-wrap: nowrap;"> <button class="btn btn-sm btn-success bt-permission" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
-          ' <button class="btn btn-sm btn-warning bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> '+
-          ' <button class="btn btn-sm btn-danger bt-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-trash3-fill"></i> delete session</button> '+
-          ' <button class="btn btn-sm btn-info bt-info" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-diagram-3-fill"></i> view tree</button> '+
-          ' </td>' +
-          '</tr>');
-      }
-
-      $('.bt-approve').unbind('click').bind('click',function(e) {
-        e.preventDefault();
-        var _bt = $(this);
-        var _btcontent = $(this).html();
-        $(this).html('<i class="fas fa-sync fa-spin"></i>');
-        console.log(">>>",_btcontent,$(this).html());
-        //if(confirm('Approve this session?')){
-          var user_id_logged = {{ user_id }};
-          var request_data = JSON.stringify({'data': {session_id: $(this).data('idsession'), approver: user_id_logged}});
-          $.ajax({
-            type: 'POST',
-            async : false,
-            url: '/postHostsDatabasesTablesTreeApprove',
-            data: request_data,
-            success: function(status) { 
-              ini_table();
-            },
-            contentType: "application/json",
-            dataType: 'json'
-          });
-        //}else{
-        //  _bt.html(_btcontent);
-        //}
-      });
-
-      $('.bt-permission-remove').unbind('click').bind('click',function(e) {
-        e.preventDefault();
-        const session_id = $(this).attr('data-bs-session-id')
-        const user_name = $(this).attr('data-bs-user-name')
-        var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name}});
-        if(confirm('Remove all permissions for this username?')){
-          $(this).html('<i class="fas fa-sync fa-spin"></i>');
-          $.ajax({
-            type: 'POST',
-            async : false,
-            url: '/removeUserFromHostBySession',
-            data: request_data,
-            success: function(status) { 
-              ini_table();
-            },
-            contentType: "application/json",
-            dataType: 'json'
-          });
-        }
-      });
-
-
-      $('.bt-remove').unbind('click').bind('click',function(e) {
-        e.preventDefault();
-        const session_id = $(this).attr('data-bs-session-id')
-        const user_name = $(this).attr('data-bs-user-name')
-        const user_id = $(this).attr('data-bs-user-id')
-        var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name, user_id: user_id}});
-        if(confirm('Delete this session?')){
-          $(this).html('<i class="fas fa-sync fa-spin"></i>');
-          $.ajax({
-            type: 'POST',
-            async : false,
-            url: '/removeSession/'+((filter_user!=false)?filter_user:'0'),
-            data: request_data,
-            success: function(status) { 
-              ini_table();
-            },
-            contentType: "application/json",
-            dataType: 'json'
-          });
-        }
-      });
-
-      
-      $('.bt-info').unbind('click').bind('click',function(e) {
-        e.preventDefault();
-        const session_id = $(this).attr('data-bs-session-id')
-        const user_name = $(this).attr('data-bs-user-name')
-        const user_id = $(this).attr('data-bs-user-id')
-        $.getJSON('/getTreeSession/'+session_id, function (tree) {
-          if(tree.hasOwnProperty('permissions_name')){
-            var modal = $('#passwordModal');
-            modal.find('.modal-title').text('Permissions required');
-            modal.find('.container').text("Permissions Tree: "+JSON.stringify(tree['permissions_name'], null, 2));
-            $('#passwordModal').modal('show');
-
-          }else{
-            alert('No permissions required yet');
-          }
-        });
-      });
-
-      
-      bind_permission();
-
-      if(session_included!=undefined && session_included!=0){
-        Cookies.remove("session_included");
-        $('.bt-permission[data-bs-session-id='+session_included+']').trigger('click');
-      }
-
-    });
-  }
-
-  ini_table();
-
-
+  
   $('.bt-newsession').unbind('click').bind('click',function(e) {
     e.preventDefault();
     var target = $(this).data('target');
     $('#content-area').load('/sessions_new.html'); // Load content for new table form
   });
-  
-
-  function exibeSenha(username,details,waiting_approve){
-    var modal = $('#passwordModal');
-    modal.find('.modal-title').text(((waiting_approve)?"Waiting approve":"Generated access")+" for: "+username);
-    modal.find('.container').text("Username: \""+username+"\"\nTemporary password: \""+details.password+"\"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
-    $('#passwordModal').modal('show');
-  }
-
-  
+    
 });
 
+function exibeSenha(username,details,waiting_approve){
+  var modal = $('#passwordModal');
+  modal.find('.modal-title').text(((waiting_approve)?"Waiting approve":"Generated access")+" for: "+username);
+  modal.find('.container').text("Username: \""+username+"\"\nTemporary password: \""+details.password+"\"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
+  $('#passwordModal').modal('show');
+}
 
 function bind_permission(){
   $('.bt-permission').unbind('click').bind('click',function() {
