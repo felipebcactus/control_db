@@ -406,6 +406,10 @@ function bindmodal(datatree){
     var _btcontent = $(this).html();
     var selected_val_data = tree_sel.getSelectedNodesById();
     var selected_array_data=[];
+    var button = $('.bt-permission');
+    var session_id = button.attr('data-bs-session-id')
+    var user_id = button.attr('data-bs-user-id')
+    var user_name = button.attr('data-bs-user-name')    
     for(var i in selected_val_data){
       selected_array_data.push(i);
     }
