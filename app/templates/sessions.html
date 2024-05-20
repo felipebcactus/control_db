@@ -381,10 +381,24 @@ function start_datatree(){
   
 }
 
+function preventChildExpansion() {
+  $('.treejs-switcher').each(function () {
+      var $parent = $(this).closest('.treejs-node');
+      if (!$parent.hasClass('treejs-node__close')) {
+          $parent.addClass('treejs-node__close');
+      }
+  });
+}
+
 function bindmodal(datatree){
   tree_sel = new Tree('.container', { // https://github.com/daweilv/treejs
-      closeDepth: 3,
-      data: datatree
+      closeDepth: 1,
+      data: datatree,
+      loaded: function () {
+        window.setTimeout(preventChildExpansion,100);        
+      },
+        onChange: function () {
+      }
   });
 
   $('.bt-generate').unbind('click').bind('click',function(){
