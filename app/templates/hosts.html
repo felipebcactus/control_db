@@ -5,16 +5,16 @@
 <table class="table table-dark" id="hosts">
   <thead>
     <tr>
-      <th scope="col">ID</th>
+      <!-- th scope="col">ID</th -->
       <th scope="col">Name</th>
       <th scope="col">Type</th>
-      <th scope="col">W.Endpoint</th>
-      <th scope="col">R.Endpoint</th>
-      <th scope="col">Port</th>
-      <th scope="col">Username</th>
-      <th scope="col">Included by</th>
-      <th scope="col">Created at</th>
-      <th scope="col">Updated at</th>
+      <!-- th scope="col">W.Endpoint</th -->
+      <!-- th scope="col">R.Endpoint</th -->
+      <!-- th scope="col">Port</th -->
+      <!-- th scope="col">Username</th -->
+      <!-- th scope="col">Included by</th -->
+      <!-- th scope="col">Created at</th -->
+      <!-- th scope="col">Updated at</th -->
       <th scope="col">Actions</th>
       </tr>
   </thead>
@@ -27,6 +27,8 @@
 
 <script>
   var qtd_global=0;
+  var _bt;
+  var _btcontent;
   $(document).ready(function() {
     function ini_table(pag=1,qtd=10){
       qtd_global = qtd;
@@ -84,25 +86,50 @@
             // console.log(hosts[i]);
             var host_id=hosts[i].id;
             // '<a href="/hosts/' + host_id + '">' + hosts[i].name + '</a></td>' +
-            $('#hosts > tbody:last').append('<tr><td>'+host_id+'</td>' +
+            $('#hosts > tbody:last').append('<tr>' +
+              //<td>'+ host_id +'</td>' +
               '<td>' + hosts[i].name + '</td>' +
               '<td>' + hosts[i].type + '</td>' +
-              '<td>' + hosts[i].ipaddress + '</td>' +
-              '<td>' + hosts[i].ipaddress_read + '</td>' +
-              '<td>' + hosts[i].port + '</td>' +
-              '<td>' + hosts[i].username + '</td>' +
-              '<td>' + hosts[i].id_user + '</td>' +
-              '<td>' + moment(hosts[i].createdAt).format("YYYY/MM/DD HH:mm") + '</td>' +
-              '<td>' + moment(hosts[i].updatedAt).format("YYYY/MM/DD HH:mm") + '</td>' +
+              //'<td>' + hosts[i].ipaddress + '</td>' +
+              //'<td>' + hosts[i].ipaddress_read + '</td>' +
+              //'<td>' + hosts[i].port + '</td>' +
+              //'<td>' + hosts[i].username + '</td>' +
+              //'<td>' + hosts[i].id_user + '</td>' +
+              //'<td>' + moment(hosts[i].createdAt).format("YYYY/MM/DD HH:mm") + '</td>' +
+              //'<td>' + moment(hosts[i].updatedAt).format("YYYY/MM/DD HH:mm") + '</td>' +
               '<td><button class="btn btn-sm btn-success bt-sync" host_id="'+ hosts[i].id +'"><i class="bi bi-arrow-down-up"></i> sync</button> ' +
-                  '<button class="btn btn-sm btn-danger bt-remove" host_id="'+ hosts[i].id +'"><i class="bi bi-trash3-fill"></i> remove+all</button></td>' +
+                  '<button class="btn btn-sm btn-danger bt-remove" host_id="'+ hosts[i].id +'"><i class="bi bi-trash3-fill"></i> remove+all</button> ' +
+                  '<button class="btn btn-sm btn-info bt-info" host_id="'+ hosts[i].id +'"><i class="bi bi-file-plus"></i> details</button><span class="info-space small" style="display:none">'+
+                  '<br>'+
+                  'ID: '+ host_id + '<br>' +
+                  'W.Endpoint: '+ hosts[i].ipaddress + '<br>' +
+                  'R.Endpoint: '+ hosts[i].ipaddress_read + '<br>' +
+                  'Port: '+ hosts[i].port + '<br>' +
+                  'Username: '+ hosts[i].username + '<br>' +
+                  'Included: '+ hosts[i].id_user + '<br>' +
+                  'Created: '+ moment(hosts[i].createdAt).format("YYYY/MM/DD HH:mm") + '<br>' +
+                  'Updated: '+ moment(hosts[i].updatedAt).format("YYYY/MM/DD HH:mm") + '<br>' +
+                  '</span></td>' +
               '</tr>');
           }              
-          $('.bt-sync').click(function(e) {
+          
+          $('.bt-info').unbind('click').bind('click',function(e) {
             e.preventDefault();
-            var _bt = $(this);
-            var _btcontent = $(this).html();
+            $(this).parent().find('.info-space').toggle();
+            if($(this).find('i').hasClass('bi-file-plus')){
+              $(this).find('i').removeClass('bi-file-plus');
+              $(this).find('i').addClass('bi-file-minus');
+            }else{
+              $(this).find('i').removeClass('bi-file-minus');
+              $(this).find('i').addClass('bi-file-plus');
+            }
+          });
+
+          $('.bt-sync').unbind('click').bind('click',function(e) {
+            e.preventDefault();
               if(confirm('Sync every databases and tables?')){
+                _bt = $(this);
+                _btcontent = $(this).html();
                 $(this).html('<i class="fas fa-sync fa-spin"></i>');
                 $.get( "/synchosts/" + $(this).attr('host_id'), function( returned ) {
                   _bt.html(_btcontent);
@@ -110,11 +137,12 @@
                 });
               }
           });
-          $('.bt-remove').click(function(e) {
+
+          $('.bt-remove').unbind('click').bind('click',function(e) {
             e.preventDefault();
-            var _bt = $(this);
-            var _btcontent = $(this).html();
               if(confirm('Remove all sessions + tables + databases + this host?')){
+                _bt = $(this);
+                _btcontent = $(this).html();
                 $(this).html('<i class="fas fa-sync fa-spin"></i>');
                 var request_data = JSON.stringify({'data': {host_id: $(this).attr('host_id')}});
                 $.ajax({
@@ -131,7 +159,7 @@
               }
           });
       });
-      $('.bt-newhost').click(function(e) {
+      $('.bt-newhost').unbind('click').bind('click',function(e) {
           e.preventDefault();
           var target = $(this).data('target');
           $('#content-area').load('hosts_new.html'); // Load content based on menu item

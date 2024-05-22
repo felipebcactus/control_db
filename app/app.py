@@ -675,7 +675,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             # create relationship for future remove
             results.append({'removingOldSessionHost': session_id+'-'+_host_id})
             results.append({'addSessionHost': session_id+'-'+_host_id})
-            details['host'].append({'hostname': hostData.name, 'ipaddress': hostData.ipaddress, 'ipaddress_read': hostData.ipaddress_read, 'port': hostData.port, 'type': host_types[hostData.type]})
+            details['host'].append({'hostname': hostData.name, 'endpoint_writer': hostData.ipaddress, 'endpoint_reader': hostData.ipaddress_read, 'port': hostData.port, 'type': host_types[hostData.type]})
             
             # pula o laco caso nao tenha permissao
             if (filter_user!=False and user_auto_approve!=True) :
