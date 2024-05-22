@@ -39,6 +39,10 @@ table_type = {
     1: "Open"
 }
 
+table_type_restricted_default = {
+    0: ['auth_config', 'users', 'user_documents']
+}
+
 session_status_type = {
     -1: 'New',
     0: 'Waiting for approval',
@@ -47,6 +51,7 @@ session_status_type = {
     3: 'Expired'  ,
     4: 'DB Removed' 
 }
+
 class Users(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)

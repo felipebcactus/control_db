@@ -1,6 +1,6 @@
 from flask import Blueprint
 from sqlalchemy.sql import text
-from .models import Hosts, Databases, Tables, ExternalConnectionByHostId, db_name_ignore_per_type, host_types
+from .models import Hosts, Databases, Tables, ExternalConnectionByHostId, db_name_ignore_per_type, table_type_restricted_default
 from . import database
 import json
 
@@ -61,7 +61,11 @@ def synchosts(host_id):
                     print("TABELA JA EXISTENTE: "+table_name) 
                     table_id = result[0].id
                 else:
-                    table_id = database.add_instance(Tables, name=table_name, id_database=db_id, type=0)
+                    for tb_name_restrict in table_type_restricted_default[0]:
+                        if table_name==tb_name_restrict:
+                            table_id = database.add_instance(Tables, name=table_name, id_database=db_id, type=0)
+                        else:
+                            table_id = database.add_instance(Tables, name=table_name, id_database=db_id, type=1)
                     print("TABELA NOVA: "+table_name) 
         
         return json.dumps('Synchosts successful!'), 200

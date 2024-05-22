@@ -202,13 +202,13 @@ function ini_table(pag=1,qtd=10,filter={}){
 
     $('.bt-permission-remove').unbind('click').bind('click',function(e) {
       e.preventDefault();
-      var _bt = $(this);
-      var _btcontent = $(this).html();
-      $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       const session_id = $(this).attr('data-bs-session-id')
       const user_name = $(this).attr('data-bs-user-name')
       var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name}});
       if(confirm('Remove all permissions for this username?')){
+        var _bt = $(this);
+        var _btcontent = $(this).html();
+        $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
         $(this).html('<i class="fas fa-sync fa-spin"></i>');
         $.ajax({
           type: 'POST',
@@ -227,14 +227,14 @@ function ini_table(pag=1,qtd=10,filter={}){
 
     $('.bt-remove').unbind('click').bind('click',function(e) {
       e.preventDefault();
-      var _bt = $(this);
-      var _btcontent = $(this).html();
-      $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       const session_id = $(this).attr('data-bs-session-id')
       const user_name = $(this).attr('data-bs-user-name')
       const user_id = $(this).attr('data-bs-user-id')
       var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name, user_id: user_id}});
       if(confirm('Delete this session?')){
+        var _bt = $(this);
+        var _btcontent = $(this).html();
+        $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
         $(this).html('<i class="fas fa-sync fa-spin"></i>');
         $.ajax({
           type: 'POST',

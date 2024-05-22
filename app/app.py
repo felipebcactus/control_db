@@ -165,6 +165,26 @@ def getConfig(_json=False):
         return all_configs
     else:
         return json.dumps(all_configs), 200
+    
+    
+    
+@app.route('/getNode', methods=['GET'])
+@login_required
+def getNode():
+    id = request.args.get('id')
+    
+    return json.dumps([{"id":888,"text":"New node: "+str(id),"children":False}]), 200
+    # configs = database.get_all_order_by(Config, 'key')
+    # all_configs = []
+    # for _config in configs:
+    #     config_key = _config.key
+    #     config_value = _config.value
+    #     all_configs.append({config_key:config_value})
+    # if _json==True:
+    #     return all_configs
+    # else:
+    #     return json.dumps(all_configs), 200
+    
 
 
 def getConfigValue(config_name):

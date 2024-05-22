@@ -23,8 +23,8 @@
 
 <script>
   var hours=24;
+  var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
   $(document).ready(function() {      
-    var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
     
     $.getJSON('/getConfigParam/hours_user_session', function (_hours) {
       hours = _hours;
@@ -80,6 +80,10 @@
     });
     $('.bt-create').click(function(e) {
         e.preventDefault();
+        if(filter_user==false){
+          $('#access_start').val($('#access_start').val()+' 00:00:00');
+          $('#access_end').val($('#access_end').val()+' 23:59:59');
+        }
         var dataform = JSON.stringify($('form#session-form').serializeArray());
         $.ajax({
               type: 'POST',
