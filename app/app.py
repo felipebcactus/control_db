@@ -870,7 +870,7 @@ def removeUserFromHostByHostId(_host_id):
 @app.route('/removeUserFromHostBySession', methods=['POST'])
 @login_required
 def removeUserFromHostBySession(_data_received=None):
-    removeUserFromHostBySession_action(_data_received=_data_received)
+    return removeUserFromHostBySession_action(_data_received=_data_received)
     
 def removeUserFromHostBySession_action(_data_received=None):
     print("removeUserFromHostBySession")
@@ -927,15 +927,23 @@ def removeUserFromHostBySession_action(_data_received=None):
                     print(_command)
                     results.append({'dropuserfromhost': _command, 'host_id': _reg.id_host})
                     external_session.execute(text(_command))
-                
+        else:
+            results.append({'nenhumhost': True})
+            print('nenhum host de sessao')
     except Exception as ex:
         print(ex)
         _msgtry = 'banco sem conexao - pode ter sido desativado'
         print(_msgtry)
         results.append({'dropuserfromhost': _msgtry})
-    database.delete_instance_by(SessionsHosts, 'id_session', id_session)
-    database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None, approver=None)
-    # database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
+    try:
+        database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None, approver=None)
+        print('atualizou sessao info')
+        database.delete_instance_by(SessionsHosts, 'id_session', id_session)
+        print('apagou sessionhost')
+        # database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
+    except Exception as ex:
+        print('ERRO: '+ex)
+    print('returnOK')
     return json.dumps(results), 200
 
 
@@ -948,13 +956,13 @@ def removeSession(user_id_logged, _data_received=None):
     _data = request.get_json()['data'] if _data_received==None else _data_received
     id_session = _data['session_id']
     user_id_selected = _data['user_id']
+    results = []
     
     if user_id_logged!='0' and user_id_logged != user_id_selected:
-        return {}, 200
+        return json.dumps(results), 200
     
     sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
     print(sessions_host)
-    results = []
     if len(sessions_host)>0 :
         for _reg in sessions_host :
             print(_reg)

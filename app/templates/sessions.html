@@ -253,14 +253,14 @@ function ini_table(pag=1,qtd=10,filter={}){
     
     $('.bt-info').unbind('click').bind('click',function(e) {
       e.preventDefault();
-      var _bt = $(this);
-      var _btcontent = $(this).html();
+      __bt = $(this);
+      __btcontent = $(this).html();
       $(this).html('<i class="fas fa-sync fa-spin"></i>');
       const session_id = $(this).attr('data-bs-session-id')
       const user_name = $(this).attr('data-bs-user-name')
       const user_id = $(this).attr('data-bs-user-id')
       $.getJSON('/getTreeSession/'+session_id, function (tree) {
-        __bt.html(__bt_content);
+        __bt.html(__btcontent);
         if(tree.hasOwnProperty('permissions_name')){
           var modal = $('#passwordModal');
           modal.find('.modal-title').text('Permissions required');

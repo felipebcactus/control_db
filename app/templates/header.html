@@ -43,13 +43,24 @@
   <script>
 
     $(document).ready(function() {
+      window.setTimeout(function(){
+        var hashatual = window.location.hash;
+        if(hashatual!=''){
+          var hash = hashatual.replace('#', '');
+          if($('.nav-link[data-target='+hash+']')!=undefined){
+            $('.nav-link[data-target='+hash+']').trigger('click');
+          }
+        }
+      },100);
+
         moment.suppressDeprecationWarnings = true;
         $(document).ajaxError(function(event, request, settings) {
               window.location="/logout";
         });
-        $('.nav-link').click(function(e) {
+        $('.nav-link').unbind('click').bind('click',function(e) {
             e.preventDefault();
             var target = $(this).data('target');
+            window.location.href = window.location.origin+'#'+target;
             if(target=='logout'){
               window.location='/logout';
               return false;
