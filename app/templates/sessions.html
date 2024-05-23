@@ -374,7 +374,6 @@ function start_datatree(){
       async : true,
       success : function(data) { 
         window.setTimeout(function(){
-          console.log('loaded');
           bind_permission();
           __bt.html(__bt_content);
         },10);
@@ -410,7 +409,7 @@ function bindmodal(datatree){
     var _btcontent = $(this).html();
     var selected_val_data = tree_sel.getSelectedNodesById();
     var selected_array_data=[];
-    var button = $('.bt-permission');
+    var button = __bt;
     var session_id = button.attr('data-bs-session-id')
     var user_id = button.attr('data-bs-user-id')
     var user_name = button.attr('data-bs-user-name')    
