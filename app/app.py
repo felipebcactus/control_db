@@ -50,6 +50,7 @@ def fetch(_json=False):
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "days_default_access": user.days_default_access,
             "password": user.password
         }
 
@@ -311,6 +312,7 @@ def getUsers(type,_json=False):
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "days_default_access": user.days_default_access,
             "parent": "" if user.parent is None else database.get_id(Users, user.parent).name,
             "parent_id": user.parent,
             "status": user.status,
