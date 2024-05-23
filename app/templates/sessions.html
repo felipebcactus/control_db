@@ -9,7 +9,7 @@
 <table class="table table-dark" id="Sessions">
   <thead>
     <tr>
-      <th scope="col">Writer</th>
+      <th scope="col">Permission</th>
       <th scope="col"><span class="filter-title" data-column="user">User</span></th>
       <th scope="col"><span class="filter-title" data-column="approver">Approver</span></th>
       <th scope="col">Access Start</th>
@@ -160,7 +160,7 @@ function ini_table(pag=1,qtd=10,filter={}){
       }
       // Modify selector to target tables table
       $('#Sessions > tbody:last').append('<tr>' +
-        '<td'+ (writer=='1'?' style="background-color: #045101;"':'') +'>' + (writer=='1'?'<i class="bi bi-database-add"></i>':'<i class="bi bi-database"></i>') + '</td>' +
+        '<td style="text-align: center;background-color: '+ (writer=='1'?'#045101':'#71041a') +';">' + (writer=='1'?'<i class="bi bi-database-add"></i> WRITE':'<i class="bi bi-database"></i> READ') + '</td>' +
         '<td>' + user_name + '</td>' +
         '<td>' + ((approver!=null && approver!='')?approver:'') + '</td>' +
         '<td>' + moment(access_start).format("YYYY/MM/DD HH:mm") + '</td>' +
