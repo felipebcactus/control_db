@@ -94,7 +94,7 @@
         }
         var _dataform = $('form#session-form').serializeArray();
         var days = $('#userCombo option:selected').attr('days');
-        _dataform.append({'name': 'days', 'value': days});
+        _dataform.push({'name': 'days', 'value': days});
         var dataform = JSON.stringify(_dataform);
         $.ajax({
               type: 'POST',
