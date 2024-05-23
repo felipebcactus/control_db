@@ -635,8 +635,6 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
         return database.get_id(Databases, _id)
         
     results = []
-    results.append({'PRIVILEGE': privilegesConfig})
-    print("PRIVILEGE: "+privilegesConfig)
     
     if _approve==False:
         characters = list(string.ascii_letters + string.digits + "!@#$%^&*()")            
@@ -680,7 +678,13 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     return external_session.execute(text(sql)).fetchall()
                 else:
                     external_session.execute(text(sql))
-                    
+            
+            
+            _session_data = database.get_id(Sessions, session_id)
+            privilegesConfig = 'SELECT, UPDATE, INSERT, DELETE' if _session_data.writer == 1 else privilegesConfig
+            print("PRIVILEGE: "+privilegesConfig)
+            results.append({'PRIVILEGE': privilegesConfig})
+            
             if hostData.type == 0 : #MySQL
                                        
                 try:
