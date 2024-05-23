@@ -30,7 +30,11 @@
   var _bt;
   var _btcontent;
   $(document).ready(function() {
+
+
+
     function ini_table(pag=1,qtd=10){
+
       qtd_global = qtd;
       $.getJSON('/getHosts?pag='+pag+'&qtd='+qtd, function (returned) {
           //if (!Array.isArray(hosts)) return; // If the response is not an array, it's a single object so convert
@@ -106,7 +110,7 @@
                   'R.Endpoint: '+ hosts[i].ipaddress_read + '<br>' +
                   'Port: '+ hosts[i].port + '<br>' +
                   'Username: '+ hosts[i].username + '<br>' +
-                  'Included: '+ hosts[i].id_user + '<br>' +
+                  'Included: <span class="edit" _id="'+host_id+'" table="Hosts" field="id_user" original="'+ hosts[i].id_user +'">'+ hosts[i].id_user + '-</span><br>' +
                   'Created: '+ moment(hosts[i].createdAt).format("YYYY/MM/DD HH:mm") + '<br>' +
                   'Updated: '+ moment(hosts[i].updatedAt).format("YYYY/MM/DD HH:mm") + '<br>' +
                   '</span></td>' +
@@ -158,13 +162,91 @@
                 });
               }
           });
+
+          bind_crud_real_time(ini_table);
+
       });
+
       $('.bt-newhost').unbind('click').bind('click',function(e) {
           e.preventDefault();
           var target = $(this).data('target');
           $('#content-area').load('hosts_new.html'); // Load content based on menu item
       });
+
     }
     ini_table();
   });
+
+  var __callback=false;
+  function bind_crud_real_time(_callback=false){
+    if(_callback!==false){
+      __callback = _callback;
+    }
+    $('.edit').unbind("dblclick").bind("dblclick",function(){
+        $(this).unbind("dblclick");
+        var val = $(this).text();
+        var _id = $(this).attr('_id');
+        var table = $(this).attr('table');
+        var field = $(this).attr('field');
+        var original = $(this).attr('original');
+        $(this).html('<input type="text" field="'+field+'" table="'+table+'" original="'+original+'" _id="'+_id+'" value="'+(val=='-'?'':val)+'" class="editval"/>').find('input').focus().unbind("blur").bind("blur",function(){
+          var val_edited = $(this).val();
+          var _id_edited = $(this).attr('_id');
+          var table_edited = $(this).attr('table');
+          var field_edited = $(this).attr('field');
+          var original_edited = $(this).attr('original');
+          $(this).parent().text(val_edited==''?'-':val_edited);
+
+          if(original_edited==val_edited){
+            alertify.message('No modified');
+            if(__callback!==false && typeof __callback=='function'){
+              __callback();
+              __callback=false;
+              bind_crud_real_time(__callback);
+            }else{
+              bind_crud_real_time();
+            }
+            return false;
+          }
+
+          var obj = {}
+          obj['val_edited'] = val_edited;
+          obj['_id_edited'] = _id_edited;
+          obj['table_edited'] = table_edited;
+          obj['field_edited'] = field_edited;   
+          obj['original_edited'] = original_edited;          
+          var dataform = JSON.stringify({'data':obj});
+
+          $.ajax({
+            type: 'POST',
+            url: '/updateCrudRealTime',
+            data: dataform,
+            success: function (data) { 
+              alertify.success('Updated');
+              console.log("Updated",data);
+              if(__callback!==false && typeof __callback=='function'){
+                __callback();
+                __callback=false;
+                bind_crud_real_time(__callback);
+              }else{
+                bind_crud_real_time();
+              }
+            },
+            error: function (jqXHR, textStatus, errorThrown) { 
+              console.log("Error",textStatus);
+              alertify.error(textStatus);
+              if(__callback!==false && typeof __callback=='function'){
+                __callback();
+                __callback=false;
+                bind_crud_real_time(__callback);
+              }else{
+                bind_crud_real_time();
+              }
+            },
+            contentType: "application/json",
+            dataType: 'json'
+          });
+        });
+      });
+  }
 </script>

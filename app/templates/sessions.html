@@ -89,7 +89,7 @@ function ini_table(pag=1,qtd=10,filter={}){
     filters_global['unique_approver'] = returned['unique_approvers'];
     filters_global['unique_status'] = returned['unique_status'];
 
-    if(Object.keys(filters_global['unique_user']).length>0){
+    if(filters_global['unique_user']!=undefined && filters_global['unique_user']!=null && Object.keys(filters_global['unique_user']).length>0){
       for(var h in filters_global['unique_user']){
         global_users_filters[Object.keys(filters_global['unique_user'][h])[0]] = Object.values(filters_global['unique_user'][h])[0];
       }

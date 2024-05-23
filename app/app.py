@@ -167,26 +167,6 @@ def getConfig(_json=False):
         return json.dumps(all_configs), 200
     
     
-    
-@app.route('/getNode', methods=['GET'])
-@login_required
-def getNode():
-    id = request.args.get('id')
-    
-    return json.dumps([{"id":888,"text":"New node: "+str(id),"children":False}]), 200
-    # configs = database.get_all_order_by(Config, 'key')
-    # all_configs = []
-    # for _config in configs:
-    #     config_key = _config.key
-    #     config_value = _config.value
-    #     all_configs.append({config_key:config_value})
-    # if _json==True:
-    #     return all_configs
-    # else:
-    #     return json.dumps(all_configs), 200
-    
-
-
 def getConfigValue(config_name):
     try:
         data = database.get_by(Config, 'key', config_name)
@@ -389,13 +369,13 @@ def getFieldValuesFromObjectsArray(objects, name, getFieldNameById=False, ModelN
 def getSessions(_json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
-    
+    print('getSessions')
     unique_users = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'user'), 'user', 'name', Users)
     unique_approvers = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'approver'), 'approver', 'name', Users)
     unique_status = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'status'), 'status', session_status_type)
-    
+    print('pegou uniques')
     sessions_pag = database.get_by_paginated(Sessions, 'request_date', page=pag, per_page=qtd, orderby=True)
-    
+    print('sessoes paginadas')
     all_sessions = []
     for session in sessions_pag['items']:
         _approver_name=''
@@ -629,6 +609,9 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
         _data = json.loads(_approve_data.datatree)
     else:
         _data = request.get_json()['data']
+        
+    privilegesConfig = getConfigValue('privileges') or 'ALL'
+    print("PRIVILEGE: "+privilegesConfig)
     permissions = returnPermissionTree(_data['datatree'])
     permissions_obj_name = permissions['permissions_name']
     permissions_obj_id = permissions['permissions_id']
@@ -681,8 +664,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             if (filter_user!=False and user_auto_approve!=True) :
                 results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve}})
                 continue
-                        
-                
+
             _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
             results.append({'removeUserFromHostBySession':_removeUserFromHost})
                     
@@ -826,6 +808,19 @@ def expireAccessEnd():
     return {'session_expired': _sessions_expired}, 200
 
 
+@app.route('/updateCrudRealTime', methods=['POST'])
+@login_required
+def updateCrudRealTime(_data_received=None):
+    results = []
+    _data = request.get_json()['data'] if _data_received==None else _data_received
+    print('val_edited: ' + _data['val_edited'])
+    print('_id_edited: ' + _data['_id_edited'])
+    print('table_edited: ' + _data['table_edited'])
+    print('field_edited: ' + _data['field_edited'])
+    print('original_edited: ' + _data['original_edited'])
+    
+    return json.dumps(_data), 200
+    
 @app.route('/removeHostAndAllTogether', methods=['POST'])
 @login_required
 def removeHostAndAllTogether(_data_received=None):
