@@ -64,10 +64,15 @@
                 var option = $("<option></option>");
                 option.val(user.id);
                 option.text(user.name + " (" + user.email + ")");
+                option.attr('days',user.days_default_access);
                 if((filter_user!=false && (filter_user==user.id || filter_user==user.parent_id)) ||  filter_user===false){
                   userCombo.append(option);
                 }
             });
+            userCombo.unbind('change').bind('change',function(){
+              var days = $(this).find('option:selected').attr('days');
+              $('#access_end').val(moment().add('d',days).format("YYYY-MM-DD HH:mm:ss"));     
+            }).trigger('change');
         },
         error: function(xhr, status, error) {
             console.log("Error: " + xhr.responseText);
@@ -84,7 +89,10 @@
           $('#access_start').val($('#access_start').val()+' 00:00:00');
           $('#access_end').val($('#access_end').val()+' 23:59:59');
         }
-        var dataform = JSON.stringify($('form#session-form').serializeArray());
+        var _dataform = $('form#session-form').serializeArray();
+        var days = $('#userCombo option:selected').attr('days');
+        _dataform.append({'name': 'days', 'value': days});
+        var dataform = JSON.stringify(_dataform);
         $.ajax({
               type: 'POST',
               url: '/addSession',
