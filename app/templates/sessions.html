@@ -160,7 +160,7 @@ function ini_table(pag=1,qtd=10,filter={}){
       }
       // Modify selector to target tables table
       $('#Sessions > tbody:last').append('<tr>' +
-        '<td style="text-align: center;background-color: '+ (writer=='1'?'#045101':'#71041a') +';">' + (writer=='1'?'<i class="bi bi-database-add"></i> WRITE':'<i class="bi bi-database"></i> READ') + '</td>' +
+        '<td style="text-align: center;color: '+ (writer=='1'?'#ff0000':'#00ff00') +';">' + (writer=='1'?'<i class="bi bi-database-add"></i> WRITE':'<i class="bi bi-database"></i> READ') + '</td>' +
         '<td>' + user_name + '</td>' +
         '<td>' + ((approver!=null && approver!='')?approver:'') + '</td>' +
         '<td>' + moment(access_start).format("YYYY/MM/DD HH:mm") + '</td>' +
