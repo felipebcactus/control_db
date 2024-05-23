@@ -89,8 +89,8 @@
     $('.bt-create').click(function(e) {
         e.preventDefault();
         if(filter_user==false){
-          $('#access_start').val($('#access_start').val()+' 00:00:00');
-          $('#access_end').val($('#access_end').val()+' 23:59:59');
+          $('#access_start').val($('#access_start').val()+(($('#access_start').val().length==10)?' 00:00:00':''));
+          $('#access_end').val($('#access_end').val()+(($('#access_end').val().length==10)?' 23:59:59':''));
         }
         var _dataform = $('form#session-form').serializeArray();
         var days = $('#userCombo option:selected').attr('days');
