@@ -17,13 +17,16 @@
 <script>
   
 $(document).ready(function() {
-  var exceptions=['db_user_prefix','hours_user_session'];
+  var exceptions=['db_user_prefix','hours_user_session','privileges'];
   function getConfig(){
     
     $.getJSON('/getConfig', function (configs) {
       if (!Array.isArray(configs)) return; // Check for array response
       $('#configs > tbody').empty();
       for (var i in configs) {
+        if(Object.keys(configs[i])[0]=='privileges'){
+          continue;
+        }
         // Modify selector to target configs table
         $('#configs > tbody:last').append('<tr>'+ 
           '<td>' + Object.keys(configs[i])[0] + '</td>' +

@@ -133,6 +133,7 @@ class Sessions(db.Model):
     __tablename__ = 'sessions'
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.Integer, db.ForeignKey('users.id'))
+    writer = db.Column(db.Integer, default=0)
     approver = db.Column(db.Integer, default=None)
     access_start = db.Column(db.DateTime())
     access_end = db.Column(db.DateTime())
@@ -147,6 +148,7 @@ class Sessions(db.Model):
         return {
             "name": self.name,
             "user": Users.query.filter_by(id=self.user).first().username,
+            "writer": self.writer,
             "approver": (Users.query.filter_by(id=self.approver).first() or None).username if self.approver else None,
             "access_start": self.access_start.strftime("%Y-%m-%d %H:%M"),
             "access_end" : self.access_end.strftime("%Y-%m-%d %H:%M") if self.access_end else None,

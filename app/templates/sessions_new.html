@@ -1,11 +1,11 @@
 <h2>Create New Session</h2>
 <form id="session-form">
   <div class="mb-3">
-    <label for="user" class="form-label">User *</label>
+    <label for="user" class="form-label">User</label>
     <select class="form-select" id="userCombo" name="user" required></select>
   </div>
   <div class="mb-3 periodo" style="display:none;">
-      <label for="access_date" class="form-label">Access Date *</label>
+      <label for="access_date" class="form-label">Access Date</label>
       <input type="text" class="form-control" name="access_date" required />
       <input type="hidden" name="access_start" id="access_start">
       <input type="hidden" name="access_end" id="access_end">
@@ -15,10 +15,7 @@
       <input type="text" class="form-control" id="description" name="description">
   </div>
   <div class="mb-3">
-    <small><input type="checkbox"> WRITE PRIVILEGES</small>
-  </div>
-  <div class="mb-3">
-    <small>* - required fields</small>
+    <small><input type="checkbox" name="writer" value="1"> WRITER PRIVILEGES</small>
   </div>
   <button type="button" form="session-form" class="btn btn-primary bt-create">Create</button>
   <button type="button" form="session-form" class="btn btn-danger bt-cancel">CANCEL</button>

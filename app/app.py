@@ -344,8 +344,10 @@ def addSession():
     data = request.get_json()
     session_obj = {}
     for item in data:
-        session_obj[item['name']] = item['value']        
-    _sess = database.add_instance(Sessions, user=session_obj['user'], status=-1, access_start=session_obj['access_start'], access_end=session_obj['access_end'], description=session_obj['description'])
+        session_obj[item['name']] = item['value']       
+    if 'writer' not in session_obj:
+        session_obj['writer']=0
+    _sess = database.add_instance(Sessions, user=session_obj['user'], writer=session_obj['writer'], status=-1, access_start=session_obj['access_start'], access_end=session_obj['access_end'], description=session_obj['description'])
     session_obj['id_session'] = _sess
     return json.dumps(session_obj), 200
 
@@ -610,7 +612,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
     else:
         _data = request.get_json()['data']
         
-    privilegesConfig = getConfigValue('privileges') or 'ALL'
+    privilegesConfig = getConfigValue('privileges') or 'SELECT' ## ALL PRIVILEGES
     permissions = returnPermissionTree(_data['datatree'])
     permissions_obj_name = permissions['permissions_name']
     permissions_obj_id = permissions['permissions_id']
