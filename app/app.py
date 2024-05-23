@@ -391,6 +391,7 @@ def getSessions(_json=False):
             "id": session.id,
             "user": session.user,
             "user_name": user_name,
+            "writer": session.writer,
             "approver":  _approver_name, #session.approver,
             "access_start": str(session.access_start) or '',
             "access_end": str(session.access_end) or '',
@@ -440,6 +441,7 @@ def getSessionsUser(user_id, _json=False):
         new_session = {
             "id": session.id,
             "user": session.user,
+            "writer": session.writer,
             "user_name": user_name,
             "approver": '' if session.approver==None else database.get_id(Users, session.approver).name,
             "access_start": str(session.access_start) or '',
@@ -465,6 +467,7 @@ def getSessionsUser(user_id, _json=False):
             new_session = {
                 "id": session.id,
                 "user": session.user,
+                "writer": session.writer,
                 "user_name": user_name,
                 "approver": '' if session.approver==None else database.get_id(Users, session.approver).name,
                 "access_start": str(session.access_start) or '',
