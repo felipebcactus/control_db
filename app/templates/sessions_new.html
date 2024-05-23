@@ -49,6 +49,7 @@
           $('#access_start').val(moment().format("YYYY-MM-DD HH:mm:ss"));
           $('#access_end').val(moment().add('H',hours).format("YYYY-MM-DD HH:mm:ss"));          
         }
+        $('input[name="access_date"]').val(moment($('#access_start').val()).format('DD/MM/YYYY')+' '+moment($('#access_end').val()).format('DD-MM-YYYY'));
         
     }).trigger('apply.daterangepicker');
 
@@ -71,7 +72,9 @@
             });
             userCombo.unbind('change').bind('change',function(){
               var days = $(this).find('option:selected').attr('days');
-              $('#access_end').val(moment().add('d',days).format("YYYY-MM-DD HH:mm:ss"));     
+              $('#access_end').val(moment().add('d',days).format("YYYY-MM-DD HH:mm:ss"));
+              $('input[name="access_date"]').val(moment($('#access_start').val()).format('DD/MM/YYYY')+' '+moment($('#access_end').val()).format('DD-MM-YYYY'));   
+              console.log('data final: ',$('#access_end').val());  
             }).trigger('change');
         },
         error: function(xhr, status, error) {
