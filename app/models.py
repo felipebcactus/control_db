@@ -61,6 +61,7 @@ class Users(UserMixin, db.Model):
     type = db.Column(db.Integer)
     status = db.Column(db.Integer, default=0) # 0-Inactive; 1-Active
     parent = db.Column(db.Integer, default=None)
+    days_default_access = db.Column(db.Integer, default=1)
     created_at  = db.Column(db.DateTime(), default=db.func.now())
     updated_at = db.Column(db.DateTime(), onupdate=db.func.now())
 

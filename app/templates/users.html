@@ -36,6 +36,7 @@
           <th scope="col">Username</th>
           <th scope="col">Email</th>
           <th scope="col">Type</th>
+          <th scope="col">Days for Access</th>
           <th scope="col">System User</th>
           <th scope="col">Status</th>
         </tr>
@@ -115,6 +116,7 @@ $(document).ready(function() {
           var user_name = users[i].name;
           var user_email = users[i].email;
           var user_type = users[i].type;
+          var days = users[i].days_default_access;
           var user_parent = users[i].parent;
           var user_status = users[i].status_name;
           var btn_a = " <button title='activate' class='badge bg-success bt-approve' data-idsuser='"+user_id+"'><i class='bi bi-check-square-fill'></i></button>";
@@ -127,6 +129,7 @@ $(document).ready(function() {
             '<td>' + user_name + '</td>' +
             '<td>' + user_email + '</td>' +
             '<td>' + user_type + '</td>' +
+            '<td>' + days + '</td>' +
             '<td>' + user_parent + '</td>' +
             '<td>' + user_status + '</td>' +
             '</tr>');
