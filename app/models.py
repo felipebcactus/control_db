@@ -16,7 +16,7 @@ db_name_ignore_per_type = {
 }
 
 db_username_deny = {
-    0: ['bet7k']
+    0: ['bet7k','%']
 }
 
 db_config_exceptions = {
