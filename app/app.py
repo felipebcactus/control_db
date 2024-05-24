@@ -666,9 +666,14 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             results.append({'addSessionHost': session_id+'-'+_host_id})
             details['host'].append({'hostname': hostData.name, 'endpoint_writer': hostData.ipaddress, 'endpoint_reader': hostData.ipaddress_read, 'port': hostData.port, 'type': host_types[hostData.type]})
             
+            _session_data = database.get_id(Sessions, session_id)
+            privilegesConfig = 'SELECT, UPDATE, INSERT, DELETE' if _session_data.writer == 1 else privilegesConfig
+            print("PRIVILEGE: "+privilegesConfig)
+            results.append({'PRIVILEGE': privilegesConfig})
+            
             # pula o laco caso nao tenha permissao
-            if (filter_user!=False and user_auto_approve!=True) :
-                results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve}})
+            if ((filter_user!=False and user_auto_approve!=True) or (_session_data.writer == 1 and _approve==False)) :
+                results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve,"writer_permission": (_session_data.writer == 1)}})
                 continue
 
             _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
@@ -680,13 +685,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     return external_session.execute(text(sql)).fetchall()
                 else:
                     external_session.execute(text(sql))
-            
-            
-            _session_data = database.get_id(Sessions, session_id)
-            privilegesConfig = 'SELECT, UPDATE, INSERT, DELETE' if _session_data.writer == 1 else privilegesConfig
-            print("PRIVILEGE: "+privilegesConfig)
-            results.append({'PRIVILEGE': privilegesConfig})
-            
+                        
             if hostData.type == 0 : #MySQL
                                        
                 try:
