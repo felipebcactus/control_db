@@ -1,13 +1,15 @@
 from flask import request, redirect, render_template, flash, url_for, request, send_file
 from . import create_app, database
-from .models import Users, Hosts, Databases, Tables, Config, Sessions, SessionsHosts, ExternalConnectionByHostId, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny, db_config_exceptions
+from .models import Users, Hosts, Databases, Tables, Config, Sessions, SessionsHosts, ExternalConnectionByHostId, AuditLog, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny, db_config_exceptions
 from flask_wtf import FlaskForm #, DataRequired, Length
 from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length
 from werkzeug.security import generate_password_hash
 from flask_login import login_required, current_user
 from sqlalchemy.sql import text
+from sqlalchemy.orm import Session
 from datetime import datetime
+import sqlalchemy as sa
 import os
 import string
 import random
@@ -979,3 +981,64 @@ def removeSession(user_id_logged, _data_received=None):
     database.delete_instance_by(Sessions, 'id', id_session)
     
     return json.dumps(results), 200
+
+
+    
+
+# AUDITLOGS
+def log_changes(session: Session, operation: str):
+    for obj in session.new:
+        if isinstance(obj, AuditLog):
+            continue
+        for attr in sa.inspect(obj).mapper.column_attrs:
+            log_entry = AuditLog(
+                table_name=obj.__tablename__,
+                operation=operation,
+                field_name=attr.key,
+                new_value=str(getattr(obj, attr.key)),
+                changed_by=current_user.id
+            )
+            session.add(log_entry)
+    
+    for obj in session.dirty:
+        if isinstance(obj, AuditLog):
+            continue
+        state = sa.inspect(obj)
+        for attr in state.attrs:
+            if attr.history.has_changes():
+                old_value = attr.history.deleted[0] if attr.history.deleted else None
+                new_value = attr.history.added[0] if attr.history.added else None
+                log_entry = AuditLog(
+                    table_name=obj.__tablename__,
+                    operation=operation,
+                    field_name=attr.key,
+                    old_value=str(old_value) if old_value else None,
+                    new_value=str(new_value) if new_value else None,
+                    changed_by=current_user.id
+                )
+                session.add(log_entry)
+
+    for obj in session.deleted:
+        if isinstance(obj, AuditLog):
+            continue
+        for attr in sa.inspect(obj).mapper.column_attrs:
+            log_entry = AuditLog(
+                table_name=obj.__tablename__,
+                operation=operation,
+                field_name=attr.key,
+                old_value=str(getattr(obj, attr.key)),
+                changed_by=current_user.id
+            )
+            session.add(log_entry)
+
+@sa.event.listens_for(Session, 'before_flush')
+def before_flush(session, flush_context, instances):
+    log_changes(session, 'INSERT')
+
+@sa.event.listens_for(Session, 'before_commit')
+def before_commit(session):
+    log_changes(session, 'UPDATE')
+
+@sa.event.listens_for(Session, 'before_delete')
+def before_delete(session, flush_context, instances):
+    log_changes(session, 'DELETE')

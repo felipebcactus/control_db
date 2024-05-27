@@ -65,6 +65,17 @@ class Users(UserMixin, db.Model):
     created_at  = db.Column(db.DateTime(), default=db.func.now())
     updated_at = db.Column(db.DateTime(), onupdate=db.func.now())
 
+class AuditLog(db.Model):
+    __tablename__ = 'audit_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    table_name = db.Column(db.String(255), nullable=False)
+    operation = db.Column(db.String(255), nullable=False)
+    field_name = db.Column(db.String(255), nullable=True)
+    old_value = db.Column(db.String(255), nullable=True)
+    new_value = db.Column(db.String(255), nullable=True)
+    changed_by = db.Column(db.Integer, nullable=False)
+    changed_at = db.Column(db.DateTime(), default=db.func.now())
+
 class Hosts(db.Model):
     __tablename__ = 'hosts'
     id = db.Column(db.Integer, primary_key=True)
