@@ -703,17 +703,14 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     
                     databaseData = _getDatabaseData(_database)     
                     database_tables_count = len(permissions_obj_id[_host_id][_database])
-                    # TODO ainda nao foi encontrada a permissao correta
-                    
-                    if database_tables_count == 0 : # todo o database (todas as tabelas)
-                        
-                        # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas database dbTest
-                        _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+".* To '"+username+"'@'%';" # IDENTIFIED BY '"+password+"';"
+                   
+                    if database_tables_count == 0 :
+        
+                        _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+".* To '"+username+"'@'%';"
                         results.append({'grantpermission': _command})
                         _execSQL(_command)
                                                 
-                    else: # apenas algumas tabelas dentro de um database GRANT Select ON *.* TO 'cb_felipe.bevilacqua'@'%';
-
+                    else:
                                                                                    
                         # Get all tables names from each external database
                         tables = _execSQL('SELECT table_name FROM information_schema.tables WHERE table_schema = "'+databaseData.name+'"', True)
@@ -729,8 +726,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                         
                         else:
                             
-                            # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password'; -> apenas database dbTest
-                            _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+".* To '"+username+"'@'%';" # IDENTIFIED BY '"+password+"';"
+                            _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+".* To '"+username+"'@'%';" 
                             results.append({'grantpermission': _command})
                             _execSQL(_command)
                                                 
@@ -824,14 +820,21 @@ def expireAccessEnd():
 @app.route('/updateCrudRealTime', methods=['POST'])
 @login_required
 def updateCrudRealTime(_data_received=None):
-    results = []
     _data = request.get_json()['data'] if _data_received==None else _data_received
-    print('val_edited: ' + _data['val_edited'])
-    print('_id_edited: ' + _data['_id_edited'])
-    print('table_edited: ' + _data['table_edited'])
-    print('field_edited: ' + _data['field_edited'])
+    table_name = _data['table_edited']
+    instance_id = _data['_id_edited']
+    field_name = _data['field_edited']
+    new_value = _data['val_edited']
+    edited = database.edit_instance(model=globals()[table_name], id=instance_id, **{field_name: new_value})
+    print('EDITED: ')
+    print('val_edited: ' + new_value)
+    print('_id_edited: ' + instance_id)
+    print('table_edited: ' + table_name)
+    print('field_edited: ' + field_name)
     print('original_edited: ' + _data['original_edited'])
-    
+    print('------------------------------')
+    print(edited)
+    print('------------------------------')
     return json.dumps(_data), 200
     
 @app.route('/removeHostAndAllTogether', methods=['POST'])

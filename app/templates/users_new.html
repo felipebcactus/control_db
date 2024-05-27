@@ -62,26 +62,6 @@
               dataType: 'json'
           });
       });
-        
-      $.ajax({
-          url: "/getUsers/0",
-          type: "GET",
-          success: function(returned) {
-              returned = JSON.parse(returned);
-              var users = returned['items'];
-              var userCombo = $("#parentCombo");
-              userCombo.empty();
-              userCombo.append($("<option></option>").text('select a responsible for this user').val(''));
-              users.forEach(function(user) {
-                  var option = $("<option></option>");
-                  option.val(user.id);
-                  option.text(user.name + " (" + user.email + ")");
-                  userCombo.append(option);
-              });
-          },
-          error: function(xhr, status, error) {
-              console.log("Error: " + xhr.responseText);
-          }
-      });
+      crateUserCombo("#parentCombo");
   });
 </script>

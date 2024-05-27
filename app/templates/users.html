@@ -19,6 +19,7 @@
       <th scope="col">Days for Access</th>
       <th scope="col">Parent</th>
       <th scope="col">Status</th>
+      <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
@@ -40,6 +41,7 @@
           <th scope="col">Days for Access</th>
           <th scope="col">System User</th>
           <th scope="col">Status</th>
+          <th scope="col">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -55,135 +57,157 @@
 </div>
 
 <script>
-var qtd_global=0;
+var qtd_global=false;
+var pag_global=false;
+var type_global=false;
+
+function getUsers(_type=false,pag=1,qtd=10){
+  qtd_global = (_type==false)?qtd_global:qtd;
+  pag_global = (_type==false)?pag_global:pag;
+  type_global = (_type==false)?type_global:_type;
+  $.getJSON('/getUsers/'+_type+'?pag='+pag+'&qtd='+qtd, function (returned) {
+    // if (!Array.isArray(users)) return; // Check for array response
+    $('#system_users > tbody' ).empty(); // Empty the table body
+    $('#database_users > tbody' ).empty(); // Empty the table body
+    users = returned['items'];
+      
+    var pag = document.createElement('div');
+    pag.innerHTML = '';
+    
+    if(returned['has_prev']){
+      pag.innerHTML += `
+          <span page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
+      `;
+    }else{
+      pag.innerHTML += `
+          <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
+      `;
+    }
+    var contfor=0;
+    for(var i=1; i<=returned['pages']; i++){
+      if(i == returned['page']){
+        pag.innerHTML += `
+                <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
+        `;
+      }else{
+        contfor++;
+        pag.innerHTML += `
+              <span page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
+        `;
+      }
+      if(false && contfor>3){
+        pag.innerHTML += `
+              <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
+        `;
+        break;          
+      }
+    }
+    if(returned['has_next']){
+      pag.innerHTML += `
+          <span page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
+      `;
+    }else{
+      pag.innerHTML += `
+          <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
+      `;
+    }
+    $('.pagination').html('').append(pag.innerHTML);
+    $('.linknav[page]').unbind('click').bind('click',function(){
+      getUsers(_type,$(this).attr('page'),qtd_global)
+    });
+    
+    for (var i in users) {
+      var user_id = users[i].id;
+      var user_name = users[i].name;
+      var user_email = users[i].email;
+      var user_type = users[i].type;
+      var days = users[i].days_default_access;
+      var user_parent = users[i].parent;
+      var user_status = users[i].status_name;
+      var btn_a = " <button title='activate' class='badge bg-success bt-approve' data-idsuser='"+user_id+"'><i class='bi bi-check-square-fill'></i></button>";
+      var btn_d = "<button title='deactivate' class='badge bg-danger bt-deapprove' data-idsuser='"+user_id+"'><i class='bi bi-x-square-fill'></i></button> ";
+      var btn = (users[i].status==0)?btn_a:btn_d;
+      user_status = (users[i].status==1) ? '<span class="badge bg-success"> ACTIVE</span>' : '<span class="badge bg-danger"> INACTIVE</span>';
+      user_status = (users[i].status==0) ? user_status + btn : btn + user_status;
+      user_status = '<span style="background-color: #a4a4a4;padding: 4px 4px 8px 4px;border-radius: 5px;">' + user_status + "</span>";
+      
+      // Modify selector to target users user
+      $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
+        '<td>' + print_field_edit(user_id,'name',user_name,"Users") + '</td>' +
+        '<td>' + print_field_edit(user_id,'email',user_email,"Users") + '</td>' +
+        '<td>' + user_type + '</td>' +
+        '<td>' + print_field_edit(user_id,'days_default_access',days,"Users") + '</td>' +
+        '<td>' + user_parent + '</td>' +
+        '<td>' + user_status + '</td>' +
+        '<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'><i class='bi bi-trash'></i> DELETE</button>" + '</td>' +
+        '</tr>');
+    }
+        
+    $('.bt-approve, .bt-deapprove').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      var id_user = $(this).data('idsuser');
+      $.getJSON('/statusChangeUser/'+id_user+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
+        getUsers(0);
+      });
+    });
+
+    $('.bt-delete').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      if(prompt('Confirm deletion of this user?')){
+        console.log('deleteuser'); // TODO create delete user with DELETE verb
+        // var id_user = $(this).data('idsuser');
+        // $.getJSON('/deleteUser/'+id_user, function () {
+        //   getUsers(0);
+        // });
+      }
+    });
+    
+    bind_crud_real_time(getUsers);
+
+  });
+};
 
 $(document).ready(function() {
 
-  var getUsers = function(_type,pag=1,qtd=10){
-      qtd_global = qtd;
-      $.getJSON('/getUsers/'+_type+'?pag='+pag+'&qtd='+qtd, function (returned) {
-        // if (!Array.isArray(users)) return; // Check for array response
-        $('#system_users > tbody' ).empty(); // Empty the table body
-        $('#database_users > tbody' ).empty(); // Empty the table body
-        users = returned['items'];
-          
-        var pag = document.createElement('div');
-        pag.innerHTML = '';
-        
-        if(returned['has_prev']){
-          pag.innerHTML += `
-              <span page="${returned['prev_num']}" class="btn-sm btn btn-secondary linknav">Anterior</span>
-          `;
-        }else{
-          pag.innerHTML += `
-              <span class="btn-sm btn btn-secondary linknav disabled">Anterior</span>
-          `;
-        }
-        var contfor=0;
-        for(var i=1; i<=returned['pages']; i++){
-          if(i == returned['page']){
-            pag.innerHTML += `
-                    <span class="btn-sm btn btn-secondary current linknav disabled">${i}</span>
-            `;
-          }else{
-            contfor++;
-            pag.innerHTML += `
-                  <span page="${i}" class="btn-sm btn btn-secondary linknav">${i}</span>
-            `;
-          }
-          if(false && contfor>3){
-            pag.innerHTML += `
-                  <span class="btn-sm btn btn-secondary ellipsis linknav disabled">...</span>
-            `;
-            break;          
-          }
-        }
-        if(returned['has_next']){
-          pag.innerHTML += `
-              <span page="${returned['next_num']}" class="btn-sm btn btn-secondary linknav">Próximo</span>
-          `;
-        }else{
-          pag.innerHTML += `
-              <span class="btn-sm btn btn-secondary linknav disabled">Próximo</span>
-          `;
-        }
-        $('.pagination').html('').append(pag.innerHTML);
-        $('.linknav[page]').unbind('click').bind('click',function(){
-          getUsers(_type,$(this).attr('page'),qtd_global)
-        });
-        
-        for (var i in users) {
-          var user_id = users[i].id;
-          var user_name = users[i].name;
-          var user_email = users[i].email;
-          var user_type = users[i].type;
-          var days = users[i].days_default_access;
-          var user_parent = users[i].parent;
-          var user_status = users[i].status_name;
-          var btn_a = " <button title='activate' class='badge bg-success bt-approve' data-idsuser='"+user_id+"'><i class='bi bi-check-square-fill'></i></button>";
-          var btn_d = "<button title='deactivate' class='badge bg-danger bt-deapprove' data-idsuser='"+user_id+"'><i class='bi bi-x-square-fill'></i></button> ";
-          var btn = (users[i].status==0)?btn_a:btn_d;
-          user_status = (users[i].status==1) ? '<span class="badge bg-success"> ACTIVE</span>' : '<span class="badge bg-danger"> INACTIVE</span>';
-          user_status = (users[i].status==0) ? user_status + btn : btn + user_status;
-          // Modify selector to target users user
-          $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
-            '<td>' + user_name + '</td>' +
-            '<td>' + user_email + '</td>' +
-            '<td>' + user_type + '</td>' +
-            '<td>' + days + '</td>' +
-            '<td>' + user_parent + '</td>' +
-            '<td>' + user_status + '</td>' +
-            '</tr>');
-        }
-            
-        $('.bt-approve, .bt-deapprove').click(function(e) {
-          e.preventDefault();
-          var id_user = $(this).data('idsuser');
-          $.getJSON('/statusChangeUser/'+id_user+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
-            getUsers(0);
-          });
-        });
+  // Find tab links and content divs
+  const tabLinks = $('.nav-tabs .nav-link');
+  const tabContents = $('.tab-pane');
 
-      });
-    };
+  // Hide all tab contents by default
+  tabContents.hide().removeClass('active');
 
-    // Find tab links and content divs
-    const tabLinks = $('.nav-tabs .nav-link');
-    const tabContents = $('.tab-pane');
-  
-    // Hide all tab contents by default
-    tabContents.hide().removeClass('active');
-  
-    // Show the first tab content (or active tab if set)
-    let activeTabIndex = 0; // Default to first tab
-    const activeTabLink = $('.nav-tabs .nav-link.active'); // Check for pre-active tab
-  
-    if (activeTabLink.length) {
-      activeTabIndex = activeTabLink.index(); // Use index of pre-active tab
-    }
-      
-    // Add click event listener to each tab link
-    tabLinks.on('click', function(e) {
-      e.preventDefault(); // Prevent default link behavior
-      $('.tab-pane').hide();
-      // Update active class and show corresponding content
-      const clickedTabIndex = $(this).index();
-      tabLinks.removeClass("active");
-      $(this).addClass("active");
-      tabContents.eq(clickedTabIndex).show().fadeTo(0,1);
-      // getUsers(clickedTabIndex==0?0:2);// TODO
-      getUsers(0);
-    });
+  // Show the first tab content (or active tab if set)
+  let activeTabIndex = 0; // Default to first tab
+  const activeTabLink = $('.nav-tabs .nav-link.active'); // Check for pre-active tab
+
+  if (activeTabLink.length) {
+    activeTabIndex = activeTabLink.index(); // Use index of pre-active tab
+  }
     
-    $('.bt-newuser').click(function(e) {
-      e.preventDefault();
-      var target = $(this).data('target');
-      $('#content-area').load('users_new.html'); // Load content for new table form
-    });
-
-    tabLinks.eq(activeTabIndex).trigger('click');
-
+  // Add click event listener to each tab link
+  tabLinks.on('click', function(e) {
+    e.preventDefault(); // Prevent default link behavior
+    $('.tab-pane').hide();
+    // Update active class and show corresponding content
+    const clickedTabIndex = $(this).index();
+    tabLinks.removeClass("active");
+    $(this).addClass("active");
+    tabContents.eq(clickedTabIndex).show().fadeTo(0,1);
+    // getUsers(clickedTabIndex==0?0:2);// TODO
+    getUsers(0);
   });
+  
+  $('.bt-newuser').unbind('click').bind('click',function(e) {
+    e.preventDefault();
+    var target = $(this).data('target');
+    $('#content-area').load('users_new.html'); // Load content for new table form
+  });
+
+  tabLinks.eq(activeTabIndex).trigger('click');
+  
+  getUsers(0);
+
+});
   
 
 </script>

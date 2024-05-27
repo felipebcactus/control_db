@@ -42,6 +42,8 @@
     
   <script>
 
+  var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
+
     $(document).ready(function() {
       window.setTimeout(function(){
         var hashatual = window.location.hash;
@@ -86,6 +88,109 @@
           }
         );
     });
+    
+  function print_field_edit(_id,_field,_value,_table){
+    return '<span class="edit" _id="'+_id+'" table="'+_table+'" field="'+_field+'" original="'+_value+'">'+ ((_value=='')?'-':_value) + '</span>';
+  }
+
+  var __callback=false;
+  function bind_crud_real_time(_callback=false){
+    if(filter_user){
+      return false;
+    }
+    if(_callback!==false){
+      __callback = _callback;
+    }
+    $('.edit').unbind("dblclick").bind("dblclick",function(){
+        $(this).unbind("dblclick");
+        var val = $(this).text();
+        var _id = $(this).attr('_id');
+        var table = $(this).attr('table');
+        var field = $(this).attr('field');
+        var original = $(this).attr('original');
+        $(this).html('<input type="text" field="'+field+'" table="'+table+'" original="'+original+'" _id="'+_id+'" value="'+(val=='-'?'':val)+'" class="editval"/>').find('input').focus().unbind("blur").bind("blur",function(){
+          var val_edited = $(this).val();
+          var _id_edited = $(this).attr('_id');
+          var table_edited = $(this).attr('table');
+          var field_edited = $(this).attr('field');
+          var original_edited = $(this).attr('original');
+          $(this).parent().text(val_edited==''?'-':val_edited);
+
+          if(original_edited==val_edited){
+            alertify.message('No modified');
+            if(__callback!==false && typeof __callback=='function'){
+              __callback();
+              __callback=false;
+              bind_crud_real_time(__callback);
+            }else{
+              bind_crud_real_time();
+            }
+            return false;
+          }
+
+          var obj = {}
+          obj['val_edited'] = val_edited;
+          obj['_id_edited'] = _id_edited;
+          obj['table_edited'] = table_edited;
+          obj['field_edited'] = field_edited;   
+          obj['original_edited'] = original_edited;          
+          var dataform = JSON.stringify({'data':obj});
+
+          $.ajax({
+            type: 'POST',
+            url: '/updateCrudRealTime',
+            data: dataform,
+            success: function (data) { 
+              alertify.success('Updated');
+              console.log("Updated",data);
+              if(__callback!==false && typeof __callback=='function'){
+                __callback();
+                __callback=false;
+                bind_crud_real_time(__callback);
+              }else{
+                bind_crud_real_time();
+              }
+            },
+            error: function (jqXHR, textStatus, errorThrown) { 
+              console.log("Error",textStatus);
+              alertify.error(textStatus);
+              if(__callback!==false && typeof __callback=='function'){
+                __callback();
+                __callback=false;
+                bind_crud_real_time(__callback);
+              }else{
+                bind_crud_real_time();
+              }
+            },
+            contentType: "application/json",
+            dataType: 'json'
+          });
+        });
+      });
+    }
+
+    function crateUserCombo(_field){
+      $.ajax({
+          url: "/getUsers/0",
+          type: "GET",
+          success: function(returned) {
+              returned = JSON.parse(returned);
+              var users = returned['items'];
+              var userCombo = $(_field);
+              userCombo.empty();
+              userCombo.append($("<option></option>").text('select a responsible for this user').val(''));
+              users.forEach(function(user) {
+                  var option = $("<option></option>");
+                  option.val(user.id);
+                  option.text(user.name + " (" + user.email + ")");
+                  userCombo.append(option);
+              });
+          },
+          error: function(xhr, status, error) {
+              console.log("Error: " + xhr.responseText);
+          }
+      });
+    }
   </script>
   <style>
     .ajs-message, .alertify-notifier{

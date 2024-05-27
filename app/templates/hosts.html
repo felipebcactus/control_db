@@ -90,7 +90,7 @@
             // '<a href="/hosts/' + host_id + '">' + hosts[i].name + '</a></td>' +
             $('#hosts > tbody:last').append('<tr>' +
               //<td>'+ host_id +'</td>' +
-              '<td>' + hosts[i].name + '</td>' +
+              '<td>' + print_field_edit(host_id,'name',hosts[i].name,"Hosts") + '</td>' +
               '<td>' + hosts[i].type + '</td>' +
               //'<td>' + hosts[i].ipaddress + '</td>' +
               //'<td>' + hosts[i].ipaddress_read + '</td>' +
@@ -104,11 +104,11 @@
                   '<button class="btn btn-sm btn-info bt-info" host_id="'+ hosts[i].id +'"><i class="bi bi-file-plus"></i> details</button><span class="info-space small" style="display:none">'+
                   '<br>'+
                   'ID: '+ host_id + '<br>' +
-                  'W.Endpoint: '+ hosts[i].ipaddress + '<br>' +
-                  'R.Endpoint: '+ hosts[i].ipaddress_read + '<br>' +
-                  'Port: '+ hosts[i].port + '<br>' +
-                  'Username: '+ hosts[i].username + '<br>' +
-                  'Included: <span class="edit" _id="'+host_id+'" table="Hosts" field="id_user" original="'+ hosts[i].id_user +'">'+ hosts[i].id_user + '-</span><br>' +
+                  'W.Endpoint: '+ print_field_edit(host_id,'ipaddress',hosts[i].ipaddress,"Hosts") + '<br>' +
+                  'R.Endpoint: '+ print_field_edit(host_id,'ipaddress_read',hosts[i].ipaddress_read,"Hosts") + '<br>' +
+                  'Port: '+ print_field_edit(host_id,'port',hosts[i].port,"Hosts") + '<br>' +
+                  'Username: '+ print_field_edit(host_id,'username',hosts[i].username,"Hosts") + '<br>' +
+                  'Included: '+ print_field_edit(host_id,'id_user',hosts[i].id_user,"Hosts") + '<br>' +
                   'Created: '+ moment(hosts[i].createdAt).format("YYYY/MM/DD HH:mm") + '<br>' +
                   'Updated: '+ moment(hosts[i].updatedAt).format("YYYY/MM/DD HH:mm") + '<br>' +
                   '</span></td>' +
@@ -175,76 +175,5 @@
     ini_table();
   });
 
-  var __callback=false;
-  function bind_crud_real_time(_callback=false){
-    if(_callback!==false){
-      __callback = _callback;
-    }
-    $('.edit').unbind("dblclick").bind("dblclick",function(){
-        $(this).unbind("dblclick");
-        var val = $(this).text();
-        var _id = $(this).attr('_id');
-        var table = $(this).attr('table');
-        var field = $(this).attr('field');
-        var original = $(this).attr('original');
-        $(this).html('<input type="text" field="'+field+'" table="'+table+'" original="'+original+'" _id="'+_id+'" value="'+(val=='-'?'':val)+'" class="editval"/>').find('input').focus().unbind("blur").bind("blur",function(){
-          var val_edited = $(this).val();
-          var _id_edited = $(this).attr('_id');
-          var table_edited = $(this).attr('table');
-          var field_edited = $(this).attr('field');
-          var original_edited = $(this).attr('original');
-          $(this).parent().text(val_edited==''?'-':val_edited);
 
-          if(original_edited==val_edited){
-            alertify.message('No modified');
-            if(__callback!==false && typeof __callback=='function'){
-              __callback();
-              __callback=false;
-              bind_crud_real_time(__callback);
-            }else{
-              bind_crud_real_time();
-            }
-            return false;
-          }
-
-          var obj = {}
-          obj['val_edited'] = val_edited;
-          obj['_id_edited'] = _id_edited;
-          obj['table_edited'] = table_edited;
-          obj['field_edited'] = field_edited;   
-          obj['original_edited'] = original_edited;          
-          var dataform = JSON.stringify({'data':obj});
-
-          $.ajax({
-            type: 'POST',
-            url: '/updateCrudRealTime',
-            data: dataform,
-            success: function (data) { 
-              alertify.success('Updated');
-              console.log("Updated",data);
-              if(__callback!==false && typeof __callback=='function'){
-                __callback();
-                __callback=false;
-                bind_crud_real_time(__callback);
-              }else{
-                bind_crud_real_time();
-              }
-            },
-            error: function (jqXHR, textStatus, errorThrown) { 
-              console.log("Error",textStatus);
-              alertify.error(textStatus);
-              if(__callback!==false && typeof __callback=='function'){
-                __callback();
-                __callback=false;
-                bind_crud_real_time(__callback);
-              }else{
-                bind_crud_real_time();
-              }
-            },
-            contentType: "application/json",
-            dataType: 'json'
-          });
-        });
-      });
-  }
 </script>
