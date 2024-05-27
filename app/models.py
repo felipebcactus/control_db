@@ -71,8 +71,8 @@ class AuditLog(db.Model):
     table_name = db.Column(db.String(255), nullable=False)
     operation = db.Column(db.String(255), nullable=False)
     field_name = db.Column(db.String(255), nullable=True)
-    old_value = db.Column(db.String(255), nullable=True)
-    new_value = db.Column(db.String(255), nullable=True)
+    old_value = db.Column(db.Text(), nullable=True)
+    new_value = db.Column(db.Text(), nullable=True)
     changed_by = db.Column(db.Integer, nullable=False)
     changed_at = db.Column(db.DateTime(), default=db.func.now())
 
