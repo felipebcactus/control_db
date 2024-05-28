@@ -41,7 +41,7 @@
           <th scope="col" title="in days">Expire Time</th>
           <th scope="col">System User</th>
           <th scope="col">Status</th>
-          <th scope="col">Action</th>
+          <!-- th scope="col">Action</th -->
         </tr>
       </thead>
       <tbody>
@@ -139,7 +139,7 @@ function getUsers(_type=false,pag=1,qtd=10){
         '<td>' + print_field_edit(user_id,'days_default_access',days,"Users") + '</td>' +
         '<td>' + user_parent + '</td>' +
         '<td>' + user_status + '</td>' +
-        '<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'>DELETE</button>" + '</td>' +
+        //'<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'>DELETE</button>" + '</td>' +
         '</tr>');
     }
         
