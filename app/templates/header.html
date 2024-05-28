@@ -43,8 +43,15 @@
   <script>
 
   var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
+  filter_user = filter_user=='false'?false:filter_user;
 
     $(document).ready(function() {
+      $.getJSON('/getUserLogged',function(ret){
+        Cookies.remove("filter_user");    
+        filter_user = (ret['is_adm']==true?false:ret['id']);
+        filter_user = filter_user=='false'?false:filter_user;
+        Cookies.set("filter_user", filter_user);    
+      });
       window.setTimeout(function(){
         var hashatual = window.location.hash;
         if(hashatual!=''){
@@ -52,6 +59,8 @@
           if($('.nav-link[data-target='+hash+']')!=undefined){
             $('.nav-link[data-target='+hash+']').trigger('click');
           }
+        }else{
+          $('.nav-link[data-target=sessions]').trigger('click');
         }
       },100);
 
@@ -67,12 +76,6 @@
               window.location='/logout';
               return false;
             }
-            var filter_user = $(this).data('user-id')==undefined?false:$(this).data('user-id');
-            if (filter_user){ // set cookie filter_user   
-              Cookies.set("filter_user", filter_user);    
-            }else{ // remove cookie filter_user    
-              Cookies.remove("filter_user");    
-            }              
             $('li.nav-item a').removeClass('sel');
             $(this).addClass('sel');
             $('li.nav-item a').trigger('mouseout');
@@ -142,7 +145,6 @@
             data: dataform,
             success: function (data) { 
               alertify.success('Updated');
-              console.log("Updated",data);
               if(__callback!==false && typeof __callback=='function'){
                 __callback();
                 __callback=false;
@@ -193,6 +195,9 @@
     }
   </script>
   <style>
+    .hideadm{
+      display: none;
+    }
     .ajs-message, .alertify-notifier{
       padding: 1px !important;
     }

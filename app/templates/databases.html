@@ -20,13 +20,16 @@
 
 <script>
 var qtd_global=0; 
+var host_id=false;
 $(document).ready(function() {
 
 // Additional code to fetch database
   function ini_table(pag=1,qtd=15){
     qtd_global = qtd;
     $('#databases > tbody').empty();
-    $.getJSON('/getDatabases?pag='+pag+'&qtd='+qtd, function (returned) {
+    host_id = Cookies.get("host_id") | false;
+    Cookies.remove("host_id");
+    $.getJSON('/getDatabases?pag='+pag+'&qtd='+qtd+((host_id!=false)?'&host_id='+host_id:''), function (returned) {
       // if (!Array.isArray(databases)) return; // Check for array response
       databases = returned['items'];
       

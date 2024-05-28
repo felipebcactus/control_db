@@ -201,8 +201,11 @@ def getConfigParam(config_name):
 def getDatabases(_json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
-    
-    databases_pag = database.get_by_paginated(Databases, 'id', page=pag, per_page=qtd, orderby=True)
+    host_id = request.args.get('host_id', 0, type=int)
+    if host_id!=0:
+        databases_pag = database.get_by_paginated_filtered(Databases, 'id_host', host_id, 'name', page=pag, per_page=qtd)
+    else:
+        databases_pag = database.get_by_paginated(Databases, 'id', page=pag, per_page=qtd, orderby=True)
     
     all_databases = []
     for _database in databases_pag['items']:
@@ -427,6 +430,13 @@ def getSessions(_json=False):
         return json.dumps(return_obj), 200
 
 
+@app.route('/getUserLogged', methods=['GET'])
+@login_required
+def getUserLogged():
+        user_data = database.get_id(Users,current_user.id)        
+        return json.dumps({"id":current_user.id,"name":user_data.name,"is_adm":(True if int(user_data.type)==2 or int(user_data.type)==0 else False)}), 200
+
+    
 @app.route('/getSessions/<user_id>', methods=['GET'])
 @login_required
 def getSessionsUser(user_id, _json=False):
@@ -512,7 +522,36 @@ def getTreeSession(session_id, _json=False):
     
 @app.route('/getHostsDatabasesTablesTree', methods=['GET'])
 @login_required
-def getHostsDatabasesTablesTree(_json=False):
+def getHostsDatabasesTablesTree():
+    return getHostsDatabasesTablesTreeFromFile()
+
+@app.route('/forceGenerateTree', methods=['GET'])
+@login_required
+def forceGenerateTree():
+    getHostsDatabasesTablesTreeFromFile(_force_generate=True)
+    return json.dumps(getHostsDatabasesTablesTreeFromFile()), 200
+
+def getHostsDatabasesTablesTreeFromFile(_force_generate=False):
+    nome_arquivo = '/tmp/HostsDatabasesTablesTree.json'
+    if _force_generate:
+        print('forcando a criacao de nova arvore')
+        dados = generateHostsDatabasesTablesTree(_json=True, nome_arquivo=nome_arquivo)
+    else:
+        if os.path.exists(nome_arquivo):
+            print('arquivo de arvore existente')
+            with open(nome_arquivo, 'r') as f:
+                try:
+                    dados = json.load(f)
+                    print('retornando arquivo de arvore')
+                except json.decoder.JSONDecodeError:
+                    print('execao do arquivo de arvore, gerando dinamicamente')
+                    dados = generateHostsDatabasesTablesTree(_json=True, nome_arquivo=nome_arquivo)
+        else:
+            print('arquivo de arvore nao existe, gerando dinamicamente')
+            dados = generateHostsDatabasesTablesTree(_json=True, nome_arquivo=nome_arquivo)
+    return dados
+    
+def generateHostsDatabasesTablesTree(_json=False, nome_arquivo=False):
     hosts = database.get_all_order_by(Hosts, 'name')
     tree = []
     for host in hosts:
@@ -539,6 +578,9 @@ def getHostsDatabasesTablesTree(_json=False):
                         database_dict["children"].append(table_dict)
                 host_dict["children"].append(database_dict)
         tree.append(host_dict)
+    if nome_arquivo!=False:
+        with open(nome_arquivo, 'w') as f:
+            json.dump(tree, f, indent=4)
     if _json==True:
         return tree
     else:
@@ -953,7 +995,8 @@ def removeUserFromHostBySession_action(_data_received=None):
         print('apagou sessionhost')
         # database.edit_instance(Sessions, id=id_session, description=sessionData.description+"\n["+datetime.today().strftime('%Y-%m-%d')+"] REMOVED")
     except Exception as ex:
-        print('ERRO: '+ex)
+        print('ERRO: ')
+        print(ex)
     print('returnOK')
     return json.dumps(results), 200
 

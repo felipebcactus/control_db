@@ -24,6 +24,8 @@
 <script>
   var hours=24;
   var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
+  filter_user = filter_user=='false'?false:filter_user;
+  
   $(document).ready(function() {      
     
     $.getJSON('/getConfigParam/hours_user_session', function (_hours) {

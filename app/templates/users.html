@@ -38,7 +38,7 @@
           <th scope="col">Username</th>
           <th scope="col">Email</th>
           <th scope="col">Type</th>
-          <th scope="col">Days for Access</th>
+          <th scope="col" title="in days">Expire Time</th>
           <th scope="col">System User</th>
           <th scope="col">Status</th>
           <th scope="col">Action</th>
@@ -124,12 +124,12 @@ function getUsers(_type=false,pag=1,qtd=10){
       var days = users[i].days_default_access;
       var user_parent = users[i].parent;
       var user_status = users[i].status_name;
-      var btn_a = " <button title='activate' class='badge bg-success bt-approve' data-idsuser='"+user_id+"'><i class='bi bi-check-square-fill'></i></button>";
-      var btn_d = "<button title='deactivate' class='badge bg-danger bt-deapprove' data-idsuser='"+user_id+"'><i class='bi bi-x-square-fill'></i></button> ";
+      var btn_a = " <label title='activate' style='cursor:pointer;' class='badge bt-approve' data-idsuser='"+user_id+"'>ACTIVATE</label>";
+      var btn_d = "<label title='deactivate' style='cursor:pointer;' class='badge bt-deapprove' data-idsuser='"+user_id+"'>INACTIVATE</label> ";
       var btn = (users[i].status==0)?btn_a:btn_d;
       user_status = (users[i].status==1) ? '<span class="badge bg-success"> ACTIVE</span>' : '<span class="badge bg-danger"> INACTIVE</span>';
       user_status = (users[i].status==0) ? user_status + btn : btn + user_status;
-      user_status = '<span style="background-color: #a4a4a4;padding: 4px 4px 8px 4px;border-radius: 5px;">' + user_status + "</span>";
+      user_status = '<span style="text-wrap: nowrap;">' + user_status + "</span>";
       
       // Modify selector to target users user
       $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
@@ -139,7 +139,7 @@ function getUsers(_type=false,pag=1,qtd=10){
         '<td>' + print_field_edit(user_id,'days_default_access',days,"Users") + '</td>' +
         '<td>' + user_parent + '</td>' +
         '<td>' + user_status + '</td>' +
-        '<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'><i class='bi bi-trash'></i> DELETE</button>" + '</td>' +
+        '<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'>DELETE</button>" + '</td>' +
         '</tr>');
     }
         
@@ -153,7 +153,7 @@ function getUsers(_type=false,pag=1,qtd=10){
 
     $('.bt-delete').unbind('click').bind('click',function(e) {
       e.preventDefault();
-      if(prompt('Confirm deletion of this user?')){
+      if(confirm('Confirm deletion of this user?')){
         console.log('deleteuser'); // TODO create delete user with DELETE verb
         // var id_user = $(this).data('idsuser');
         // $.getJSON('/deleteUser/'+id_user, function () {

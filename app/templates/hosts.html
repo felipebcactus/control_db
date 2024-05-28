@@ -88,7 +88,7 @@
             // console.log(hosts[i]);
             var host_id=hosts[i].id;
             // '<a href="/hosts/' + host_id + '">' + hosts[i].name + '</a></td>' +
-            $('#hosts > tbody:last').append('<tr>' +
+            $('#hosts > tbody:last').append('<tr host_id="'+ host_id +'">' +
               //<td>'+ host_id +'</td>' +
               '<td>' + print_field_edit(host_id,'name',hosts[i].name,"Hosts") + '</td>' +
               '<td>' + hosts[i].type + '</td>' +
@@ -114,6 +114,13 @@
                   '</span></td>' +
               '</tr>');
           }              
+
+              
+          $('#hosts tbody tr').unbind('click').bind('click',function(){
+            var host_id = $(this).attr("host_id");
+            Cookies.set("host_id", host_id);    
+            $('#content-area').load('/databases.html');
+          });
           
           $('.bt-info').unbind('click').bind('click',function(e) {
             e.preventDefault();
@@ -136,6 +143,8 @@
                 $.get( "/synchosts/" + $(this).attr('host_id'), function( returned ) {
                   _bt.html(_btcontent);
                   console.log(returned);
+                  alertify.success('Sync completed!');
+                  window.setTimeout(function(){ forceGenerateTree(); },100);
                 });
               }
           });
@@ -160,7 +169,7 @@
                 });
               }
           });
-
+          
           bind_crud_real_time(ini_table);
 
       });
@@ -175,5 +184,17 @@
     ini_table();
   });
 
+  function forceGenerateTree(){
+    $.ajax({
+      type: 'GET',
+      async : true,
+      url: '/forceGenerateTree'
+    });
+  }
 
 </script>
+<style>
+  #hosts tbody tr{
+    cursor: pointer;
+  }
+</style>
