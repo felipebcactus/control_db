@@ -278,6 +278,10 @@ function ini_table(pag=1,qtd=10,filter={}){
 
     if(session_included!=undefined && session_included!=0){
       Cookies.remove("session_included");
+      $('#passwordModal').clone().attr('id','passwordModal_load').appendTo("body");
+      $('#passwordModal_load').find('.modal-title').html('<i class="fas fa-sync fa-spin"></i> please wait:');
+      $('#passwordModal_load').find('.container').html('loading all available databases...');
+      $('#passwordModal_load').modal('show');
       $('.bt-permission[data-bs-session-id='+session_included+']').trigger('click');
     }
 
@@ -386,8 +390,12 @@ function start_datatree(){
           bind_permission();
           __bt.html(__bt_content);
           __bt.addClass('hideadm');
+          $('#passwordModal_load').modal('hide');
         },10);
         bindmodal(data);
+        window.setTimeout(function(){
+          $('#passwordModal_load').modal('hide');
+        },500);        
         $('#permissionModal').modal('show');
       }
   });
@@ -408,7 +416,10 @@ function bindmodal(datatree){
       closeDepth: 1,
       data: datatree,
       loaded: function () {
-        window.setTimeout(preventChildExpansion,100);        
+        window.setTimeout(function(){
+          preventChildExpansion();
+          $('#passwordModal_load').modal('hide');
+        },100);        
       },
         onChange: function () {
       }
