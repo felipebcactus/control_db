@@ -78,39 +78,40 @@
               $('input[name="access_date"]').val(moment($('#access_start').val()).format('DD/MM/YYYY')+' '+moment($('#access_end').val()).format('DD-MM-YYYY'));   
               console.log('data final: ',$('#access_end').val());  
             }).trigger('change');
+                    
+            $('.bt-cancel').unbind('click').bind('click',function(e) {
+                e.preventDefault();
+                $('#content-area').load('/sessions.html'); // Load content based on menu item
+            });
+
+            $('.bt-create').unbind('click').bind('click',function(e) {
+                e.preventDefault();
+                $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
+                if(filter_user==false){
+                  $('#access_start').val($('#access_start').val()+(($('#access_start').val().length==10)?' 00:00:00':''));
+                  $('#access_end').val($('#access_end').val()+(($('#access_end').val().length==10)?' 23:59:59':''));
+                }
+                var _dataform = $('form#session-form').serializeArray();
+                var days = $('#userCombo option:selected').attr('days');
+                _dataform.push({'name': 'days', 'value': days});
+                var dataform = JSON.stringify(_dataform);
+                $.ajax({
+                      type: 'POST',
+                      url: '/addSession',
+                      data: dataform,
+                      success: function(data) { 
+                        var target = $(this).data('target');
+                        Cookies.set("session_included",data['id_session']);
+                        $('#content-area').load('/sessions.html'); // Load content based on menu item
+                      },
+                      contentType: "application/json",
+                      dataType: 'json'
+                });
+            });
         },
         error: function(xhr, status, error) {
             console.log("Error: " + xhr.responseText);
         }
-    });
-    $('.bt-cancel').unbind('click').bind('bind',function(e) {
-        e.preventDefault();
-        var target = $(this).data('target');
-        $('#content-area').load('/sessions.html'); // Load content based on menu item
-    });
-    $('.bt-create').unbind('click').bind('bind',function(e) {
-        e.preventDefault();
-        if(filter_user==false){
-          $('#access_start').val($('#access_start').val()+(($('#access_start').val().length==10)?' 00:00:00':''));
-          $('#access_end').val($('#access_end').val()+(($('#access_end').val().length==10)?' 23:59:59':''));
-        }
-        var _dataform = $('form#session-form').serializeArray();
-        var days = $('#userCombo option:selected').attr('days');
-        _dataform.push({'name': 'days', 'value': days});
-        var dataform = JSON.stringify(_dataform);
-        $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
-        $.ajax({
-              type: 'POST',
-              url: '/addSession',
-              data: dataform,
-              success: function(data) { 
-                var target = $(this).data('target');
-                Cookies.set("session_included",data['id_session']);
-                $('#content-area').load('/sessions.html'); // Load content based on menu item
-              },
-              contentType: "application/json",
-              dataType: 'json'
-        });
     });
   });
 </script>
