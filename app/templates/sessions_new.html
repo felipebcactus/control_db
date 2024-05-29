@@ -90,7 +90,6 @@
     });
     $('.bt-create').unbind('click').bind('bind',function(e) {
         e.preventDefault();
-        $(this).unbind('click');
         if(filter_user==false){
           $('#access_start').val($('#access_start').val()+(($('#access_start').val().length==10)?' 00:00:00':''));
           $('#access_end').val($('#access_end').val()+(($('#access_end').val().length==10)?' 23:59:59':''));
@@ -99,6 +98,7 @@
         var days = $('#userCombo option:selected').attr('days');
         _dataform.push({'name': 'days', 'value': days});
         var dataform = JSON.stringify(_dataform);
+        $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
         $.ajax({
               type: 'POST',
               url: '/addSession',
