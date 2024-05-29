@@ -68,7 +68,7 @@
                 option.val(user.id);
                 option.text(user.name + " (" + user.email + ")");
                 option.attr('days',user.days_default_access);
-                if((filter_user!=false && (filter_user==user.id || filter_user==user.parent_id)) ||  filter_user===false){
+                if(user.name!='Admin' && ((filter_user!=false && (filter_user==user.id || filter_user==user.parent_id)) ||  filter_user===false)){
                   userCombo.append(option);
                 }
             });
@@ -83,13 +83,16 @@
             console.log("Error: " + xhr.responseText);
         }
     });
-    $('.bt-cancel').click(function(e) {
+    $('.bt-cancel').unbind('click').bind('bind',function(e) {
         e.preventDefault();
+        e.stopPropagation();
         var target = $(this).data('target');
         $('#content-area').load('/sessions.html'); // Load content based on menu item
     });
-    $('.bt-create').click(function(e) {
+    $('.bt-create').unbind('click').bind('bind',function(e) {
         e.preventDefault();
+        e.stopPropagation();
+        $(this).unbind('click');
         if(filter_user==false){
           $('#access_start').val($('#access_start').val()+(($('#access_start').val().length==10)?' 00:00:00':''));
           $('#access_end').val($('#access_end').val()+(($('#access_end').val().length==10)?' 23:59:59':''));
