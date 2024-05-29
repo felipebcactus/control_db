@@ -124,13 +124,10 @@ function getUsers(_type=false,pag=1,qtd=10){
       var days = users[i].days_default_access;
       var user_parent = users[i].parent;
       var user_status = users[i].status_name;
-      var btn_a = " <label title='activate' style='cursor:pointer;' class='badge bt-approve' data-idsuser='"+user_id+"'>ACTIVATE</label>";
-      var btn_d = "<label title='deactivate' style='cursor:pointer;' class='badge bt-deapprove' data-idsuser='"+user_id+"'>INACTIVATE</label> ";
-      var btn = (users[i].status==0)?btn_a:btn_d;
-      user_status = (users[i].status==1) ? '<span class="badge bg-success"> ACTIVE</span>' : '<span class="badge bg-danger"> INACTIVE</span>';
-      user_status = (users[i].status==0) ? user_status + btn : btn + user_status;
-      user_status = '<span style="text-wrap: nowrap;">' + user_status + "</span>";
-      
+      var btn_a = function(text){ return "<button title='activate' style='cursor:pointer;' class='btn btn-sm btn-danger bt-approve' data-idsuser='"+user_id+"'>"+text+"</button>"; };
+      var btn_d = function(text){ return "<button title='deactivate' style='cursor:pointer;' class='btn btn-sm btn-success bt-deapprove' data-idsuser='"+user_id+"'>"+text+"</button> "; }; 
+      var user_status = (users[i].status==0)?btn_a('INACTIVE'):btn_d('ACTIVE');
+            
       // Modify selector to target users user
       $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
         '<td>' + print_field_edit(user_id,'name',user_name,"Users") + '</td>' +

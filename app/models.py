@@ -158,6 +158,7 @@ class Sessions(db.Model):
     updated_at = db.Column(db.DateTime(), onupdate=db.func.now())
     def serialize(self):
         return {
+            "id": self.id,
             "name": self.name,
             "user": Users.query.filter_by(id=self.user).first().username,
             "writer": self.writer,

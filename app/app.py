@@ -921,7 +921,6 @@ def removeUserFromHostByHostId(_host_id):
 
 # pode receber apenas _data['session_id']
 @app.route('/removeUserFromHostBySession', methods=['POST'])
-@login_required
 def removeUserFromHostBySession(_data_received=None):
     return removeUserFromHostBySession_action(_data_received=_data_received)
     
@@ -989,7 +988,7 @@ def removeUserFromHostBySession_action(_data_received=None):
         print(_msgtry)
         results.append({'dropuserfromhost': _msgtry})
     try:
-        database.edit_instance(Sessions, id=id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None, approver=None)
+        database.edit_instance(Sessions, id_session, password=None, status=(3 if 'expired' in _data else 2), approve_date=None, approver=None)
         print('atualizou sessao info')
         database.delete_instance_by(SessionsHosts, 'id_session', id_session)
         print('apagou sessionhost')

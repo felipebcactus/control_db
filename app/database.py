@@ -1,4 +1,6 @@
 from .models import db
+from sqlalchemy import update
+
 
 def get_all(model):
     data = model.query.all()
@@ -148,13 +150,13 @@ def delete_instance_by(model, column_name, value):
 
 def edit_instance(model, id, **kwargs):
     try:
-        instance = model.query.filter_by(id=id).all()[0]
-        for attr, new_value in kwargs.items():
-            setattr(instance, attr, new_value)
-        commit_changes()        
+        query = update(model).where(model.id == id).values(**kwargs)
+        db.session.execute(query)
+        db.session.commit()
     except Exception as ex:
         print('EDIT INSTANCE')
         print(ex)
+        db.session.rollback()
 
 def edit_instance_by(model, column_name, _value, **kwargs):
     try:

@@ -15,7 +15,7 @@
       <!-- th scope="col">Included by</th -->
       <!-- th scope="col">Created at</th -->
       <!-- th scope="col">Updated at</th -->
-      <th scope="col">Actions</th>
+      <th scope="col" style="width: 50%;">Actions</th>
       </tr>
   </thead>
   <tbody>
@@ -116,7 +116,9 @@
           }              
 
               
-          $('#hosts tbody tr').unbind('click').bind('click',function(){
+          $('#hosts tbody tr').unbind('click').bind('click',function(e){
+            e.preventDefault();
+            e.stopPropagation();
             var host_id = $(this).attr("host_id");
             Cookies.set("host_id", host_id);    
             $('#content-area').load('/databases.html');
@@ -124,6 +126,7 @@
           
           $('.bt-info').unbind('click').bind('click',function(e) {
             e.preventDefault();
+            e.stopPropagation();
             $(this).parent().find('.info-space').toggle();
             if($(this).find('i').hasClass('bi-file-plus')){
               $(this).find('i').removeClass('bi-file-plus');
@@ -136,6 +139,7 @@
 
           $('.bt-sync').unbind('click').bind('click',function(e) {
             e.preventDefault();
+            e.stopPropagation();
               if(confirm('Sync every databases and tables?')){
                 _bt = $(this);
                 _btcontent = $(this).html();
@@ -151,6 +155,7 @@
 
           $('.bt-remove').unbind('click').bind('click',function(e) {
             e.preventDefault();
+            e.stopPropagation();
               if(confirm('Remove all sessions + tables + databases + this host?')){
                 _bt = $(this);
                 _btcontent = $(this).html();
