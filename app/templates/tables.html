@@ -84,12 +84,11 @@ $(document).ready(function() {
         var table_type = tables[i].type;
         var table_database = tables[i].database_name; // Assuming foreign key for database
         databasename = table_database;
-        var btn_a = " <button title='OPEN' class='badge bg-success bt-approve' data-idtable='"+table_id+"'><i class='bi bi-check-square-fill'></i></button>";
-        var btn_d = "<button title='RESTRICT' class='badge bg-danger bt-deapprove' data-idtable='"+table_id+"'><i class='bi bi-x-square-fill'></i></button> ";
-        var btn = (tables[i].type_id==0)?btn_a:btn_d;
-        table_type = (tables[i].type_id==1) ? '<span class="badge bg-success"> OPEN</span>' : '<span class="badge bg-danger"> RESTRICT</span>';
-        table_type = (tables[i].type_id==1) ? table_type + btn : btn + table_type;
-        
+          
+        var btn_a = function(text){ return "<button title='activate' style='cursor:pointer;' class='btn btn-sm btn-danger bt-approve' data-idtable='"+table_id+"'>"+text+"</button>"; };
+        var btn_d = function(text){ return "<button title='deactivate' style='cursor:pointer;' class='btn btn-sm btn-success bt-deapprove' data-idtable='"+table_id+"'>"+text+"</button> "; }; 
+        var table_type = (users[i].status==0)?btn_a('RESTRICT'):btn_d('OPEN');
+                
         // Modify selector to target tables table
         $('#tables > tbody:last').append('<tr>'+ //<td>' + table_id + '</td>' +
           '<td>' + table_name + '</td>' +
@@ -100,6 +99,7 @@ $(document).ready(function() {
       
       $('.bt-approve, .bt-deapprove').click(function(e) {
         e.preventDefault();
+        $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
         var id_table = $(this).data('idtable');
         $.getJSON('/typeChangeTable/'+id_table+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
           getTables();
