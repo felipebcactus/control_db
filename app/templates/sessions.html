@@ -188,13 +188,11 @@ function ini_table(pag=1,qtd=10,filter={}){
     $('.bt-info-details').unbind('click').bind('click',function(e) {
             e.preventDefault();
             e.stopPropagation();
-            $(this).parent().find('.info-space').toggle();
+            $(this).parent().find('.info-space, .hideadm.bt-info').toggle();
             if($(this).find('i').hasClass('bi-file-plus')){
-              $('.hideadm.bt-info').show();
               $(this).find('i').removeClass('bi-file-plus');
               $(this).find('i').addClass('bi-file-minus');
             }else{
-              $('.hideadm.bt-info').hide();
               $(this).find('i').removeClass('bi-file-minus');
               $(this).find('i').addClass('bi-file-plus');
             }
