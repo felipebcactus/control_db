@@ -142,6 +142,7 @@ function getUsers(_type=false,pag=1,qtd=10){
         
     $('.bt-approve, .bt-deapprove').unbind('click').bind('click',function(e) {
       e.preventDefault();
+      $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       var id_user = $(this).data('idsuser');
       $.getJSON('/statusChangeUser/'+id_user+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
         getUsers(0);
