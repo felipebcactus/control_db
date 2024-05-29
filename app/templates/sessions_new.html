@@ -85,13 +85,11 @@
     });
     $('.bt-cancel').unbind('click').bind('bind',function(e) {
         e.preventDefault();
-        e.stopPropagation();
         var target = $(this).data('target');
         $('#content-area').load('/sessions.html'); // Load content based on menu item
     });
     $('.bt-create').unbind('click').bind('bind',function(e) {
         e.preventDefault();
-        e.stopPropagation();
         $(this).unbind('click');
         if(filter_user==false){
           $('#access_start').val($('#access_start').val()+(($('#access_start').val().length==10)?' 00:00:00':''));
