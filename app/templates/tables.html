@@ -87,7 +87,7 @@ $(document).ready(function() {
           
         var btn_a = function(text){ return "<button title='activate' style='cursor:pointer;' class='btn btn-sm btn-danger bt-approve' data-idtable='"+table_id+"'>"+text+"</button>"; };
         var btn_d = function(text){ return "<button title='deactivate' style='cursor:pointer;' class='btn btn-sm btn-success bt-deapprove' data-idtable='"+table_id+"'>"+text+"</button> "; }; 
-        var table_type = (users[i].status==0)?btn_a('RESTRICT'):btn_d('OPEN');
+        var table_type = (tables[i].type_id==0)?btn_a('RESTRICT'):btn_d('OPEN');
                 
         // Modify selector to target tables table
         $('#tables > tbody:last').append('<tr>'+ //<td>' + table_id + '</td>' +
