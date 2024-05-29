@@ -171,8 +171,9 @@ function ini_table(pag=1,qtd=10,filter={}){
         '<td style="text-wrap: nowrap;"> <button class="hideadm btn btn-sm btn-success bt-permission" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
         ' <button class="hideadm btn btn-sm btn-warning bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> '+
         ' <button class="btn btn-sm btn-danger bt-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'">remove access</button> '+
+        ' <button class="btn btn-sm btn-info bt-info-details" session_id="'+ id +'"><i class="bi bi-file-plus"></i> details</button>' +
         ' <button class="hideadm btn btn-sm btn-primary bt-info" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-diagram-3-fill"></i> permissions</button> '+
-        ' <button class="btn btn-sm btn-info bt-info-details" session_id="'+ id +'"><i class="bi bi-file-plus"></i> details</button><span class="info-space small" style="display:none">'+        
+        ' <span class="info-space small" style="display:none">'+        
         ' <br>' +
           'Access Start: ' + moment(access_start).format("YYYY/MM/DD HH:mm") + '<br>' +
           'Approver: ' + ((approver!=null && approver!='')?approver:'') + '<br>' +
