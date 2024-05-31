@@ -64,7 +64,7 @@ def fetch(_json=False):
 
 @app.route('/updateUserPass', methods=['POST'])
 @login_required
-def updateConfig():
+def updateUserPass():
     data = request.get_json()
     user_id = data.id
     password= data.password
