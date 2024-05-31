@@ -367,7 +367,7 @@ $(document).ready(function() {
 
 function exibeSenha(username,details,waiting_approve){
   if(details.updateduser!=undefined){
-    alert('This user already exist in some database selected.\n\nThe password has been updated to this last one generated.\n\nREMEMBER: FOR SECURITY REASONS, the expiration time of the initial access will remove the others access to the same database.');
+    alert('This user already exist in some database selected.\n\nThe password has been updated to this last one generated and the tables access permissions has been joined.\n\nREMEMBER: FOR SECURITY REASONS, the expiration time of the initial access will remove the others access to the same database.');
   }
   var modal = $('#passwordModal');
   modal.find('.modal-title').text(((waiting_approve)?"Waiting approve":"Generated access")+" for: "+username);
