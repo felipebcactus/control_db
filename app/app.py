@@ -318,7 +318,7 @@ def getUsers(type,_json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
     
-    if type==-1:
+    if type=='-1':
         users_pag = database.get_by(Users, 'type', 0, True)
     else:
         users_pag = database.get_by_paginated(Users, 'id', page=pag, per_page=qtd, orderby=True)
