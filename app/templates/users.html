@@ -165,7 +165,9 @@ function getUsers(_type=false,pag=1,qtd=10){
       e.preventDefault();
       if(confirm('Update password of this user?')){
         if(pass = prompt('Provide a new password:',Math.random().toString(36).substr(2, 10))){
-          console.log('nwepass:',pass);
+          window.setTimeout(function(){
+            alertify.warning('Updating...');
+          },100);
           var request_data = JSON.stringify({'id':$(this).data('idsuser'),'password':pass});
           $.ajax({
             type: 'POST',
