@@ -171,9 +171,9 @@
       });
     }
 
-    function crateUserCombo(_field){
+    function crateUserCombo(_field, _type=0, _qtd=5){
       $.ajax({
-          url: "/getUsers/0",
+          url: "/getUsers/"+_type+'?qtd='+_qtd,
           type: "GET",
           success: function(returned) {
               returned = JSON.parse(returned);

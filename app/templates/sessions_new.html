@@ -56,7 +56,7 @@
     }).trigger('apply.daterangepicker');
 
     $.ajax({
-        url: "/getUsers/0",
+        url: "/getUsers/-1?qtd=1000",
         type: "GET",
         success: function(returned) {
             returned = JSON.parse(returned);
