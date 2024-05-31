@@ -66,9 +66,9 @@ def fetch(_json=False):
 @login_required
 def updateUserPass():
     data = request.get_json()
-    user_id = data['id']
+    current_logged_user = getUserLogged(True)
+    user_id = current_user.id if 'id' not in data or current_logged_user['isadm']!=True else data['id']
     password= data['password']
-    print(str(user_id)+" - "+password)
     database.edit_instance(Users, user_id, password=generate_password_hash(password, method='pbkdf2:sha256'))
     return json.dumps(data), 200
 
@@ -441,9 +441,13 @@ def getSessions(_json=False):
 
 @app.route('/getUserLogged', methods=['GET'])
 @login_required
-def getUserLogged():
-        user_data = database.get_id(Users,current_user.id)        
-        return json.dumps({"id":current_user.id,"name":user_data.name,"is_adm":(True if int(user_data.type)==2 or int(user_data.type)==0 else False)}), 200
+def getUserLogged(_json=False):
+    user_data = database.get_id(Users,current_user.id)      
+    return_obj = {"id":current_user.id,"name":user_data.name,"is_adm":(True if int(user_data.type)==2 or int(user_data.type)==0 else False)}
+    if _json==True:
+        return return_obj
+    else:
+        return json.dumps(return_obj), 200  
 
     
 @app.route('/getSessions/<user_id>', methods=['GET'])

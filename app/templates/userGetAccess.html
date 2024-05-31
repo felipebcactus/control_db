@@ -8,7 +8,7 @@
           <br>
           <span class="logo">CERBERUS</span>
       </div>
-      <p style="font-family: 'Playfair', serif; font-optical-sizing: auto; font-weight: 500; font-size: 16px; text-transform: uppercase; margin-top: 20px; text-align: center;">user: <b>{{ name }}</b></p>
+      <p style="font-family: 'Playfair', serif; font-optical-sizing: auto; font-weight: 500; font-size: 16px; text-transform: uppercase; margin-top: 20px; text-align: center;"><button title='change my password' class='btn btn-sm btn-warning bt-pass'><i class='bi bi-key'></i></button> user: <b>{{ name }}</b></p>
       <br>
       <ul class="nav flex-column nav-pills mb-auto" style="margin-top: 15px;">
         <li class="nav-item">
@@ -27,6 +27,29 @@
   <script>
     $(document).ready(function() {
       $('.request_access_menu').trigger('click');
+        
+      $('.bt-pass').unbind('click').bind('click',function(e) {
+        e.preventDefault();
+        if(confirm('Update your password?')){
+          if(pass = prompt('Provide your new password:',Math.random().toString(36).substr(2, 10))){
+            window.setTimeout(function(){
+              alertify.warning('Updating...');
+            },100);
+            var request_data = JSON.stringify({'password':pass});
+            $.ajax({
+              type: 'POST',
+              async : true,
+              url: '/updateUserPass',
+              data: request_data,
+              success: function(status) { 
+                alertify.success('Password Updated');
+              },
+              contentType: "application/json",
+              dataType: 'json'
+            });
+          }
+        }
+      });
     });
   </script>
 </body>

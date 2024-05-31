@@ -103,6 +103,7 @@ $(document).ready(function() {
         var id_table = $(this).data('idtable');
         $.getJSON('/typeChangeTable/'+id_table+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
           getTables();
+          forceGenerateTree();
         });
       });
 
@@ -118,4 +119,14 @@ $(document).ready(function() {
     $('#content-area').load('tables_new.html'); // Load content for new table form
   });
 });
+function forceGenerateTree(){
+  window.setTimeout(function(){
+    $.ajax({
+      type: 'GET',
+      async : true,
+      url: '/forceGenerateTree'
+    });
+  },100);
+}
+
 </script>
