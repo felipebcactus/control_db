@@ -792,8 +792,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 _command = "FLUSH PRIVILEGES;"
                 results.append({'flushprivileges': _command})
                 _execSQL(_command)
-                                
-                database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
+                database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now(), approver=current_user.id)
                                 
             elif hostData.type == 1:  # PostgreSQL
 
