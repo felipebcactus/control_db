@@ -19,7 +19,7 @@
       <th scope="col">Days for Access</th>
       <th scope="col">Parent</th>
       <th scope="col">Status</th>
-      <!-- th scope="col">Action</th -->
+      <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
@@ -41,7 +41,7 @@
           <th scope="col" title="in days">Expire Time</th>
           <th scope="col">System User</th>
           <th scope="col">Status</th>
-          <!-- th scope="col">Action</th -->
+          <th scope="col">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -130,12 +130,13 @@ function getUsers(_type=false,pag=1,qtd=10){
             
       // Modify selector to target users user
       $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
-        '<td>' + print_field_edit(user_id,'name',user_name,"Users") + '</td>' +
-        '<td>' + print_field_edit(user_id,'email',user_email,"Users") + '</td>' +
+        '<td>' + user_name + '</td>' +
+        '<td>' + user_email + '</td>' +
         '<td>' + user_type + '</td>' +
         '<td>' + print_field_edit(user_id,'days_default_access',days,"Users") + '</td>' +
         '<td>' + user_parent + '</td>' +
         '<td>' + user_status + '</td>' +
+        '<td>' + "<button title='pass' class='badge bg-warning bt-pass' data-idsuser='"+user_id+"'>PASS</button>" + '</td>' +
         //'<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'>DELETE</button>" + '</td>' +
         '</tr>');
     }
@@ -157,6 +158,27 @@ function getUsers(_type=false,pag=1,qtd=10){
         // $.getJSON('/deleteUser/'+id_user, function () {
         //   getUsers(0);
         // });
+      }
+    });
+
+    $('.bt-pass').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      if(confirm('Update password of this user?')){
+        if(pass = prompt('Provide a new password:')){
+          console.log('nwepass:',pass);
+          var request_data = JSON.stringify({'id':$(this).data('idsuser'),'password':pass});
+          $.ajax({
+            type: 'POST',
+            async : true,
+            url: '/updateUserPass',
+            data: request_data,
+            success: function(status) { 
+              alertify.success('Password Updated');
+            },
+            contentType: "application/json",
+            dataType: 'json'
+          });
+        }
       }
     });
     

@@ -62,6 +62,15 @@ def fetch(_json=False):
     else:
         return json.dumps(all_users), 200
 
+@app.route('/updateUserPass', methods=['POST'])
+@login_required
+def updateConfig():
+    data = request.get_json()
+    user_id = data.id
+    password= data.password
+    print(str(user_id)+" - "+password)
+    #database.edit_instance_by(Config, 'key', obj_key, value=obj_val)
+    return json.dumps(data), 200
 
 @app.route('/addHost', methods=['POST'])
 @login_required
