@@ -146,7 +146,7 @@ function getUsers(_type=false,pag=1,qtd=10){
       $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
       var id_user = $(this).data('idsuser');
       $.getJSON('/statusChangeUser/'+id_user+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
-        getUsers(0);
+        getUsers(-1);
       });
     });
 
@@ -216,7 +216,7 @@ $(document).ready(function() {
     $(this).addClass("active");
     tabContents.eq(clickedTabIndex).show().fadeTo(0,1);
     // getUsers(clickedTabIndex==0?0:2);// TODO
-    getUsers(0);
+    getUsers(-1);
   });
   
   $('.bt-newuser').unbind('click').bind('click',function(e) {
@@ -227,7 +227,7 @@ $(document).ready(function() {
 
   tabLinks.eq(activeTabIndex).trigger('click');
   
-  getUsers(0);
+  getUsers(-1);
 
 });
   

@@ -319,9 +319,9 @@ def getUsers(type,_json=False):
     qtd = request.args.get('qtd', 5, type=int)
     
     if type!='-1':
-        users_pag = database.get_by_paginated_filtered(Users, 'type', type, 'name', page=pag, per_page=qtd, order_desc=True)
+        users_pag = database.get_by_paginated_filtered(Users, 'type', type, 'name', page=pag, per_page=qtd)
     else:
-        users_pag = database.get_by_paginated(Users, 'name', page=pag, per_page=qtd, orderby=True)
+        users_pag = database.get_by_paginated(Users, 'name', page=pag, per_page=qtd)
     
     all_users = []
     for user in users_pag['items']:
