@@ -66,10 +66,10 @@ def fetch(_json=False):
 @login_required
 def updateUserPass():
     data = request.get_json()
-    user_id = data.id
-    password= data.password
+    user_id = data['id']
+    password= data['password']
     print(str(user_id)+" - "+password)
-    #database.edit_instance_by(Config, 'key', obj_key, value=obj_val)
+    database.edit_instance(Users, user_id, password=generate_password_hash(password, method='pbkdf2:sha256'))
     return json.dumps(data), 200
 
 @app.route('/addHost', methods=['POST'])
