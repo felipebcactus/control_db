@@ -667,10 +667,6 @@ def postHostsDatabasesTablesTreeApprove():
 @app.route('/postHostsDatabasesTablesTree', methods=['POST'])
 @login_required
 def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False):
-    print("postHostsDatabasesTablesTree")
-    print(_approve)
-    print(_approver)
-    print(_as_json)
     
     if _approve!=False:
         _approve_data = database.get_id(Sessions, _approve)
@@ -691,6 +687,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
     details={}
     details['host']=[]
     details['permissions']=permissions_obj_name
+    _session_data = database.get_id(Sessions, session_id)
+    details['session_writer']= True if _session_data.writer == 1 else False
     
     def _getHostData(_id):
         return database.get_id(Hosts, _id)
@@ -725,9 +723,11 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             # create relationship for future remove
             results.append({'removingOldSessionHost': session_id+'-'+_host_id})
             results.append({'addSessionHost': session_id+'-'+_host_id})
-            details['host'].append({'hostname': hostData.name, 'endpoint_writer': hostData.ipaddress, 'endpoint_reader': hostData.ipaddress_read, 'port': hostData.port, 'type': host_types[hostData.type]})
+            host_details_json = {'hostname': hostData.name, 'endpoint_reader': hostData.ipaddress_read, 'port': hostData.port, 'type': host_types[hostData.type]}
+            if _session_data.writer == 1:
+                host_details_json['endpoint_writer'] = hostData.ipaddress
+            details['host'].append(host_details_json)
             
-            _session_data = database.get_id(Sessions, session_id)
             privilegesConfig = 'SELECT, UPDATE, INSERT, DELETE' if _session_data.writer == 1 else privilegesConfig
             print("PRIVILEGE: "+privilegesConfig)
             results.append({'PRIVILEGE': privilegesConfig})
