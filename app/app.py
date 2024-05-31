@@ -67,8 +67,7 @@ def fetch(_json=False):
 def updateUserPass():
     data = request.get_json()
     current_logged_user = getUserLogged(True)
-    print(current_logged_user)
-    user_id = current_user.id if 'id' not in data or current_logged_user['isadm']!=True else data['id']
+    user_id = current_user.id if 'id' not in data or current_logged_user['is_adm']!=True else data['id']
     password= data['password']
     database.edit_instance(Users, user_id, password=generate_password_hash(password, method='pbkdf2:sha256'))
     return json.dumps(data), 200
