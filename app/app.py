@@ -45,7 +45,7 @@ def return_favicon_file(filename):
 @app.route('/getUsers', methods=['GET'])
 @login_required
 def fetch(_json=False):
-    users = database.get_all(Users)
+    users = database.get_all_order_by(Users,'name')
     all_users = []
     for user in users:
         new_user = {
@@ -320,9 +320,10 @@ def getUsers(type,_json=False):
     
     if type=='-1':
         qtd=1000
-    #users_pag = database.get_by(Users, 'type', 0, orderby=True)
-    #else:
-    users_pag = database.get_by_paginated(Users, 'name', page=pag, per_page=qtd, orderby=True)
+        users_pag = database.get_by_paginated_filtered(Users, 'type', 0, 'name', page=pag, per_page=qtd, order_desc=True)
+    else:
+        users_pag = database.get_by_paginated(Users, 'name', page=pag, per_page=qtd, orderby=True)
+    
     
     all_users = []
     for user in users_pag['items']:
