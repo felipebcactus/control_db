@@ -61,16 +61,16 @@ def synchosts(host_id):
                     print("TABELA JA EXISTENTE: "+table_name) 
                     table_id = result[0].id
                 else:
-                    try:
-                        for tb_name_restrict in table_type_restricted_default[0]:
+                    for tb_name_restrict in table_type_restricted_default[0]:
+                        try:
                             if table_name==tb_name_restrict:
                                 table_id = database.add_instance(Tables, name=table_name, id_database=db_id, type=0)
                             else:
                                 table_id = database.add_instance(Tables, name=table_name, id_database=db_id, type=1)
-                        print("TABELA NOVA: "+table_name) 
-                    except Exception as ex:
-                        print(ex)
-                        print('TABELA NOVA: Fail insert table duplicated')
+                            print("TABELA NOVA: "+table_name) 
+                        except Exception as ex:
+                            print(ex)
+                            print('TABELA NOVA: Fail insert table duplicated')
         
         return json.dumps('Synchosts successful!'), 200
     except Exception as ex:
