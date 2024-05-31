@@ -58,8 +58,9 @@ def synchosts(host_id):
                 
                 result = database.get_by_like_and_id(Tables, 'name', table_name, 'id_database', db_id)
                 if len(result)>0:
-                    print("TABELA JA EXISTENTE: "+table_name) 
-                    table_id = result[0].id
+                    print("TABELA JA EXISTENTE: "+table_name+" - DBID: "+str(db_id)) 
+                    print(result[0])
+                    # table_id = result[0].id
                 else:
                     for tb_name_restrict in table_type_restricted_default[0]:
                         try:
