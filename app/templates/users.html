@@ -136,7 +136,7 @@ function getUsers(_type=false,pag=1,qtd=10){
         '<td>' + print_field_edit(user_id,'days_default_access',days,"Users") + '</td>' +
         '<td>' + user_parent + '</td>' +
         '<td>' + user_status + '</td>' +
-        '<td>' + "<button title='pass' class='badge bg-warning bt-pass' data-idsuser='"+user_id+"'>PASS</button>" + '</td>' +
+        '<td>' + "<button title='pass' class='btn btn-sm btn-warning bt-pass' data-idsuser='"+user_id+"'><i class='bi bi-key'></i></button>" + '</td>' +
         //'<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'>DELETE</button>" + '</td>' +
         '</tr>');
     }
@@ -164,7 +164,7 @@ function getUsers(_type=false,pag=1,qtd=10){
     $('.bt-pass').unbind('click').bind('click',function(e) {
       e.preventDefault();
       if(confirm('Update password of this user?')){
-        if(pass = prompt('Provide a new password:')){
+        if(pass = prompt('Provide a new password:',Math.random().toString(36).substr(2, 10))){
           console.log('nwepass:',pass);
           var request_data = JSON.stringify({'id':$(this).data('idsuser'),'password':pass});
           $.ajax({
