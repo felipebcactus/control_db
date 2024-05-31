@@ -754,7 +754,11 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     results.append({'createnewuser': _command})
                     _execSQL(_command)                    
                 except Exception as ex:
-                    print('Exception creating user')
+                    _command = "ALTER USER '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
+                    _execSQL(_command)
+                    results.append({'updateduser': _command})
+                    details['updateduser']=True
+                    print('Exception creating user exists')
                     print(ex)
                 
                 for _database in permissions_obj_id[_host_id]:
