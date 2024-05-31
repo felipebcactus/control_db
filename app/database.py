@@ -125,6 +125,10 @@ def get_by_like_and_id(model, column_name_1, value_like_1, column_name_2, value_
     data = model.query.filter(getattr(model, column_name_1).like('%' + value_like_1 + '%'), getattr(model, column_name_2) == value_2).all()
     return data
 
+def get_by_column_and_id(model, column_name_1, value_1, column_name_2, value_2):
+    data = model.query.filter(getattr(model, column_name_1) == value_1, getattr(model, column_name_2) == value_2).all()
+    return data
+
 def force_commit():
     db.session.commit()
     

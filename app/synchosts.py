@@ -56,7 +56,7 @@ def synchosts(host_id):
                 table_name = table[0]
                 print("Atualizando TABELA: "+table_name) 
                 
-                result = database.get_by_like_and_id(Tables, 'name', table_name, 'id_database', db_id)
+                result = database.get_by_column_and_id(Tables, 'name', table_name, 'id_database', db_id)
                 if len(result)>0:
                     print("TABELA JA EXISTENTE: "+table_name+" - DBID: "+str(db_id)) 
                     print(result[0])
