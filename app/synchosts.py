@@ -68,9 +68,11 @@ def synchosts(host_id):
                             else:
                                 table_id = database.add_instance(Tables, name=table_name, id_database=db_id, type=1)
                             print("TABELA NOVA: "+table_name) 
+                            database.force_commit()
                         except Exception as ex:
                             print(ex)
                             print('TABELA NOVA: Fail insert table duplicated')
+                            database.force_rollback()
         
         return json.dumps('Synchosts successful!'), 200
     except Exception as ex:
