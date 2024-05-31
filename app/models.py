@@ -128,7 +128,7 @@ class Tables(db.Model):
     type = db.Column(db.Integer)
     created_at  = db.Column(db.DateTime(), default=db.func.now())
     updated_at = db.Column(db.DateTime(), onupdate=db.func.now())  
-    __table_args__ = (db.UniqueConstraint('name', 'id_database', name='uix_tables_name_id_database'),)
+    # __table_args__ = (db.UniqueConstraint('name', 'id_database', name='uix_tables_name_id_database'),)
     def serialize(self):
         return {
             "name" : self.name,
