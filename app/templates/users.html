@@ -132,12 +132,12 @@ function getUsers(_type=false,pag=1,qtd=10){
       $('#system_users > tbody:last').append('<tr><td>' + user_id + '</td>' +
         '<td>' + user_name + '</td>' +
         '<td>' + user_email + '</td>' +
-        '<td>' + user_type + '</td>' +
+        '<td style="text-wrap: nowrap;">' + user_type + '</td>' +
         '<td>' + print_field_edit(user_id,'days_default_access',days,"Users") + '</td>' +
         '<td>' + user_parent + '</td>' +
         '<td>' + user_status + '</td>' +
-        '<td>' + "<button title='pass' class='btn btn-sm btn-warning bt-pass' data-idsuser='"+user_id+"'><i class='bi bi-key'></i></button>" + '</td>' +
-        //'<td>' + "<button title='delete' class='badge bg-danger bt-delete' data-idsuser='"+user_id+"'>DELETE</button>" + '</td>' +
+        '<td style="text-wrap: nowrap;">' + "<button title='pass' class='btn btn-sm btn-warning bt-pass' data-idsuser='"+user_id+"'><i class='bi bi-key'></i></button> " + 
+        " <button title='delete' class='btn btn-sm btn-danger bt-delete' data-idsuser='"+user_id+"'><i class='bi bi-trash'></i></button>" + '</td>' +
         '</tr>');
     }
         
@@ -150,14 +150,26 @@ function getUsers(_type=false,pag=1,qtd=10){
       });
     });
 
-    $('.bt-delete').unbind('click').bind('click',function(e) {
+    $('.bt-delete').unbind('click').bind('click', function(e) {
       e.preventDefault();
-      if(confirm('Confirm deletion of this user?')){
-        console.log('deleteuser'); // TODO create delete user with DELETE verb
-        // var id_user = $(this).data('idsuser');
-        // $.getJSON('/deleteUser/'+id_user, function () {
-        //   getUsers(0);
-        // });
+      if (confirm("Confirm deletion of this user?\nThis action cannot be undone.")) {
+        const userId = $(this).data('idsuser');
+        $.ajax({
+          url: "/deleteUser/"+userId,
+          type: 'DELETE',
+          success: function(result) {
+            result = JSON.parse(result);
+            if (result.success == true) {
+              alertify.success('User removed successfully');
+              getUsers(-1);
+            } else {
+              alertify.error('Failed to remove user');
+            }
+          },
+          error: function(error) {
+            alertify.error('Failed to remove user');
+          }
+        });
       }
     });
 

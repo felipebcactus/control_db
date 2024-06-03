@@ -21,6 +21,13 @@ def get_id(model, id):
     else :
         return False
     
+def get_id_filter_in(model, id, column_name_in, values_in):
+    data = model.query.filter_by(id=id).filter(getattr(model, column_name_in).in_(values_in)).all()
+    if len(data)>0 :
+        return data[0]
+    else :
+        return False
+    
 def get_by_paginated_filtered(model, filter_column, filter_value, order_by_column, page=1, per_page=10, order_desc=False):
     if order_desc==False:
         query = model.query.filter(getattr(model, filter_column) == filter_value).order_by(getattr(model, order_by_column))
@@ -47,6 +54,24 @@ def get_by_paginated(model, order_by_column, page=1, per_page=10, orderby=False)
         query = model.query.order_by(getattr(model, order_by_column))
     else:
         query = model.query.order_by(getattr(model, order_by_column).desc())
+    total = query.count()
+    paginated_query = db.paginate(query, page=page, per_page=per_page)
+    return {
+        'total': total,
+        'items': paginated_query.items,
+        'pages': paginated_query.pages,
+        'page': paginated_query.page,
+        'has_prev': paginated_query.has_prev,
+        'has_next': paginated_query.has_next,
+        'prev_num': paginated_query.prev_num,
+        'next_num': paginated_query.next_num
+    }
+            
+def get_by_paginated_in(model, order_by_column, column_name_in, values_in, page=1, per_page=10, orderby=False):
+    if orderby==False:
+        query = model.query.filter(getattr(model, column_name_in).in_(values_in)).order_by(getattr(model, order_by_column))
+    else:
+        query = model.query.filter(getattr(model, column_name_in).in_(values_in)).order_by(getattr(model, order_by_column).desc())
     total = query.count()
     paginated_query = db.paginate(query, page=page, per_page=per_page)
     return {
@@ -96,6 +121,13 @@ def get_by(model, column_name, value, orderby=False):
         data = model.query.filter(getattr(model, column_name) == value).all()
     else:
         data = model.query.filter(getattr(model, column_name) == value).order_by(getattr(model, orderby).asc()).all()
+    return data
+
+def get_by_in(model, column_name, values, orderby=False):
+    if orderby == False:
+        data = model.query.filter(getattr(model, column_name).in_(values)).all()
+    else:
+        data = model.query.filter(getattr(model, column_name).in_(values)).order_by(getattr(model, orderby).asc()).all()
     return data
 
 def get_by_join(model, column_name, value, join=None, parent_column=None, parent_value=None, orderby=False):

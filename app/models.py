@@ -59,7 +59,7 @@ class Users(UserMixin, db.Model):
     email = db.Column(db.String(100))
     password = db.Column(db.String(255))
     type = db.Column(db.Integer)
-    status = db.Column(db.Integer, default=0) # 0-Inactive; 1-Active
+    status = db.Column(db.Integer, default=0) # 0-Inactive; 1-Active; -1 -soft deleted
     parent = db.Column(db.Integer, default=None)
     days_default_access = db.Column(db.Integer, default=1)
     created_at  = db.Column(db.DateTime(), default=db.func.now())

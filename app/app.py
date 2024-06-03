@@ -45,7 +45,7 @@ def return_favicon_file(filename):
 @app.route('/getUsers', methods=['GET'])
 @login_required
 def fetch(_json=False):
-    users = database.get_all_order_by(Users,'name')
+    users = database.get_by_in(Users,'type',[0,1],'name')
     all_users = []
     for user in users:
         new_user = {
@@ -321,7 +321,7 @@ def getUsers(type,_json=False):
     if type!='-1':
         users_pag = database.get_by_paginated_filtered(Users, 'type', type, 'name', page=pag, per_page=qtd)
     else:
-        users_pag = database.get_by_paginated(Users, 'name', page=pag, per_page=qtd)
+        users_pag = database.get_by_paginated_in(Users, 'name', 'type', [0,1], page=pag, per_page=qtd)
     
     all_users = []
     for user in users_pag['items']:
@@ -401,10 +401,10 @@ def getSessions(_json=False):
     for session in sessions_pag['items']:
         _approver_name=''
         if session.approver!='' and session.approver!='null' and session.approver!='None':
-            _approver_ = database.get_id(Users, session.approver)
+            _approver_ = database.get_id_filter_in(Users, session.approver, 'type', [0,1])
             if _approver_!=False:
                 _approver_name = _approver_.name
-        _user = database.get_id(Users, session.user)
+        _user = database.get_id_filter_in(Users, session.user, 'type', [0,1])
         user_name = _user.name if _user else "Unknown user"
         new_session = {
             "id": session.id,
@@ -445,7 +445,7 @@ def getSessions(_json=False):
 @app.route('/getUserLogged', methods=['GET'])
 @login_required
 def getUserLogged(_json=False):
-    user_data = database.get_id(Users,current_user.id)      
+    user_data = database.get_id_filter_in(Users,current_user.id, 'type', [0,1])      
     return_obj = {"id":current_user.id,"name":user_data.name,"is_adm":(True if int(user_data.type)==2 or int(user_data.type)==0 else False)}
     if _json==True:
         return return_obj
@@ -466,7 +466,7 @@ def getSessionsUser(user_id, _json=False):
     sessions = database.get_by(Sessions, 'user', user_id)
     all_sessions = []
     for session in sessions:
-        _user = database.get_id(Users, session.user)
+        _user = database.get_id_filter_in(Users, session.user, 'type', [0,1])
         user_name = _user.name if _user else "Unknown user"
         new_session = {
             "id": session.id,
@@ -485,7 +485,7 @@ def getSessionsUser(user_id, _json=False):
         all_sessions.append(new_session)
         
     approver_user=False
-    user_data = database.get_id(Users,user_id)
+    user_data = database.get_id_filter_in(Users,user_id, 'type', [0,1])
     if int(user_data.type)==2:
         approver_user=True
         print('User approver')
@@ -923,6 +923,29 @@ def removeHostAndAllTogether(_data_received=None):
     results.append(_host_rem)
     return json.dumps(results), 200
     
+@app.route('/deleteUser/<user_id>', methods=['DELETE'])
+@login_required
+def deleteUser(user_id):
+    current_logged_user = getUserLogged(True)
+    user_id_is_adm = current_logged_user['is_adm'] == True
+    if not user_id_is_adm:
+        return json.dumps({'error': 'Unauthorized'}), 401
+    user = database.get_id(Users, user_id)
+    if not user:
+        return json.dumps({'error': 'User not found'}), 404
+    removeUserById(user_id)
+    return json.dumps({'success': True}), 200
+
+def removeUserById(_user_id): #soft delete
+    user = database.get_id(Users, _user_id)
+    if user:
+        user.name = "DELETED " + user.name
+        user.type = -1
+        database.edit_instance(Users, _user_id, name=user.name, type=user.type)
+        sessions = database.get_by(Sessions, 'user', _user_id)
+        if sessions:
+            for session in sessions:
+                removeUserFromHostBySession({'data': {'session_id': session.id}})
 
 def removeUserFromHostByHostId(_host_id):
     print("removeUserFromHostByHostId")
@@ -936,8 +959,6 @@ def removeUserFromHostByHostId(_host_id):
         print('Exception on remove user')
         print(ex)
         
-            
-
 # pode receber apenas _data['session_id']
 @app.route('/removeUserFromHostBySession', methods=['POST'])
 def removeUserFromHostBySession(_data_received=None):
@@ -1046,8 +1067,6 @@ def removeSession(user_id_logged, _data_received=None):
     
     return json.dumps(results), 200
 
-
-    
 
 # AUDITLOGS
 def log_changes(session: Session, operation: str):
