@@ -60,6 +60,7 @@
 var qtd_global=false;
 var pag_global=false;
 var type_global=false;
+var update_global_user=false;
 
 function getUsers(_type=false,pag=1,qtd=10){
   qtd_global = (_type==false)?qtd_global:qtd;
@@ -138,8 +139,9 @@ function getUsers(_type=false,pag=1,qtd=10){
           '<td>' + user_parent + '</td>' +
           '<td>' + user_status + '</td>' +
           '<td style="text-wrap: nowrap;">' + "<button title='pass' class='btn btn-sm btn-warning bt-pass' data-idsuser='"+user_id+"'><i class='bi bi-key'></i></button> " + 
-          " <button title='delete' class='btn btn-sm btn-danger bt-delete' data-idsuser='"+user_id+"'><i class='bi bi-trash'></i></button>" + '</td>' +
-          '</tr>');
+          " <button title='delete' class='btn btn-sm btn-danger bt-delete' data-idsuser='"+user_id+"'><i class='bi bi-trash'></i></button>" + 
+          " <button title='delete' class='btn btn-sm btn-info bt-update' data-idsuser='"+user_id+"'><i class='bi bi-person-fill-gear'></i></button>" + 
+          '</td>' + '</tr>');
       }
     }
         
@@ -150,6 +152,21 @@ function getUsers(_type=false,pag=1,qtd=10){
       $.getJSON('/statusChangeUser/'+id_user+'/'+(($(this).hasClass('bt-deapprove'))?'0':'1'), function () {
         getUsers(-1);
       });
+    });
+
+    $('.bt-update').unbind('click').bind('click', function(e) {
+      e.preventDefault();
+      
+      const userId = $(this).data('idsuser');
+
+      $.getJSON('/getUserDetail/'+userId, function (returned) {
+
+        update_global_user = returned;
+        var target = $(this).data('target');
+        $('#content-area').load('users_new.html'); // Load content for new table form
+        
+      });
+      
     });
 
     $('.bt-delete').unbind('click').bind('click', function(e) {

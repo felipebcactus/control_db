@@ -1,4 +1,4 @@
-<h2>Create New User</h2>
+<h2 class="titulo">Create/Update User</h2>
 <form id="user-form">
   <div class="mb-3">
     <label for="email" class="form-label">E-mail *</label>
@@ -6,7 +6,7 @@
   </div>
   <div class="mb-3">
     <label for="name" class="form-label">Username</label>
-    <input type="text" class="form-control disabled" id="name" name="name" required readonly style="cursor: not-allowed;background-color: #bbb;">
+    <input type="text" class="form-control" id="name" name="name" required readonly style="cursor: not-allowed;background-color: #bbb;">
   </div>
   <div class="mb-3">
     <label for="password" class="form-label">Password *</label>
@@ -19,8 +19,8 @@
   <div class="mb-3">
     <label for="type" class="form-label">Type *</label>
     <select class="form-select" id="type" name="type" required>
-      <option value="0">Admin (Default Both)</option>
-      <option value="1" selected>User Only</option>
+      <option value="0">Admin</option>
+      <option value="1">User Only</option>
       <option value="2">Approver Only</option>
     </select>
   </div>
@@ -32,36 +32,81 @@
   <div class="mb-3">
     <small>* - required fields</small>
   </div>
-  <button type="button" form="user-form" class="btn btn-primary bt-create">Create</button>
+  <button type="button" form="user-form" class="btn btn-primary bt-create" id="bt-create">Create</button>
   <button type="button" form="user-form" class="btn btn-danger bt-cancel">CANCEL</button>
+  <button type="button" form="user-form" class="btn btn-primary bt-update" id="bt-update" style="display: none;">Update</button>
 </form>
 
 <script>
   $(document).ready(function() {
-      $('#email').unbind('keyup').bind('keyup',function(){
-        var part = $(this).val().split('@');
-        $('#name').val(part[0]);
-      });
-      $('.bt-cancel').click(function(e) {
-          e.preventDefault();
+    
+    if(update_global_user!=false){
+      var userData = update_global_user;
+      update_global_user=false;
+    }
+    if (typeof userData != 'undefined' && userData) {
+      $('.titulo').html('Update User: '+userData.name);
+      $('#email').val(userData.email);
+      $('#name').val(userData.name);
+      $('#days_default_access').val(userData.days_default_access);
+      $('#type').val(userData.type);
+      if (userData.parent) {
+        $('#parentCombo').val(userData.parent);
+      }
+      $('#bt-create').hide();
+      $('#bt-update').show();
+    }else{
+      $('.titulo').html('Create new user');
+    }
+    
+    $('#email').unbind('keyup').bind('keyup',function(){
+      var part = $(this).val().split('@');
+      $('#name').val(part[0]);
+    });
+    
+    $('.bt-cancel').click(function(e) {
+      e.preventDefault();
+      var target = $(this).data('target');
+      $('#content-area').load('users.html'); // Load content based on menu item
+    });
+    
+    $('.bt-create').click(function(e) {
+      e.preventDefault();
+      var dataform = JSON.stringify($('form#user-form').serializeArray());
+      $.ajax({
+        type: 'POST',
+        url: '/addUser',
+        data: dataform,
+        success: function(data) { 
           var target = $(this).data('target');
           $('#content-area').load('users.html'); // Load content based on menu item
+        },
+        contentType: "application/json",
+        dataType: 'json'
       });
-      $('.bt-create').click(function(e) {
-          e.preventDefault();
-          var dataform = JSON.stringify($('form#user-form').serializeArray());
-          $.ajax({
-              type: 'POST',
-              url: '/addUser',
-              data: dataform,
-              success: function(data) { 
-                var target = $(this).data('target');
-                $('#content-area').load('users.html'); // Load content based on menu item
-              },
-              contentType: "application/json",
-              dataType: 'json'
-          });
+    });
+    
+    $('.bt-update').click(function(e) {
+      e.preventDefault();
+      var dataform = JSON.stringify($('form#user-form').serializeArray());
+      $.ajax({
+        type: 'PUT',
+        url: '/updateUser/' + userData.id,
+        data: dataform,
+        success: function(d,s) { 
+          if(s=='success'){
+            alertify.success('Updated successfully');
+            var target = $(this).data('target');
+            $('#content-area').load('users.html'); // Load content based on menu item
+          }else{
+            alertify.error('Failed to update');
+          }
+        },
+        contentType: "application/json",
+        dataType: 'json'
       });
-      crateUserCombo("#parentCombo", 0, 1000);
+    });
+    
+    crateUserCombo("#parentCombo", 0, 1000);
   });
 </script>

@@ -45,7 +45,7 @@ def return_favicon_file(filename):
 @app.route('/getUsers', methods=['GET'])
 @login_required
 def fetch(_json=False):
-    users = database.get_by_in(Users,'type',[0,1],'name')
+    users = database.get_by_in(Users,'type',user_types,'name')
     all_users = []
     for user in users:
         new_user = {
@@ -62,6 +62,35 @@ def fetch(_json=False):
     else:
         return json.dumps(all_users), 200
 
+@app.route('/getUserDetail/<userId>', methods=['GET'])
+@login_required
+def getUserDetail(userId):
+    user = database.get_id(Users,userId)
+    all_user_data = {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "type": user.type,
+        "days_default_access": user.days_default_access
+    }
+    return json.dumps(all_user_data), 200
+    
+@app.route('/updateUser/<userId>', methods=['PUT'])
+@login_required
+def updateUser(userId):
+    data = request.get_json()
+    userUpdated = {}
+    for item in data:
+        if item['value']!='':
+            if item['name']=='password':
+                item['value']=generate_password_hash(item['value'], method='pbkdf2:sha256')
+            userUpdated[item['name']] = item['value']
+    current_logged_user = getUserLogged(True)
+    if not current_logged_user['is_adm']:
+        return json.dumps({'error': 'Unauthorized'}), 401
+    database.edit_instance(Users, userId, **userUpdated)
+    return json.dumps({'success': True}), 200
+    
 @app.route('/updateUserPass', methods=['POST'])
 @login_required
 def updateUserPass():
@@ -321,7 +350,7 @@ def getUsers(type,_json=False):
     if type!='-1':
         users_pag = database.get_by_paginated_filtered(Users, 'type', type, 'name', page=pag, per_page=qtd)
     else:
-        users_pag = database.get_by_paginated_in(Users, 'name', 'type', [0,1], page=pag, per_page=qtd)
+        users_pag = database.get_by_paginated_in(Users, 'name', 'type', user_types, page=pag, per_page=qtd)
     
     all_users = []
     for user in users_pag['items']:
@@ -401,10 +430,10 @@ def getSessions(_json=False):
     for session in sessions_pag['items']:
         _approver_name=''
         if session.approver!='' and session.approver!='null' and session.approver!='None':
-            _approver_ = database.get_id_filter_in(Users, session.approver, 'type', [0,1])
+            _approver_ = database.get_id_filter_in(Users, session.approver, 'type', user_types)
             if _approver_!=False:
                 _approver_name = _approver_.name
-        _user = database.get_id_filter_in(Users, session.user, 'type', [0,1])
+        _user = database.get_id_filter_in(Users, session.user, 'type', user_types)
         user_name = _user.name if _user else "Unknown user"
         new_session = {
             "id": session.id,
@@ -445,7 +474,7 @@ def getSessions(_json=False):
 @app.route('/getUserLogged', methods=['GET'])
 @login_required
 def getUserLogged(_json=False):
-    user_data = database.get_id_filter_in(Users,current_user.id, 'type', [0,1])      
+    user_data = database.get_id_filter_in(Users,current_user.id, 'type', user_types)      
     return_obj = {"id":current_user.id,"name":user_data.name,"is_adm":(True if int(user_data.type)==2 or int(user_data.type)==0 else False)}
     if _json==True:
         return return_obj
@@ -466,7 +495,7 @@ def getSessionsUser(user_id, _json=False):
     sessions = database.get_by(Sessions, 'user', user_id)
     all_sessions = []
     for session in sessions:
-        _user = database.get_id_filter_in(Users, session.user, 'type', [0,1])
+        _user = database.get_id_filter_in(Users, session.user, 'type', user_types)
         user_name = _user.name if _user else "Unknown user"
         new_session = {
             "id": session.id,
@@ -485,7 +514,7 @@ def getSessionsUser(user_id, _json=False):
         all_sessions.append(new_session)
         
     approver_user=False
-    user_data = database.get_id_filter_in(Users,user_id, 'type', [0,1])
+    user_data = database.get_id_filter_in(Users,user_id, 'type', user_types)
     if int(user_data.type)==2:
         approver_user=True
         print('User approver')
