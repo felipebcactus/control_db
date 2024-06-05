@@ -25,8 +25,8 @@ db_config_exceptions = {
 
 user_types = {
     0: "Admin",
-    1: "User Only",
-    2: "Approver Only"
+    1: "User",
+    2: "Approver"
 }
 
 user_status = {
