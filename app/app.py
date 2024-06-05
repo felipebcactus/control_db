@@ -1108,7 +1108,7 @@ def log_changes(session: Session, operation: str):
                 operation=operation,
                 field_name=attr.key,
                 new_value=str(getattr(obj, attr.key)),
-                changed_by=current_user.id
+                changed_by=current_user.id or 0
             )
             session.add(log_entry)
     
