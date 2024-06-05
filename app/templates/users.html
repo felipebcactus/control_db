@@ -138,9 +138,9 @@ function getUsers(_type=false,pag=1,qtd=10){
           '<td>' + print_field_edit(user_id,'days_default_access',days,"Users") + '</td>' +
           '<td>' + user_parent + '</td>' +
           '<td>' + user_status + '</td>' +
-          '<td style="text-wrap: nowrap;">' + "<button title='pass' class='btn btn-sm btn-warning bt-pass' data-idsuser='"+user_id+"'><i class='bi bi-key'></i></button> " + 
+          '<td style="text-wrap: nowrap;">' + "<button title='set password' class='btn btn-sm btn-warning bt-pass' data-idsuser='"+user_id+"'><i class='bi bi-key'></i></button> " + 
           " <button title='delete' class='btn btn-sm btn-danger bt-delete' data-idsuser='"+user_id+"'><i class='bi bi-trash'></i></button>" + 
-          " <button title='delete' class='btn btn-sm btn-info bt-update' data-idsuser='"+user_id+"'><i class='bi bi-person-fill-gear'></i></button>" + 
+          " <button title='edit' class='btn btn-sm btn-info bt-update' data-idsuser='"+user_id+"'><i class='bi bi-person-fill-gear'></i></button>" + 
           '</td>' + '</tr>');
       }
     }
