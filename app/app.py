@@ -1099,49 +1099,53 @@ def removeSession(user_id_logged, _data_received=None):
 
 # AUDITLOGS
 def log_changes(session: Session, operation: str):
-    for obj in session.new:
-        if isinstance(obj, AuditLog):
-            continue
-        for attr in sa.inspect(obj).mapper.column_attrs:
-            log_entry = AuditLog(
-                table_name=obj.__tablename__,
-                operation=operation,
-                field_name=attr.key,
-                new_value=str(getattr(obj, attr.key)),
-                changed_by=current_user.id or 0
-            )
-            session.add(log_entry)
-    
-    for obj in session.dirty:
-        if isinstance(obj, AuditLog):
-            continue
-        state = sa.inspect(obj)
-        for attr in state.attrs:
-            if attr.history.has_changes():
-                old_value = attr.history.deleted[0] if attr.history.deleted else None
-                new_value = attr.history.added[0] if attr.history.added else None
+    try:
+        for obj in session.new:
+            if isinstance(obj, AuditLog):
+                continue
+            for attr in sa.inspect(obj).mapper.column_attrs:
                 log_entry = AuditLog(
                     table_name=obj.__tablename__,
                     operation=operation,
                     field_name=attr.key,
-                    old_value=str(old_value) if old_value else None,
-                    new_value=str(new_value) if new_value else None,
+                    new_value=str(getattr(obj, attr.key)),
+                    changed_by=current_user.id or 0
+                )
+                session.add(log_entry)
+        
+        for obj in session.dirty:
+            if isinstance(obj, AuditLog):
+                continue
+            state = sa.inspect(obj)
+            for attr in state.attrs:
+                if attr.history.has_changes():
+                    old_value = attr.history.deleted[0] if attr.history.deleted else None
+                    new_value = attr.history.added[0] if attr.history.added else None
+                    log_entry = AuditLog(
+                        table_name=obj.__tablename__,
+                        operation=operation,
+                        field_name=attr.key,
+                        old_value=str(old_value) if old_value else None,
+                        new_value=str(new_value) if new_value else None,
+                        changed_by=current_user.id
+                    )
+                    session.add(log_entry)
+
+        for obj in session.deleted:
+            if isinstance(obj, AuditLog):
+                continue
+            for attr in sa.inspect(obj).mapper.column_attrs:
+                log_entry = AuditLog(
+                    table_name=obj.__tablename__,
+                    operation=operation,
+                    field_name=attr.key,
+                    old_value=str(getattr(obj, attr.key)),
                     changed_by=current_user.id
                 )
                 session.add(log_entry)
-
-    for obj in session.deleted:
-        if isinstance(obj, AuditLog):
-            continue
-        for attr in sa.inspect(obj).mapper.column_attrs:
-            log_entry = AuditLog(
-                table_name=obj.__tablename__,
-                operation=operation,
-                field_name=attr.key,
-                old_value=str(getattr(obj, attr.key)),
-                changed_by=current_user.id
-            )
-            session.add(log_entry)
+    except Exception as ex:
+        print('ERRO LOG: ')
+        print(ex)
 
 @sa.event.listens_for(Session, 'before_flush')
 def before_flush(session, flush_context, instances):
