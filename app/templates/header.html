@@ -64,9 +64,10 @@
       });        
     } catch(err) {  
       console.log(err);
-    } finally {
       console.log('trying again refresh_vars in 2 sec...');
       window.setTimeout(refresh_vars,2000);
+    } finally {
+      console.log('refreshed');
     }
   }
 
