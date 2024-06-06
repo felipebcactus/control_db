@@ -46,12 +46,14 @@
   filter_user = filter_user=='false'?false:filter_user;
 
     $(document).ready(function() {
-      $.getJSON('/getUserLogged',function(ret){
-        Cookies.remove("filter_user");    
-        filter_user = (ret['is_adm']==true?false:ret['id']);
-        filter_user = filter_user=='false'?false:filter_user;
-        Cookies.set("filter_user", filter_user);    
-      });
+      window.setTimeout(function(){
+        $.getJSON('/getUserLogged',function(ret){
+          Cookies.remove("filter_user");    
+          filter_user = (ret['is_adm']==true?false:ret['id']);
+          filter_user = filter_user=='false'?false:filter_user;
+          Cookies.set("filter_user", filter_user);    
+        });
+      },1000);
       window.setTimeout(function(){
         var hashatual = window.location.hash;
         if(hashatual!=''){
