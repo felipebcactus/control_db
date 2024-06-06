@@ -45,15 +45,32 @@
   var filter_user = Cookies.get("filter_user") == undefined ? false : Cookies.get("filter_user");
   filter_user = filter_user=='false'?false:filter_user;
 
+  function prevent_errors(){
+    window.setTimeout(function(){
+      $(document).ajaxError(function(event, request, settings) {
+        window.location="/logout";
+      });
+    },5000);
+  }
+
+  function refresh_vars(){
+    try{
+      console.log('try refresh_vars');
+      $.getJSON('/getUserLogged',function(ret){
+        Cookies.remove("filter_user");    
+        filter_user = (ret['is_adm']==true?false:ret['id']);
+        filter_user = filter_user=='false'?false:filter_user;
+        Cookies.set("filter_user", filter_user);    
+      });        
+    } catch(err) {  
+      console.log(err);
+    } finally {
+      console.log('trying again refresh_vars in 2 sec...');
+      window.setTimeout(refresh_vars,2000);
+    }
+  }
+
     $(document).ready(function() {
-      window.setTimeout(function(){
-        $.getJSON('/getUserLogged',function(ret){
-          Cookies.remove("filter_user");    
-          filter_user = (ret['is_adm']==true?false:ret['id']);
-          filter_user = filter_user=='false'?false:filter_user;
-          Cookies.set("filter_user", filter_user);    
-        });
-      },1000);
       window.setTimeout(function(){
         var hashatual = window.location.hash;
         if(hashatual!=''){
@@ -64,12 +81,11 @@
         }else{
           $('.nav-link[data-target=sessions]').trigger('click');
         }
+        refresh_vars();
       },100);
 
         moment.suppressDeprecationWarnings = true;
-        $(document).ajaxError(function(event, request, settings) {
-              window.location="/logout";
-        });
+        prevent_errors();
         $('.nav-link').unbind('click').bind('click',function(e) {
             e.preventDefault();
             var target = $(this).data('target');
