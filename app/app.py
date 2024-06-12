@@ -1,4 +1,4 @@
-from flask import request, redirect, render_template, flash, url_for, request, send_file
+from flask import request, redirect, render_template, jsonify, url_for, request, send_file
 from . import create_app, database
 from .models import Users, Hosts, Databases, Tables, Config, Sessions, SessionsHosts, ExternalConnectionByHostId, AuditLog, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny, db_config_exceptions
 from flask_wtf import FlaskForm #, DataRequired, Length
@@ -1090,9 +1090,8 @@ def removeSession(user_id_logged, _data_received=None):
             print(_reg)
             removeUserFromHostBySession({'session_id':_reg.id_session})
             
-            
-    database.delete_instance_by(SessionsHosts, 'id_session', id_session)
-    database.delete_instance_by(Sessions, 'id', id_session)
+    database.delete_instance_by(SessionsHosts, 'id_session', id_session)    
+    database.edit_instance(Sessions, id_session, password=None, status=2, approve_date=None, approver=None)
     
     return json.dumps(results), 200
 

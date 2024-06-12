@@ -9,6 +9,7 @@
 <table class="table table-dark" id="Sessions">
   <thead>
     <tr>
+      <th scope="col">ID</th>
       <th scope="col">Permission</th>
       <th scope="col"><span class="filter-title" data-column="user">User</span></th>
       <!-- th scope="col"><span class="filter-title" data-column="approver">Approver</span></th -->
@@ -154,11 +155,13 @@ function ini_table(pag=1,qtd=10,filter={}){
       var approve_date = sessions[i].approve_date
       var description = sessions[i].description
       var updated_at = sessions[i].updated_at
+      var classRemoveButton = status=='Approved'?'':' hideadm ';
       if((!filter_user || returned['approver_user']==true) && status_id==0){
         status+="<button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button>";
       }
       // Modify selector to target tables table
       $('#Sessions > tbody:last').append('<tr>' +
+        '<td>' + id + '</td>' +
         '<td style="text-align: center;color: '+ (writer=='1'?'#ff0000':'#00ff00') +';">' + (writer=='1'?'<i class="bi bi-database-add"></i> WRITE':'<i class="bi bi-database"></i> READ') + '</td>' +
         '<td>' + user_name + '</td>' +
         // '<td>' + ((approver!=null && approver!='')?approver:'') + '</td>' +
@@ -170,7 +173,7 @@ function ini_table(pag=1,qtd=10,filter={}){
         // '<td><pre>' + description + '</pre></td>' +
         '<td style="text-wrap: nowrap;"> <button class="hideadm btn btn-sm btn-success bt-permission" data-bs-session-id="'+ id +'" data-bs-user-id="'+ user +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-lines-fill"></i> create rules</button> ' +
         ' <button class="hideadm btn btn-sm btn-warning bt-permission-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'"><i class="bi bi-person-fill-slash"></i> remove rules</button> '+
-        ' <button class="btn btn-sm btn-danger bt-remove" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'">remove access</button> '+
+        ' <button class="btn btn-sm btn-danger bt-remove '+classRemoveButton+'" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'">remove access</button> '+
         ' <button class="btn btn-sm btn-info bt-info-details" session_id="'+ id +'"><i class="bi bi-file-plus"></i> details</button>' +
         ' <button class="hideadm btn btn-sm btn-primary bt-info" data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"><i class="bi bi-diagram-3-fill"></i> permissions</button> '+
         ' <span class="info-space small" style="display:none">'+        
@@ -253,7 +256,7 @@ function ini_table(pag=1,qtd=10,filter={}){
       const user_name = $(this).attr('data-bs-user-name')
       const user_id = $(this).attr('data-bs-user-id')
       var request_data = JSON.stringify({'data': {session_id: session_id, user_name: user_name, user_id: user_id}});
-      if(__creatingAccess!=false || confirm('Delete this session?')){
+      if(__creatingAccess!=false || confirm('Remove all access?')){
         var _bt = $(this);
         var _btcontent = $(this).html();
         $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
