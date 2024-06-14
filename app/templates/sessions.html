@@ -375,6 +375,7 @@ function exibeSenha(username,details,waiting_approve){
   var modal = $('#passwordModal');
   modal.find('.modal-title').text(((waiting_approve)?"Waiting approve":"Generated access")+" for: "+username);
   modal.find('.container').text("Username: \""+username+"\"\nTemporary password: \""+details.password+"\"\nHost: "+JSON.stringify(details.host, null, 2)+"\nPermissions Tree: "+JSON.stringify(details.permissions, null, 2)+"\n");
+  $('<label class="alert alert-danger">Save all the information above, it will only appear at this moment.</label>').prependTo($('#passwordModal .modal-footer'));
   $('#passwordModal').modal('show');
 }
 
