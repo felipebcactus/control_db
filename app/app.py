@@ -475,7 +475,7 @@ def getSessions(_json=False):
 @login_required
 def getUserLogged(_json=False):
     user_data = database.get_id_filter_in(Users,current_user.id, 'type', user_types)      
-    return_obj = {"id":current_user.id,"name":user_data.name,"is_adm":(True if int(user_data.type)==2 or int(user_data.type)==0 else False)}
+    return_obj = {"id":current_user.id,"name":'' if user_data==False else user_data.name,"is_adm":(True if user_data!=False and (int(user_data.type)==2 or int(user_data.type)==0) else False),"is_only_adm":(True if user_data!=False and int(user_data.type)==0 else False)}
     if _json==True:
         return return_obj
     else:
@@ -515,7 +515,7 @@ def getSessionsUser(user_id, _json=False):
         
     approver_user=False
     user_data = database.get_id_filter_in(Users,user_id, 'type', user_types)
-    if int(user_data.type)==2:
+    if user_data != False and int(user_data.type)==2:
         approver_user=True
         print('User approver')
         # verifica se o user logado possui "usuarios filhos"
@@ -568,7 +568,21 @@ def getTreeSession(session_id, _json=False):
 @app.route('/getHostsDatabasesTablesTree', methods=['GET'])
 @login_required
 def getHostsDatabasesTablesTree():
-    return getHostsDatabasesTablesTreeFromFile()
+    datatree = getHostsDatabasesTablesTreeFromFile()
+    
+    # filtra DB permitidos a um usuario NAO ADMIN
+    current_logged_user = getUserLogged(True)
+    user_id_is_only_adm = current_logged_user['is_only_adm'] == True
+    if not user_id_is_only_adm:
+        databasesAllowed = database.get_by(UsersPermissionsHosts, 'user_id', current_logged_user['id'])
+        allowedDataTrees=[]
+        for _database in databasesAllowed:
+            for existDatabase in datatree:
+                if int(existDatabase['id']) == int(_database.host_id):
+                    allowedDataTrees.append(existDatabase)
+        datatree = allowedDataTrees
+    
+    return datatree
 
 @app.route('/forceGenerateTree', methods=['GET'])
 @login_required
