@@ -181,6 +181,19 @@ class SessionsHosts(db.Model):
     create_date = db.Column(db.DateTime(), default=db.func.now())
 
 
+class UsersPermissionsHosts(db.Model):
+    __tablename__ = 'users_permissions_hosts'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    host_id = db.Column(db.Integer, db.ForeignKey('hosts.id'))
+
+    user = db.relationship('Users', backref=db.backref('hosts_associations'))
+    host = db.relationship('Hosts', backref=db.backref('users_associations'))
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'host_id'),
+    )
+
 class ExternalConnectionByHostId():
     
     def getConn(host_id, _database=False):

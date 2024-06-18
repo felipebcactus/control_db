@@ -1,6 +1,6 @@
 from flask import request, redirect, render_template, jsonify, url_for, request, send_file
 from . import create_app, database
-from .models import Users, Hosts, Databases, Tables, Config, Sessions, SessionsHosts, ExternalConnectionByHostId, AuditLog, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny, db_config_exceptions
+from .models import Users, Hosts, Databases, Tables, Config, Sessions, UsersPermissionsHosts, SessionsHosts, ExternalConnectionByHostId, AuditLog, db_name_ignore_per_type, host_types, user_types, user_status, session_status_type, table_type, db_username_deny, db_config_exceptions
 from flask_wtf import FlaskForm #, DataRequired, Length
 from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Length
@@ -1094,6 +1094,58 @@ def removeSession(user_id_logged, _data_received=None):
     database.edit_instance(Sessions, id_session, password=None, status=2, approve_date=None, approver=None)
     
     return json.dumps(results), 200
+
+
+@app.route('/getUserHosts/<user_id>', methods=['GET'])
+@login_required
+def getUserHosts(user_id, _json=False):
+    pag = request.args.get('pag', 1, type=int)
+    qtd = request.args.get('qtd', 5, type=int)
+            
+    users_permissions = database.get_by_paginated_filtered(UsersPermissionsHosts, 'user_id', user_id, 'host_id', page=pag, per_page=qtd, order_desc=True)
+    
+    all_users = []
+    for userpermission in users_permissions['items']:
+        obj_userpermission = {
+            "id": userpermission.id,
+            "user_id": userpermission.user_id,
+            "host_id": userpermission.host_id
+        }
+        all_users.append(obj_userpermission)
+            
+    return_obj = {
+        'total': users_permissions['total'],
+        'items': all_users,
+        'pages': users_permissions['pages'],
+        'page': users_permissions['page'],
+        'has_prev': users_permissions['has_prev'],
+        'has_next': users_permissions['has_next'],
+        'prev_num': users_permissions['prev_num'],
+        'next_num': users_permissions['next_num']
+    }        
+            
+    if _json==True:
+        return return_obj
+    else:
+        return json.dumps(return_obj), 200
+
+
+@app.route('/postHostsUserPermissions', methods=['POST'])
+@login_required
+def postHostsUserPermissions():
+    
+    data = request.get_json()['data']
+    hosts = data['hosts']
+    user_id = data['user_id']
+    
+    # delete all UsersPermissionsHosts before new inclusions
+    database.delete_instance_by(UsersPermissionsHosts, 'user_id', user_id)
+    
+    for host_id in hosts:
+        database.add_instance(UsersPermissionsHosts, user_id=user_id, host_id=host_id)
+    
+    
+    return json.dumps({}), 200
 
 
 # AUDITLOGS
