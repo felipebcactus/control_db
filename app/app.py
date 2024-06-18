@@ -617,14 +617,14 @@ def generateHostsDatabasesTablesTree(_json=False, nome_arquivo=False):
         databases = database.get_all_order_by(Databases, 'name')
         host_dict = {
             "id": str(host.id),
-            "text": host.name,
+            "text": str(host.name).upper(),
             "children": []
         }  # 🔒🔓
         for _database in databases:
             if _database.id_host == host.id:
                 database_dict = {
                     "id": '-'.join((str(host.id),str(_database.id))),
-                    "text": _database.name,
+                    "text": str(_database.name).upper(),
                     "children": []
                 }
                 tables = database.get_all_order_by(Tables, 'name')
@@ -632,7 +632,7 @@ def generateHostsDatabasesTablesTree(_json=False, nome_arquivo=False):
                     if table.id_database == _database.id:
                         table_dict = {
                             "id": '-'.join((str(host.id),str(_database.id),str(table.id))),
-                            "text": ('🔒 ' if table.type==0 else "✅ ") + table.name
+                            "text": ('🔒 ' if table.type==0 else "✅ ") + str(table.name).upper()
                         }
                         database_dict["children"].append(table_dict)
                 host_dict["children"].append(database_dict)
