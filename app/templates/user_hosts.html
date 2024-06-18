@@ -200,6 +200,7 @@ function bindmodal(datatree){
         _bt.html(_btcontent);
         $('#permissionModal').unbind('hidden.bs.modal').modal('hide');
         getUsers(-1);
+        alertify.success('Databases permissions updated');
       },
       contentType: "application/json",
       dataType: 'json'

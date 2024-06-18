@@ -421,6 +421,11 @@ function start_datatree(){
           __bt.addClass('hideadm');
           $('#passwordModal_load').modal('hide');
         },10);
+        if(data.length==0){
+          $('#permissionModal .modal-body').html('No databases available for this user');
+        }else{
+          $('#permissionModal .modal-body').html('<form><div class="mb-6 container"></div></form>');
+        }
         bindmodal(data);
         window.setTimeout(function(){
           $('#passwordModal_load').modal('hide');
