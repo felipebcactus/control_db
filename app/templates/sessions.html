@@ -67,7 +67,24 @@ var __bt;
 var __bt_content;
 var __creatingAccess = false;
 
+var __btselectall;
+
+function bindSelectAll(){  
+  $('.bt-select-all').unbind('click').bind('click',function(){
+    __btselectall=$(this);
+    $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
+    window.setTimeout(function(){
+      $('div.treejs>ul.treejs-nodes>li.treejs-node>span.treejs-checkbox').each(function(){
+        $(this).trigger('click');
+        __btselectall.html('all');
+        bindSelectAll();
+      });
+    },100);
+  });
+}
 function ini_table(pag=1,qtd=10,filter={}){
+
+  bindSelectAll();
   pag_global = pag;
   qtd_global = qtd;
   filters_global = filter;
@@ -315,7 +332,9 @@ function ini_table(pag=1,qtd=10,filter={}){
 }
 
 $(document).ready(function() {
-  $('#permissionModal .modal-body').prepend('<div onclick="$(\'div.treejs>ul.treejs-nodes>li.treejs-node>span.treejs-checkbox\').trigger(\'click\');"><button class="btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button></div>');
+  $('#permissionModal .modal-body').prepend('<button class="bt-select-all btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button>');
+  
+  bindSelectAll();
   $.getJSON('/getUserLogged',function(ret){
     filter_user = (ret['is_adm']==true?false:ret['id']);    
     if(filter_user){
@@ -430,7 +449,8 @@ function start_datatree(){
           $('#permissionModal .modal-body').html('No databases available for this user');
         }else{
           $('#permissionModal .modal-body').html('<form><div class="mb-6 container"></div></form>');
-          $('#permissionModal .modal-body').prepend('<div onclick="$(\'.treejs-checkbox\').trigger(\'click\');"><button class="btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button></div>');
+          $('#permissionModal .modal-body').prepend('<button class="bt-select-all btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button>');
+          bindSelectAll();
         }
         bindmodal(data);
         window.setTimeout(function(){
