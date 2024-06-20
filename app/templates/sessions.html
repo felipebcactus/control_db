@@ -315,7 +315,7 @@ function ini_table(pag=1,qtd=10,filter={}){
 }
 
 $(document).ready(function() {
-  $('#permissionModal .modal-body').prepend('<div onclick="$(\'.treejs-checkbox\').trigger(\'click\');"><button class="btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button></div>');
+  $('#permissionModal .modal-body').prepend('<div onclick="$(\'div.treejs>ul.treejs-nodes>li.treejs-node>span.treejs-checkbox\').trigger(\'click\');"><button class="btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button></div>');
   $.getJSON('/getUserLogged',function(ret){
     filter_user = (ret['is_adm']==true?false:ret['id']);    
     if(filter_user){
