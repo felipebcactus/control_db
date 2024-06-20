@@ -1123,6 +1123,24 @@ def removeRequestSession(id_session):
     database.edit_instance(Sessions, id_session, password=None, status=2, approve_date=None, approver=None)    
     return json.dumps({}), 200
 
+@app.route('/forceDeleteSession/<id_session>', methods=['GET'])
+@login_required
+def forceDeleteSession(id_session):    
+    
+    # apenas UM ADMIN
+    current_logged_user = getUserLogged(True)
+    user_id_is_only_adm = current_logged_user['is_only_adm'] == True
+    if not user_id_is_only_adm:
+        return json.dumps({}), 403
+                    
+    sessions_host = database.get_by(SessionsHosts, 'id_session', id_session)
+    if len(sessions_host)>0 :
+        for _reg in sessions_host :
+            removeUserFromHostBySession({'session_id':_reg.id_session})            
+    database.delete_instance_by(SessionsHosts, 'id_session', id_session)    
+    database.delete_instance_by(Sessions, 'id', id_session)
+    return json.dumps({}), 200
+
 
 @app.route('/getUserHosts/<user_id>', methods=['GET'])
 @login_required
