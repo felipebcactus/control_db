@@ -419,13 +419,10 @@ def getFieldValuesFromObjectsArray(objects, name, getFieldNameById=False, ModelN
 def getSessions(_json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
-    print('getSessions')
     unique_users = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'user'), 'user', 'name', Users)
     unique_approvers = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'approver'), 'approver', 'name', Users)
     unique_status = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'status'), 'status', session_status_type)
-    print('pegou uniques')
     sessions_pag = database.get_by_paginated(Sessions, 'request_date', page=pag, per_page=qtd, orderby=True)
-    print('sessoes paginadas')
     all_sessions = []
     for session in sessions_pag['items']:
         _approver_name=''
@@ -564,6 +561,16 @@ def getTreeSession(session_id, _json=False):
         return json.dumps(returnPermissionTree(json.loads(session.datatree)['datatree'])), 200
     else:
         return json.dumps({}), 200
+    
+@app.route('/getApproversName', methods=['GET'])
+@login_required
+def getApproversName(_json=False):
+    approvers = database.get_by(Users, "type", 2, "name")
+    ret = []
+    for user in approvers:
+        name = str(str(user.name).split(".")[0]).capitalize()
+        ret.append(name)
+    return json.dumps(ret), 200
     
 @app.route('/getHostsDatabasesTablesTree', methods=['GET'])
 @login_required

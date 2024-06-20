@@ -29,7 +29,8 @@
 
 <div class="pagination">
 </div>
-
+<hr>
+<div class="approvers"></div>
 <style>
   .filter-icon {
     cursor: pointer;
@@ -157,7 +158,7 @@ function ini_table(pag=1,qtd=10,filter={}){
       var updated_at = sessions[i].updated_at
       var classRemoveButton = status=='Approved'?'':' hideadm ';
       if((!filter_user || returned['approver_user']==true) && status_id==0){
-        status+="<button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button>";
+        status+="\n<br><button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button><button class='btn btn-sm btn-danger bt-remove'"+' data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"'+">deny</button>";
       }
       // Modify selector to target tables table
       $('#Sessions > tbody:last').append('<tr>' +
@@ -314,10 +315,14 @@ function ini_table(pag=1,qtd=10,filter={}){
 }
 
 $(document).ready(function() {
-
-  
+  $('#permissionModal .modal-body').prepend('<div onclick="$(\'.treejs-checkbox\').trigger(\'click\');"><button class="btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button></div>');
   $.getJSON('/getUserLogged',function(ret){
     filter_user = (ret['is_adm']==true?false:ret['id']);    
+    if(filter_user){
+      $('.approvers').each(function(){
+        $(this).html("<b>Approvers:</b><br>"+getApprovers().join("<br>"));   
+      });
+    }
   });
 
   ini_table();
@@ -425,6 +430,7 @@ function start_datatree(){
           $('#permissionModal .modal-body').html('No databases available for this user');
         }else{
           $('#permissionModal .modal-body').html('<form><div class="mb-6 container"></div></form>');
+          $('#permissionModal .modal-body').prepend('<div onclick="$(\'.treejs-checkbox\').trigger(\'click\');"><button class="btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button></div>');
         }
         bindmodal(data);
         window.setTimeout(function(){
@@ -434,6 +440,20 @@ function start_datatree(){
       }
   });
   
+}
+
+function getApprovers(){  
+  var ret = false;
+  $.ajax({
+      url: '/getApproversName', 
+      dataType : 'json',
+      method: "GET",
+      async : false,
+      success : function(data) { 
+        ret = data;
+      }
+  });  
+  return ret;
 }
 
 function preventChildExpansion() {
