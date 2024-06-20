@@ -49,7 +49,8 @@ session_status_type = {
     1: 'Approved' ,
     2: 'Revoked'  ,
     3: 'Expired'  ,
-    4: 'DB Removed' 
+    4: 'DB Removed',
+    5: 'Denied' 
 }
 
 class Users(UserMixin, db.Model):

@@ -401,6 +401,33 @@ def addSession():
 
 def getFieldValuesFromObjectsArray(objects, name, getFieldNameById=False, ModelName=False):
     values = []
+    seen_values = set()
+    
+    for obj in objects:
+        if name is not None and name is not False and obj is not False and hasattr(obj, name):
+            item = getattr(obj, name)
+            if item is not None:
+                if getFieldNameById:
+                    if ModelName:
+                        new_value = {item: getattr(database.get_id(ModelName, item), getFieldNameById)}
+                    else:
+                        new_value = {item: getFieldNameById[item]}
+                    
+                    # Convert dictionary to a tuple of tuples for hashing
+                    new_value_hashable = tuple(new_value.items())
+                else:
+                    new_value = item
+                    new_value_hashable = item
+                
+                # Add to values only if not seen before
+                if new_value_hashable not in seen_values:
+                    values.append(new_value)
+                    seen_values.add(new_value_hashable)
+    
+    return values
+
+def getFieldValuesFromObjectsArray_OLD(objects, name, getFieldNameById=False, ModelName=False):
+    values = []
     for obj in objects:
         if name!=None and name!=False and obj!=False and hasattr(obj, name):
             item = getattr(obj, name)
@@ -419,10 +446,14 @@ def getFieldValuesFromObjectsArray(objects, name, getFieldNameById=False, ModelN
 def getSessions(_json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
+    _filter_status = request.args.get('status', False)
     unique_users = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'user'), 'user', 'name', Users)
     unique_approvers = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'approver'), 'approver', 'name', Users)
     unique_status = getFieldValuesFromObjectsArray(database.get_distinct(Sessions,'status'), 'status', session_status_type)
-    sessions_pag = database.get_by_paginated(Sessions, 'request_date', page=pag, per_page=qtd, orderby=True)
+    if _filter_status:        
+        sessions_pag = database.get_by_paginated_filtered(Sessions, 'status', _filter_status, 'request_date', page=pag, per_page=qtd, order_desc=True)
+    else:
+        sessions_pag = database.get_by_paginated(Sessions, 'request_date', page=pag, per_page=qtd, orderby=True)
     all_sessions = []
     for session in sessions_pag['items']:
         _approver_name=''
@@ -1120,7 +1151,7 @@ def removeSession(user_id_logged, _data_received=None):
 @app.route('/removeRequestSession/<id_session>', methods=['GET'])
 @login_required
 def removeRequestSession(id_session):                    
-    database.edit_instance(Sessions, id_session, password=None, status=2, approve_date=None, approver=None)    
+    database.edit_instance(Sessions, id_session, password=None, status=5, approve_date=None, approver=None)    
     return json.dumps({}), 200
 
 @app.route('/forceDeleteSession/<id_session>', methods=['GET'])

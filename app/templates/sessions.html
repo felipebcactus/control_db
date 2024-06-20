@@ -2,6 +2,7 @@
 
 <div class="d-flex justify-content-between mb-3">
   <button type="button" class="btn btn-primary bt-newsession" data-toggle="modal" data-target="#sessionModal">New Access</button>
+  <button type="button" class="btn btn-success bt-apenas-ativos">Active Sessions Only</button>
 </div>
 <div class="filter_applied">
 
@@ -61,6 +62,7 @@
 var tree_sel;
 var qtd_global=0;
 var pag_global=0;
+var status_global=false;
 var filters_global={};
 var global_users_filters={};
 var __bt;
@@ -101,7 +103,7 @@ function ini_table(pag=1,qtd=10,filter={}){
     $('.filter_applied').html('');
   }
 
-  $.getJSON('/getSessions'+((filter_user!=false)?'/'+filter_user:'')+'?pag='+pag+'&qtd='+qtd, function (returned) {
+  $.getJSON('/getSessions'+((filter_user!=false)?'/'+filter_user:'')+'?pag='+pag+'&qtd='+qtd+((status_global)?"&status="+status_global:''), function (returned) {
     //if (!Array.isArray(sessions)) return; // Check for array response
     $('#Sessions > tbody').empty();
     sessions = returned['items'];
@@ -371,6 +373,13 @@ function ini_table(pag=1,qtd=10,filter={}){
 }
 
 $(document).ready(function() {
+
+  $('.bt-apenas-ativos').unbind('click').bind('click',function(){
+    status_global = status_global==false?1:false;
+    $(this).html(status_global?'All Sessions':'Active Sessions Only');
+    ini_table();
+  });
+
   $('#permissionModal .modal-body').prepend('<button class="bt-select-all btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button>');
   
   bindSelectAll();
