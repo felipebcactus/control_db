@@ -303,10 +303,9 @@ function ini_table(pag=1,qtd=10,filter={}){
         var _btcontent = $(this).html();
         $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
         $.ajax({
-          type: 'POST',
+          type: 'GET',
           async : true,
           url: '/removeRequestSession/'+session_id,
-          data: request_data,
           success: function(status) { 
             ini_table();
           },

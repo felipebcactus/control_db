@@ -1117,7 +1117,7 @@ def removeSession(user_id_logged, _data_received=None):
     return json.dumps(results), 200
 
 
-@app.route('/removeRequestSession/<id_session>', methods=['POST'])
+@app.route('/removeRequestSession/<id_session>', methods=['GET'])
 @login_required
 def removeRequestSession(id_session):                    
     database.edit_instance(Sessions, id_session, password=None, status=2, approve_date=None, approver=None)    
