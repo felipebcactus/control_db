@@ -76,11 +76,13 @@ function bindSelectAll(){
     window.setTimeout(function(){
       $('div.treejs>ul.treejs-nodes>li.treejs-node>span.treejs-checkbox').each(function(){
         $(this).trigger('click');
-        __btselectall.html('all');
         bindSelectAll();
       });
     },100);
   });
+  window.setTimeout(function(){
+    __btselectall.html('all');
+  },2000);
 }
 function ini_table(pag=1,qtd=10,filter={}){
 
@@ -175,7 +177,7 @@ function ini_table(pag=1,qtd=10,filter={}){
       var updated_at = sessions[i].updated_at
       var classRemoveButton = status=='Approved'?'':' hideadm ';
       if((!filter_user || returned['approver_user']==true) && status_id==0){
-        status+="\n<br><button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button><button class='btn btn-sm btn-danger bt-remove'"+' data-bs-session-id="'+ id +'" data-bs-user-name="'+ user_name +'" data-bs-user-id="'+ user +'"'+">deny</button>";
+        status+="\n<br><button class='btn btn-sm btn-success bt-approve' data-idsession='"+id+"'>approve</button><button class='btn btn-sm btn-danger bt-deny'"+' data-bs-session-id="'+ id +'"'+">deny</button>";
       }
       // Modify selector to target tables table
       $('#Sessions > tbody:last').append('<tr>' +
@@ -278,7 +280,6 @@ function ini_table(pag=1,qtd=10,filter={}){
         var _bt = $(this);
         var _btcontent = $(this).html();
         $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
-        $(this).html('<i class="fas fa-sync fa-spin"></i>');
         $.ajax({
           type: 'POST',
           async : true,
@@ -293,6 +294,27 @@ function ini_table(pag=1,qtd=10,filter={}){
       }
     });
 
+    
+    $('.bt-deny').unbind('click').bind('click',function(e) {
+      e.preventDefault();
+      const session_id = $(this).attr('data-bs-session-id')
+      if(confirm('Deny this access?')){
+        var _bt = $(this);
+        var _btcontent = $(this).html();
+        $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
+        $.ajax({
+          type: 'POST',
+          async : true,
+          url: '/removeRequestSession/'+session_id,
+          data: request_data,
+          success: function(status) { 
+            ini_table();
+          },
+          contentType: "application/json",
+          dataType: 'json'
+        });
+      }
+    });
     
     $('.bt-info').unbind('click').bind('click',function(e) {
       e.preventDefault();
