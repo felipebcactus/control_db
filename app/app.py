@@ -524,9 +524,8 @@ def getSessionsUser(user_id, _json=False):
     else:
         sessions_pag = database.get_by_paginated_filtered(Sessions, 'user', user_id, 'request_date', page=pag, per_page=qtd, order_desc=True)
     
-    sessions = database.get_by(Sessions, 'user', user_id)
     all_sessions = []
-    for session in sessions:
+    for session in sessions_pag['items']:
         _user = database.get_id_filter_in(Users, session.user, 'type', user_types)
         user_name = _user.name if _user else "Unknown user"
         new_session = {
