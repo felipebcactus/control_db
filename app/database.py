@@ -46,6 +46,24 @@ def get_by_paginated_filtered(model, filter_column, filter_value, order_by_colum
         'next_num': paginated_query.next_num
     }
 
+def get_by_paginated_filtered_twice(model, filter_column, filter_value, filter_column2, filter_value2, order_by_column, page=1, per_page=10, order_desc=False):
+    if order_desc==False:
+        query = model.query.filter(getattr(model, filter_column) == filter_value).filter(getattr(model, filter_column2) == filter_value2).order_by(getattr(model, order_by_column))
+    else:
+        query = model.query.filter(getattr(model, filter_column) == filter_value).filter(getattr(model, filter_column2) == filter_value2).order_by(getattr(model, order_by_column).desc())
+    total = query.count()
+    paginated_query = db.paginate(query, page=page, per_page=per_page)
+    return {
+        'total': total,
+        'items': paginated_query.items,
+        'pages': paginated_query.pages,
+        'page': paginated_query.page,
+        'has_prev': paginated_query.has_prev,
+        'has_next': paginated_query.has_next,
+        'prev_num': paginated_query.prev_num,
+        'next_num': paginated_query.next_num
+    }
+    
 def get_distinct(model, field):
     return model.query.distinct(field).all()
 
