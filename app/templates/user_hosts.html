@@ -121,8 +121,8 @@ function getUsers(_type=false,pag=1,qtd=10){
                              // removendo filhos (databases e tabelas) pois so tratará por host a principio
                             data[i]['children']=''; 
                              // busca se este host ja esta associado pra mostrar habilitado na tela
-                            for(item in result['items']){
-                                if(result['items'][item]['host_id']==data[i]['id']){
+                            for(item in result){
+                                if(parseInt(result[item]['host_id'])==parseInt(data[i]['id'])){
                                     data[i]['checked']=true;
                                 }
                             }

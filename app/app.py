@@ -1175,14 +1175,15 @@ def forceDeleteSession(id_session):
 
 @app.route('/getUserHosts/<user_id>', methods=['GET'])
 @login_required
-def getUserHosts(user_id, _json=False):
-            
+def getUserHosts(user_id, _json=False):            
     users_permissions = database.get_by_filtered(UsersPermissionsHosts, 'user_id', user_id)
-                
-    if _json==True:
-        return users_permissions
+    saida=[]
+    for reg in users_permissions:
+        saida.append({'id':reg.id,'user_id':reg.user.id,'host_id':reg.host_id})          
+    if _json:
+        return saida
     else:
-        return json.dumps(users_permissions), 200
+        return json.dumps(saida), 200
 
 
 @app.route('/postHostsUserPermissions', methods=['POST'])
@@ -1198,9 +1199,8 @@ def postHostsUserPermissions():
     
     for host_id in hosts:
         database.add_instance(UsersPermissionsHosts, user_id=user_id, host_id=host_id)
-    
-    
-    return json.dumps(getUserHosts(user_id, True)), 200
+        
+    return getUserHosts(user_id, True), 200
 
 
 # AUDITLOGS
