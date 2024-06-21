@@ -130,6 +130,13 @@ def get_by_in(model, column_name, values, orderby=False):
         data = model.query.filter(getattr(model, column_name).in_(values)).order_by(getattr(model, orderby).asc()).all()
     return data
 
+def get_by_filtered(model, column_name, value, orderby=False):
+    if orderby == False:
+        data = model.query.filter(getattr(model, column_name) == value).all()
+    else:
+        data = model.query.filter(getattr(model, column_name) == value).order_by(getattr(model, orderby).asc()).all()
+    return data
+
 def get_by_join(model, column_name, value, join=None, parent_column=None, parent_value=None, orderby=False):
     if join and parent_column and parent_value:
         data = model.query.join(join).filter(

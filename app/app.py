@@ -1176,35 +1176,13 @@ def forceDeleteSession(id_session):
 @app.route('/getUserHosts/<user_id>', methods=['GET'])
 @login_required
 def getUserHosts(user_id, _json=False):
-    pag = request.args.get('pag', 1, type=int)
-    qtd = request.args.get('qtd', 5, type=int)
             
-    users_permissions = database.get_by_paginated_filtered(UsersPermissionsHosts, 'user_id', user_id, 'host_id', page=pag, per_page=qtd, order_desc=True)
-    
-    all_users = []
-    for userpermission in users_permissions['items']:
-        obj_userpermission = {
-            "id": userpermission.id,
-            "user_id": userpermission.user_id,
-            "host_id": userpermission.host_id
-        }
-        all_users.append(obj_userpermission)
-            
-    return_obj = {
-        'total': users_permissions['total'],
-        'items': all_users,
-        'pages': users_permissions['pages'],
-        'page': users_permissions['page'],
-        'has_prev': users_permissions['has_prev'],
-        'has_next': users_permissions['has_next'],
-        'prev_num': users_permissions['prev_num'],
-        'next_num': users_permissions['next_num']
-    }        
-            
+    users_permissions = database.get_by_filtered(UsersPermissionsHosts, 'user_id', user_id)
+                
     if _json==True:
-        return return_obj
+        return users_permissions
     else:
-        return json.dumps(return_obj), 200
+        return json.dumps(users_permissions), 200
 
 
 @app.route('/postHostsUserPermissions', methods=['POST'])
@@ -1222,7 +1200,7 @@ def postHostsUserPermissions():
         database.add_instance(UsersPermissionsHosts, user_id=user_id, host_id=host_id)
     
     
-    return json.dumps({}), 200
+    return json.dumps(getUserHosts(user_id, True)), 200
 
 
 # AUDITLOGS
