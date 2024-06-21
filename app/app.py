@@ -515,10 +515,14 @@ def getUserLogged(_json=False):
 def getSessionsUser(user_id, _json=False):
     pag = request.args.get('pag', 1, type=int)
     qtd = request.args.get('qtd', 5, type=int)
+    _filter_status = request.args.get('status', False)
     
     # unique_users = Users.objects.filter(session__isnull=False).distinct()
         
-    sessions_pag = database.get_by_paginated_filtered(Sessions, 'user', user_id, 'request_date', page=pag, per_page=qtd, order_desc=True)
+    if _filter_status:        
+        sessions_pag = database.get_by_paginated_filtered(Sessions, 'status', _filter_status, 'request_date', page=pag, per_page=qtd, order_desc=True)
+    else:
+        sessions_pag = database.get_by_paginated_filtered(Sessions, 'user', user_id, 'request_date', page=pag, per_page=qtd, order_desc=True)
     
     sessions = database.get_by(Sessions, 'user', user_id)
     all_sessions = []
