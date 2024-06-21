@@ -70,6 +70,8 @@ var __bt_content;
 var __creatingAccess = false;
 
 var __btselectall = $('.bt-select-all');
+var __btselectallgreen = $('.bt-select-all-green');
+
 
 function bindSelectAll(){  
   $('.bt-select-all').unbind('click').bind('click',function(){
@@ -78,12 +80,25 @@ function bindSelectAll(){
     window.setTimeout(function(){
       $('div.treejs>ul.treejs-nodes>li.treejs-node>span.treejs-checkbox').each(function(){
         $(this).trigger('click');
-        bindSelectAll();
       });
+      bindSelectAll();
     },100);
   });
+  
+  $('.bt-select-all-green').unbind('click').bind('click',function(){
+    __btselectallgreen=$(this);
+    $(this).html('<i class="fas fa-sync fa-spin"></i>').unbind('click');
+    window.setTimeout(function(){
+      $('li:has(span.treejs-label:contains("✅"))>span.treejs-checkbox').each(function(){
+        $(this).trigger('click');
+      });
+      bindSelectAll();
+    },100);
+  });
+
   window.setTimeout(function(){
     __btselectall.html('all');
+    __btselectallgreen.html('all ✅');
   },2000);
 }
 function ini_table(pag=1,qtd=10,filter={}){
@@ -380,7 +395,7 @@ $(document).ready(function() {
     ini_table();
   });
 
-  $('#permissionModal .modal-body').prepend('<button class="bt-select-all btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button>');
+  $('#permissionModal .modal-body').prepend('<button class="bt-select-all btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button> <button class="bt-select-all-green btn btn-sm btn-success" style="height: 22px;padding-top: 0px;">all ✅</button>');
   
   bindSelectAll();
   $.getJSON('/getUserLogged',function(ret){
@@ -497,7 +512,7 @@ function start_datatree(){
           $('#permissionModal .modal-body').html('No databases available for this user');
         }else{
           $('#permissionModal .modal-body').html('<form><div class="mb-6 container"></div></form>');
-          $('#permissionModal .modal-body').prepend('<button class="bt-select-all btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button>');
+          $('#permissionModal .modal-body').prepend('<button class="bt-select-all btn btn-sm btn-primary" style="height: 22px;padding-top: 0px;">all</button> <button class="bt-select-all-green btn btn-sm btn-success" style="height: 22px;padding-top: 0px;">all ✅</button>');
           bindSelectAll();
         }
         bindmodal(data);
