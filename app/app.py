@@ -705,12 +705,14 @@ def returnPermissionTree(_data):
             permissions_obj_name[_hostname] = {}
             permissions_obj_id[_id] = {}
     def _addDatabase(_id_host,_id_database):
+        _addHost(_id_host)
         _hostname = _getHostName(_id_host)
         _databasename = _getDatabaseName(_id_database)
         if _databasename not in permissions_obj_name[_hostname]:
             permissions_obj_name[_hostname][_databasename] = []
             permissions_obj_id[_id_host][_id_database] = []
     def _addTable(_id_host,_id_database,_id_table,user_auto_approve):
+        _addDatabase(_id_host,_id_database)
         _hostname = _getHostName(_id_host)
         _databasename = _getDatabaseName(_id_database)
         _tabledetails = _getTableDetails(_id_table)
@@ -739,6 +741,27 @@ def returnPermissionTree(_data):
             print(_parts)
     return { 'permissions_name' : permissions_obj_name , 'permissions_id' : permissions_obj_id, 'user_auto_approve': user_auto_approve }
 
+
+@app.route('/getTreeParts', methods=['GET'])
+@app.route('/getTreeParts/<int:host_id>', methods=['GET'])
+@app.route('/getTreeParts/<int:host_id>/<int:database_id>', methods=['GET'])
+@login_required
+def getTreeParts(host_id=None, database_id=None): 
+    # return all hosts if not pass any vars into GET
+    if host_id is None and database_id is None:
+        hosts = database.get_all(Hosts)
+        all_hosts = [{'id': f'host_{host.id}', 'text': host.name, 'children': True, 'icon': 'host-icon'} for host in hosts]
+        return jsonify(all_hosts), 200
+    # else if exists host_id, return all databases from this host_id
+    elif host_id is not None and database_id is None:
+        databases = database.get_by(Databases, 'id_host', host_id)
+        all_databases = [{'id': f'db_{host_id}_{_database.id}', 'text': _database.name, 'children': True, 'icon': 'db-icon'} for _database in databases]
+        return jsonify(all_databases), 200
+    # else if exists host_id and database_id, return all tables from this database_id
+    elif host_id is not None and database_id is not None:
+        tables = database.get_by(Tables, 'id_database', database_id)
+        all_tables = [{'id': f'table_{host_id}_{database_id}_{_table.id}', 'text': _table.name, 'children': False, 'icon': 'table-icon ' + ('table-icon-green' if _table.type == 1 else 'table-icon-red')} for _table in tables]
+        return jsonify(all_tables), 200
 
 @app.route('/postHostsDatabasesTablesTreeApprove', methods=['POST'])
 @login_required
