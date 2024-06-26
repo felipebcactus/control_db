@@ -8,12 +8,15 @@ from werkzeug.security import generate_password_hash
 from flask_login import login_required, current_user
 from sqlalchemy.sql import text
 from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import sqlalchemy as sa
 import os
 import string
 import random
 import json
+import base64
 
 
 app = create_app()
@@ -61,6 +64,59 @@ def fetch(_json=False):
         return all_users
     else:
         return json.dumps(all_users), 200
+
+
+@app.route('/get_table_data_users_zendesk', methods=['GET'])
+def get_table_data_users_zendesk():
+    # Variáveis de conexão ao banco de dados
+    db_host = base64.b64decode('am9nYXBpeC12Mi1teXNxbDgtZGItYXVyb3JhLWluc3RhbmNlLTEuY2x1c3Rlci1yby1jc292eWgyNWNncWwuZXUtY2VudHJhbC0xLnJkcy5hbWF6b25hd3MuY29t').decode("utf-8") #temporario sera descartado
+    db_name = 'apibs2be_jogapix'
+    db_username = base64.b64decode('Y2JfZmVsaXBlLmJldmlsYWNxdWE=').decode("utf-8") #temporario sera descartado
+    db_password = base64.b64decode('JlNYY281N0lQOA==').decode("utf-8") #temporario sera descartado
+    table_name = 'users_zendesk'
+    db_port = '3306' 
+    
+    # String de conexão
+    connection_string = f'mysql+pymysql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}'
+    print(f'Conectando: {connection_string}')
+
+    # Criando o engine e a sessão
+    engine = create_engine(connection_string)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        # Executando a query
+        with engine.connect() as connection:
+            result = connection.execute(text(f"SELECT * FROM {table_name}"))
+            rows = result.fetchall()
+            column_names = result.keys()
+
+        # Imprimindo a quantidade de linhas
+        html_result = f'<p>Quantidade de linhas: {len(rows)}</p>'
+
+        # Imprimindo os nomes das colunas
+        html_result += '<table border="1"><tr>'
+        for column in column_names:
+            html_result += f'<th>{column}</th>'
+        html_result += '</tr>'
+
+        # Imprimindo os valores das linhas
+        for row in rows:
+            html_result += '<tr>'
+            for value in row:
+                html_result += f'<td>{value}</td>'
+            html_result += '</tr>'
+        html_result += '</table>'
+
+        return html_result
+
+    except Exception as e:
+        return f"<p>Erro ao conectar ao MySQL: {e}</p>"
+
+    finally:
+        session.close()
+
 
 @app.route('/getUserDetail/<userId>', methods=['GET'])
 @login_required
