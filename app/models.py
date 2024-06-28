@@ -2,7 +2,7 @@ import flask_sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from flask_login import UserMixin
-import datetime
+from datetime import datetime
 
 db = flask_sqlalchemy.SQLAlchemy()
 
