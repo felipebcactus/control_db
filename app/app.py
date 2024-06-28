@@ -827,6 +827,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
     
     if (len(permissions_obj_id)>0) :
         details['waiting_approve'] = False
+        print('------------------FOR--------------------')
+        print(datetime.now().strftime("%Y-%m-%d %H:%M"))
         for _host_id in permissions_obj_id :
             hostData = _getHostData(_host_id)
             
@@ -846,7 +848,9 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             if ((filter_user!=False and user_auto_approve!=True) or (_session_data.writer == 1 and _approve==False)) :
                 results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve,"writer_permission": (_session_data.writer == 1)}})
                 continue
-
+            
+            print('--------------------------------------')
+            print(datetime.now().strftime("%Y-%m-%d %H:%M"))
             _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
             results.append({'removeUserFromHostBySession':_removeUserFromHost})
                     

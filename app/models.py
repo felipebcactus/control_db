@@ -2,6 +2,7 @@ import flask_sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from flask_login import UserMixin
+import datetime
 
 db = flask_sqlalchemy.SQLAlchemy()
 
@@ -221,9 +222,10 @@ class ExternalConnectionByHostId():
 
         # Create an engine instance
         strconn = connection_string[connections.type]
-        print('Conectando: '+strconn)
+        print(datetime.now().strftime("%Y-%m-%d %H:%M"))
+        print('Conectando ao HOST: '+db_host)
         external_engine = create_engine(strconn)
         _session = sessionmaker(bind=external_engine)
         external_session = _session()
-        
+        print('Conectado...')
         return external_session
