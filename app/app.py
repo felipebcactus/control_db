@@ -753,17 +753,17 @@ def returnPermissionTree(_data):
 def getTreeParts(host_id=None, database_id=None): 
     # return all hosts if not pass any vars into GET
     if host_id is None and database_id is None:
-        hosts = database.get_all(Hosts)
+        hosts = database.get_all_order_by(Hosts, 'name')
         all_hosts = [{'id': f'host_{host.id}', 'text': str(host.name).upper(), 'children': True, 'icon': 'host-icon'} for host in hosts]
         return jsonify(all_hosts), 200
     # else if exists host_id, return all databases from this host_id
     elif host_id is not None and database_id is None:
-        databases = database.get_by(Databases, 'id_host', host_id)
+        databases = database.get_by(Databases, 'id_host', host_id, 'name')
         all_databases = [{'id': f'db_{host_id}_{_database.id}', 'text': str(_database.name).upper(), 'children': True, 'icon': 'db-icon'} for _database in databases]
         return jsonify(all_databases), 200
     # else if exists host_id and database_id, return all tables from this database_id
     elif host_id is not None and database_id is not None:
-        tables = database.get_by(Tables, 'id_database', database_id)
+        tables = database.get_by(Tables, 'id_database', database_id, 'name')
         all_tables = [{'id': f'table_{host_id}_{database_id}_{_table.id}', 'text': str(_table.name).upper(), 'children': False, 'icon': 'table-icon ' + ('table-icon-green' if _table.type == 1 else 'table-icon-red')} for _table in tables]
         return jsonify(all_tables), 200
 
