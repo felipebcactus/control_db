@@ -857,6 +857,10 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             external_session = ExternalConnectionByHostId.getConn(_host_id)   
             results.append({'createdConnectionToHost':_host_id})
             def _execSQL(sql, _conn, _fetch=False):
+                print('...................')
+                print(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                print("QRY: "+str(sql))
+                print('...................')
                 if _fetch:
                     return _conn.execute(text(sql)).fetchall()
                 else:
