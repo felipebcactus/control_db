@@ -977,6 +977,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 
             external_session.close()            
             results.append({'destroyedConnectionToHost':_host_id})
+            print("DESTROY CONNECTION............. host: "+ str(_host_id))
     else:
         details['waiting_approve'] = True
     

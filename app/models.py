@@ -3,6 +3,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from flask_login import UserMixin
 from datetime import datetime
+import uuid
+
 
 db = flask_sqlalchemy.SQLAlchemy()
 
@@ -196,36 +198,50 @@ class UsersPermissionsHosts(db.Model):
         db.UniqueConstraint('user_id', 'host_id'),
     )
 
-class ExternalConnectionByHostId():
+
+class ExternalConnectionByHostId:
     
-    def getConn(host_id, _database=False):
+    def __init__(self):
+        self.external_engine = None
+        self.external_session = None
+        self.instance_id = uuid.uuid4()  # Cria um ID único para a instância
+
+    def getConn(self, host_id, _database=False):
         from . import database
         
         # Get the host with the given host_id
         connections = database.get_id(Hosts, host_id)
-        # print(connections.__dict__)
         
         db_username = connections.username
         db_password = connections.password
         db_host = connections.ipaddress
         db_port = connections.port
         
-        # Connect to the external database
         # Create a connection string
-        connection_string = {}
-        connection_string[0] = f'mysql+pymysql://{db_username}:{db_password}@{db_host}:{db_port}'
-        connection_string[1] = f'postgresql+psycopg2://{db_username}:{db_password}@{db_host}:{db_port}'+("/"+_database if _database!=False else '')
-        connection_string[2] = f'mssql+pyodbc://{db_username}:{db_password}@{db_host}:{db_port}?driver=ODBC+Driver+17+for+SQL+Server'
-        
-        # print("Iniciando atualização do HOST: "+connections.name) 
-        # print("Connection string: "+connection_string[connections.type])
+        connection_string = {
+            0: f'mysql+pymysql://{db_username}:{db_password}@{db_host}:{db_port}',
+            1: f'postgresql+psycopg2://{db_username}:{db_password}@{db_host}:{db_port}' + ("/" + _database if _database else ''),
+            2: f'mssql+pyodbc://{db_username}:{db_password}@{db_host}:{db_port}?driver=ODBC+Driver+17+for+SQL+Server'
+        }
 
-        # Create an engine instance
         strconn = connection_string[connections.type]
         print(datetime.now().strftime("%Y-%m-%d %H:%M"))
-        print('Conectando ao HOST: '+db_host)
-        external_engine = create_engine(strconn)
-        _session = sessionmaker(bind=external_engine)
-        external_session = _session()
-        print('Conectado...')
-        return external_session
+        print(f'[{self.instance_id}] Conectando ao HOST: ' + db_host)
+        
+        # Create an engine instance
+        self.external_engine = create_engine(strconn)
+        _session = sessionmaker(bind=self.external_engine)
+        self.external_session = _session()
+        
+        print(f'[{self.instance_id}] Conectado...')
+        return self.external_session
+
+    def closeConn(self):
+        if self.external_session:
+            self.external_session.close()
+            self.external_session = None
+            print(f'[{self.instance_id}] Sessão fechada.')
+        if self.external_engine:
+            self.external_engine.dispose()
+            self.external_engine = None
+            print(f'[{self.instance_id}] Engine fechada.')
