@@ -829,6 +829,11 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
         details['waiting_approve'] = False
         print('------------------FOR--------------------')
         print(datetime.now().strftime("%Y-%m-%d %H:%M"))
+    
+        _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
+        results.append({'removeUserFromHostBySession':_removeUserFromHost})
+        print('Removido usuario previo: '+str(username)+' para criacao de nova permissao')
+            
         for _host_id in permissions_obj_id :
             hostData = _getHostData(_host_id)
             
@@ -840,20 +845,18 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 host_details_json['endpoint_writer'] = hostData.ipaddress
             details['host'].append(host_details_json)
             
-            privilegesConfig = 'SELECT, UPDATE, INSERT, DELETE' if _session_data.writer == 1 else privilegesConfig
-            print("PRIVILEGE: "+privilegesConfig)
-            results.append({'PRIVILEGE': privilegesConfig})
-            
             # pula o laco caso nao tenha permissao
             if ((filter_user!=False and user_auto_approve!=True) or (_session_data.writer == 1 and _approve==False)) :
                 results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve,"writer_permission": (_session_data.writer == 1)}})
                 continue
             
-            print('--------------------------------------')
+            print('------------------ HOST: '+str(hostData.name))
             print(datetime.now().strftime("%Y-%m-%d %H:%M"))
-            _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
-            results.append({'removeUserFromHostBySession':_removeUserFromHost})
-                                
+            
+            privilegesConfig = 'SELECT, UPDATE, INSERT, DELETE' if _session_data.writer == 1 else privilegesConfig
+            print("PRIVILEGE: "+privilegesConfig)
+            results.append({'PRIVILEGE': privilegesConfig})
+                                            
             conn_manager = ExternalConnectionByHostId()
             external_session = conn_manager.getConn(_host_id)   
             results.append({'createdConnectionToHost':_host_id})
@@ -861,7 +864,6 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 print('...................')
                 print(datetime.now().strftime("%Y-%m-%d %H:%M"))
                 print("QRY: "+str(sql))
-                print('...................')
                 if _fetch:
                     return _conn.execute(text(sql)).fetchall()
                 else:
@@ -1105,12 +1107,12 @@ def removeUserFromHostBySession_action(_data_received=None):
         print('sessoes: '+str(len(sessions_host)))
         if len(sessions_host)>0 :
             for _reg in sessions_host :     
-                # TODO: criar um apagar usuario por HOST mas tem q ter o username pq ao remover um session pode nao existir mais um SESSIONHOST         
                 hostData = database.get_id(Hosts, _reg.id_host)
                 print("Host: "+hostData.name)
                 _databases_host = database.get_by(Databases, 'id_host', _reg.id_host)
                 if len(_databases_host)>0 :
-                    for _reg_database in _databases_host :                    
+                    for _reg_database in _databases_host :    
+                        print('APAGANDO USER: '+str(user_name)+' no host: '+str(_reg.id_host))                
                         conn_manager_del = ExternalConnectionByHostId()
                         external_session = conn_manager_del.getConn(_reg.id_host)
                         
