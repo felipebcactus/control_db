@@ -851,11 +851,12 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             results.append({'removeUserFromHostBySession':_removeUserFromHost})
                     
             external_session = ExternalConnectionByHostId.getConn(_host_id)   
-            def _execSQL(sql, _fetch=False):
+            results.append({'createdConnectionToHost':_host_id})
+            def _execSQL(sql, _conn, _fetch=False):
                 if _fetch:
-                    return external_session.execute(text(sql)).fetchall()
+                    return _conn.execute(text(sql)).fetchall()
                 else:
-                    external_session.execute(text(sql))
+                    _conn.execute(text(sql))
                         
             if hostData.type == 0 : #MySQL
                                        
@@ -863,10 +864,10 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     # CREATE USER 'user'@'hostname';
                     _command = "CREATE USER '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
                     results.append({'createnewuser': _command})
-                    _execSQL(_command)                    
+                    _execSQL(_command, external_session)                    
                 except Exception as ex:
                     _command = "ALTER USER '"+username+"'@'%' IDENTIFIED BY '"+password+"';"
-                    _execSQL(_command)
+                    _execSQL(_command, external_session)
                     results.append({'updateduser': _command})
                     details['updateduser']=True
                     print('Exception creating user exists')
@@ -881,7 +882,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
         
                         _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+".* To '"+username+"'@'%';"
                         results.append({'grantpermission': _command})
-                        _execSQL(_command)
+                        _execSQL(_command, external_session)
                                                 
                     else:
                                                                                    
@@ -895,18 +896,18 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                             for _table in permissions_obj_name[hostData.name][databaseData.name]:
                                 _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+"."+_table+" To '"+username+"'@'%';" # IDENTIFIED BY '"+password+"';"
                                 results.append({'grantpermission_table_'+_table: _command})
-                                _execSQL(_command)
+                                _execSQL(_command, external_session)
                         
                         else:
                             
                             _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+".* To '"+username+"'@'%';" 
                             results.append({'grantpermission': _command})
-                            _execSQL(_command)
+                            _execSQL(_command, external_session)
                                                 
                 # FLUSH PRIVILEGES;
                 _command = "FLUSH PRIVILEGES;"
                 results.append({'flushprivileges': _command})
-                _execSQL(_command)
+                _execSQL(_command, external_session)
                 database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now(), approver=current_user.id)
                                 
             elif hostData.type == 1:  # PostgreSQL
@@ -914,7 +915,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 # CREATE USER 'user' WITH PASSWORD 'password';
                 _command = "CREATE ROLE "+username+" NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN NOREPLICATION NOBYPASSRLS PASSWORD '"+password+"'; COMMIT;"
                 results.append({'createnewuser': _command})
-                _execSQL(_command)
+                _execSQL(_command, external_session)
 
                 for _database in permissions_obj_id[_host_id]:
                     databaseData = _getDatabaseData(_database)
@@ -924,14 +925,14 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                         # GRANT ALL PRIVILEGES ON DATABASE dbTest TO 'user';
                         _command = "GRANT ALL PRIVILEGES ON DATABASE "+databaseData.name+" TO "+username+"; COMMIT;"
                         results.append({'grantpermission': _command})
-                        _execSQL(_command)
+                        _execSQL(_command, external_session)
 
                     else:  # Specific tables within a database
                         # GRANT PRIVILEGES PER TABLE
                         for _table in permissions_obj_name[hostData.name][databaseData.name]:
                             _command = "GRANT ALL PRIVILEGES ON "+_table+" TO "+username+"; COMMIT;"
                             results.append({'grantpermission_table_'+_table: _command})
-                            _execSQL(_command)
+                            _execSQL(_command, external_session)
 
                 database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
 
@@ -941,7 +942,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                 # CREATE LOGIN 'user' WITH PASSWORD = 'password';
                 _command = "CREATE LOGIN "+username+" WITH PASSWORD = '"+password+"';"
                 results.append({'createnewuser': _command})
-                _execSQL(_command)
+                _execSQL(_command, external_session)
 
                 for _database in permissions_obj_id[_host_id]:
                     databaseData = _getDatabaseData(_database)
@@ -951,14 +952,14 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                         # GRANT ALL PRIVILEGES ON DATABASE::dbTest TO 'user';
                         _command = "USE "+databaseData.name+"; GRANT ALL TO "+username+";"
                         results.append({'grantpermission': _command})
-                        _execSQL(_command)
+                        _execSQL(_command, external_session)
 
                     else:  # Specific tables within a database
                         # GRANT PRIVILEGES PER TABLE
                         for _table in permissions_obj_name[hostData.name][databaseData.name]:
                             _command = "USE "+databaseData.name+"; GRANT ALL ON "+_table+" TO "+username+";"
                             results.append({'grantpermission_table_'+_table: _command})
-                            _execSQL(_command)
+                            _execSQL(_command, external_session)
 
                 database.edit_instance(Sessions, id=session_id, status=1, approve_date=datetime.now())
             
@@ -966,7 +967,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
             results.append({'SessionsHostsCreated':True})
                 
-            external_session.close()
+            external_session.close()            
+            results.append({'destroyedConnectionToHost':_host_id})
     else:
         details['waiting_approve'] = True
     
