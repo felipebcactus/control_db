@@ -853,8 +853,9 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             print(datetime.now().strftime("%Y-%m-%d %H:%M"))
             _removeUserFromHost = removeUserFromHostBySession({'session_id': session_id, 'user_name': username})
             results.append({'removeUserFromHostBySession':_removeUserFromHost})
-                    
-            external_session = ExternalConnectionByHostId.getConn(_host_id)   
+                                
+            conn_manager = ExternalConnectionByHostId()
+            external_session = conn_manager.getConn(_host_id)   
             results.append({'createdConnectionToHost':_host_id})
             def _execSQL(sql, _conn, _fetch=False):
                 print('...................')
@@ -975,7 +976,8 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             database.add_instance_no_return(SessionsHosts, id_session=session_id, id_host=_host_id)
             results.append({'SessionsHostsCreated':True})
                 
-            external_session.close()            
+            conn_manager.closeConn()
+            
             results.append({'destroyedConnectionToHost':_host_id})
             print("DESTROY CONNECTION............. host: "+ str(_host_id))
     else:
@@ -1109,7 +1111,8 @@ def removeUserFromHostBySession_action(_data_received=None):
                 _databases_host = database.get_by(Databases, 'id_host', _reg.id_host)
                 if len(_databases_host)>0 :
                     for _reg_database in _databases_host :                    
-                        external_session = ExternalConnectionByHostId.getConn(_reg.id_host)
+                        conn_manager_del = ExternalConnectionByHostId()
+                        external_session = conn_manager_del.getConn(_reg.id_host)
                         
                         if hostData.type == 0 : #MySQL
                             _command = 'DROP USER IF EXISTS \''+user_name+'\'@\''+_reg_database.name+'\';'
@@ -1135,6 +1138,8 @@ def removeUserFromHostBySession_action(_data_received=None):
 
                         if hostData.type == 2 : #SQLServer
                             _command = '' #TODO
+                            
+                        conn_manager_del.closeConn()
                                 
                 if hostData.type == 0 : #MySQL   
                     _command = 'DROP USER IF EXISTS \''+user_name+"\'@'%';"                    
