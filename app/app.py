@@ -887,7 +887,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     else:
                                                                                    
                         # Get all tables names from each external database
-                        tables = _execSQL('SELECT table_name FROM information_schema.tables WHERE table_schema = "'+databaseData.name+'"', True)
+                        tables = _execSQL('SELECT table_name FROM information_schema.tables WHERE table_schema = "'+databaseData.name+'"', external_session, True)
                         qtd_tables_total = len(tables)
                         
                         if qtd_tables_total != database_tables_count :
