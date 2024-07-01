@@ -8,8 +8,9 @@ synchosts_bp = Blueprint('synchosts', __name__)
 
 @synchosts_bp.route('/synchosts/<host_id>', methods=['GET'])
 def synchosts(host_id):
-    try:
-        external_session = ExternalConnectionByHostId.getConn(host_id)
+    try:             
+        conn_manager_del = ExternalConnectionByHostId()
+        external_session = conn_manager_del.getConn(host_id)
 
         connections = database.get_id(Hosts, host_id)
         
@@ -75,6 +76,7 @@ def synchosts(host_id):
                             print('TABELA NOVA: Fail insert table duplicated')
                             database.force_rollback()
         
+        conn_manager_del.closeConn()
         return json.dumps('Synchosts successful!'), 200
     except Exception as ex:
         print(ex)
