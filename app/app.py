@@ -884,20 +884,20 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
                     details['updateduser']=True
                     print('Exception creating user exists')
                     print(ex)
-                
-                for _database in permissions_obj_id[_host_id]:
-                    
-                    databaseData = _getDatabaseData(_database)     
-                    database_tables_count = len(permissions_obj_id[_host_id][_database])
-                   
-                    if database_tables_count == 0 :
-        
-                        _command = "GRANT "+ privilegesConfig +" ON "+databaseData.name+".* To '"+username+"'@'%';"
-                        results.append({'grantpermission': _command})
-                        _execSQL(_command, external_session)
-                                                
-                    else:
-                                                                                   
+            
+                database_tables_count = len(permissions_obj_id[_host_id])
+                if database_tables_count == 0 :
+    
+                    _command = "GRANT "+ privilegesConfig +" ON *.* To '"+username+"'@'%';"
+                    results.append({'grantpermission': _command})
+                    _execSQL(_command, external_session)
+                                            
+                else:
+                                    
+                    for _database in permissions_obj_id[_host_id]:
+                        
+                        databaseData = _getDatabaseData(_database)     
+                                                                    
                         # Get all tables names from each external database
                         tables = _execSQL('SELECT table_name FROM information_schema.tables WHERE table_schema = "'+databaseData.name+'"', external_session, True)
                         qtd_tables_total = len(tables)
