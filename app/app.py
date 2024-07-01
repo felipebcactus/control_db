@@ -847,7 +847,7 @@ def postHostsDatabasesTablesTree(_approve=False, _approver=False, _as_json=False
             
             # pula o laco caso nao tenha permissao
             if ((filter_user!=False and user_auto_approve!=True) or (_session_data.writer == 1 and _approve==False)) :
-                database.edit_instance(Sessions, id=session_id, status=0)
+                database.edit_instance(Sessions, id=session_id, status=0, password=password, datatree=json.dumps(_data))
                 results.append({'lacoPuladoSemPermissao':{"filter_user":filter_user,"user_auto_approve":user_auto_approve,"writer_permission": (_session_data.writer == 1)}})
                 continue
             
