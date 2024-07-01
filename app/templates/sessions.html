@@ -2,7 +2,7 @@
 
 <div class="d-flex justify-content-between mb-3">
   <button type="button" class="btn btn-primary bt-newsession" data-toggle="modal" data-target="#sessionModal">New Access</button>
-  <button type="button" class="btn btn-success bt-apenas-ativos">All Sessions</button>
+  <button type="button" class="btn btn-success bt-apenas-ativos">Active Sessions Only</button>
 </div>
 <div class="filter_applied">
 
@@ -90,7 +90,7 @@
 var tree_sel;
 var qtd_global=0;
 var pag_global=0;
-var status_global=1;
+var status_global=false;
 var filters_global={};
 var global_users_filters={};
 var __bt;
