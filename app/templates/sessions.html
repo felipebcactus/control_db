@@ -2,7 +2,7 @@
 
 <div class="d-flex justify-content-between mb-3">
   <button type="button" class="btn btn-primary bt-newsession" data-toggle="modal" data-target="#sessionModal">New Access</button>
-  <button type="button" class="btn btn-success bt-apenas-ativos">Active Sessions Only</button>
+  <button type="button" class="btn btn-success bt-apenas-ativos">All Sessions</button>
 </div>
 <div class="filter_applied">
 
@@ -419,7 +419,7 @@ $(document).ready(function() {
 
   $('.bt-apenas-ativos').unbind('click').bind('click',function(){
     status_global = status_global==false?1:false;
-    $(this).html(status_global?'All Sessions':'Active Sessions Only');
+    $(this).html(status_global!=1?'All Sessions':'Active Sessions Only');
     ini_table();
   });
 
